@@ -38,3 +38,10 @@
 - [无关输入](../design/hybrid-qa/desktop-no-match.png)
 
 此前初版接入、服务失败与取消状态记录见 [DeepSeek 接入验收](DEEPSEEK-QA.md)。本轮没有改动登录、上传和会话存储流程；向量检索、流式回答、通用 PDF / Word 解析和会话持久化仍待后续实现。
+
+
+## 后续引用区域对齐
+
+按用户截图将引用区域移入回答正文列，引用分隔线、标题和资料卡片与回答卡片左右边界对齐。前端 pnpm typecheck 通过；浏览器测量 1487、1024、768、390px 四种宽度，边界差均不超过 1px，无横向溢出，引用阅读及展开 / 收起正常。
+
+本项使用当前开发前端，登录与接口传输为夹具，正文采用正式导入的 Word 数据；不调用模型。未为这次布局移动重复运行生产构建。截图已查看：[桌面](../design/source-alignment-qa/desktop.png)、[手机](../design/source-alignment-qa/mobile.png)、[结构化边界结果](../design/source-alignment-qa/result.json)。

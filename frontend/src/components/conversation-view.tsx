@@ -49,18 +49,18 @@ function AnswerMessage({ message, onSource, onToast }: { message: Message; onSou
             </div>
           </div>
           <div className="answer-actions"><button className="quiet-button copy-answer" onClick={copyAnswer}>{copied ? <CheckIcon size={18} /> : <CopyIcon size={18} />}{copied ? "已复制" : "复制回答"}</button></div>
+          {!!message.answer.sources.length && <section className="sources-area" id={"sources-" + message.id} aria-label="引用资料">
+            <button className="sources-heading" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}><LinkIcon size={22} aria-hidden="true" /><span>引用资料</span><CaretDownIcon className={expanded ? "rotated" : ""} size={15} /></button>
+            {expanded && <div className="source-card">
+              <div className="source-card-top">
+                <button className="source-file" onClick={() => onSource(source)}>{/\.pdf$/i.test(source.name) ? <FilePdfIcon size={24} weight="fill" className="pdf-color" /> : <FileTextIcon size={24} weight="fill" />}<span>{source.name}{source.page ? " · 第 " + source.page + " 页" : ""}</span><ArrowUpRightIcon size={15} className="source-open-icon" /></button>
+                <span className="source-kind">{source.demo ? "演示原文" : "资料原文"}</span>
+              </div>
+              <p className="source-excerpt">{source.excerpt}</p>
+            </div>}
+          </section>}
         </div>
       </div>
-      {!!message.answer.sources.length && <section className="sources-area" id={"sources-" + message.id} aria-label="引用资料">
-        <button className="sources-heading" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}><LinkIcon size={22} aria-hidden="true" /><span>引用资料</span><CaretDownIcon className={expanded ? "rotated" : ""} size={15} /></button>
-        {expanded && <div className="source-card">
-          <div className="source-card-top">
-            <button className="source-file" onClick={() => onSource(source)}>{/\.pdf$/i.test(source.name) ? <FilePdfIcon size={24} weight="fill" className="pdf-color" /> : <FileTextIcon size={24} weight="fill" />}<span>{source.name}{source.page ? " · 第 " + source.page + " 页" : ""}</span><ArrowUpRightIcon size={15} className="source-open-icon" /></button>
-            <span className="source-kind">{source.demo ? "演示原文" : "资料原文"}</span>
-          </div>
-          <p className="source-excerpt">{source.excerpt}</p>
-        </div>}
-      </section>}
     </article>
   );
 }
