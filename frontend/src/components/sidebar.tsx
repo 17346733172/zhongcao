@@ -33,7 +33,7 @@ export function Sidebar(props: Props) {
           <h2 className="nav-label" id="library-label"><BooksIcon size={21} aria-hidden="true" />知识库</h2>
           <div className="nav-list">
             {libraries.map((library) => (
-              <button key={library.id} className={"nav-item" + (props.libraryId === library.id ? " active" : "")} aria-pressed={props.libraryId === library.id} onClick={() => props.onLibrary(library.id)}>
+              <button key={library.id} className={"nav-item" + (props.libraryId === library.id ? " active" : "")} aria-pressed={props.libraryId === library.id} aria-haspopup="dialog" onClick={() => props.onLibrary(library.id)}>
                 <BookOpenTextIcon size={22} aria-hidden="true" /><span>{library.name}</span>
               </button>
             ))}
@@ -52,7 +52,7 @@ export function Sidebar(props: Props) {
         </section>
       </nav>
       <AccountNavigation />
-      <div className="sidebar-foot"><span className="demo-dot" />问答演示 · 对话仅本次保留</div>
+      <div className="sidebar-foot"><span className="demo-dot" />对话仅本次保留</div>
     </aside>
   );
 }

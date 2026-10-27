@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-27",
+  "status": "passed",
+  "transport": "mocked login and API transport; actual imported reference document; frontend retrieval exercised in browser",
+  "checks": [
+    {
+      "label": "desktop",
+      "status": "passed"
+    },
+    {
+      "label": "mobile",
+      "status": "passed"
+    }
+  ],
+  "pageErrors": []
+}

@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 from .config import Settings
 from .database import Database
+from .reference_document import download_reference_document, load_reference_document
 from .schemas import ChangePassword, CreateDocument, CreateUser, Login, ResetPassword, UpdateUser
 from .security import PERMISSIONS, hash_password, public_user, token_hash, verify_password
 
@@ -199,6 +200,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 raise HTTPException(404, "账号不存在")
             db.execute("UPDATE users SET password_hash = ? WHERE id = ?", (encoded, user_id))
             db.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+
+    @app.get("/api/reference-document")
+    def reference_document(user=Depends(require("knowledge:read"))):
+        return load_reference_document()
+
+    @app.get("/api/reference-document/file")
+    def reference_document_file(user=Depends(require("knowledge:read"))):
+        return download_reference_document()
 
     @app.get("/api/documents")
     def list_documents(user=Depends(require("knowledge:read"))):

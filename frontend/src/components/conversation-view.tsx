@@ -79,9 +79,9 @@ export function ConversationView(props: Props) {
         <div className="welcome-icon"><BookOpenTextIcon size={38} weight="duotone" aria-hidden="true" /></div>
         <span className="eyebrow">{props.libraryName}</span>
         <h2>从一份资料，开始理解。</h2>
-        <p>上传你的中药资料，提出问题，<br />让每一次阅读都有原文可循。</p>
-        <div className="suggestions">{["帮我概括资料中的要点", "查看当前资料的收录范围", "帮我查找相关原文"].map((text) => <button onClick={() => props.onSuggestion(text)} key={text}>{text}<ArrowUpRightIcon size={17} /></button>)}</div>
-        <span className="welcome-demo">文本资料由知识库共享，AI 问答待接入。</span>
+        <p>输入药材名称或问题，<br />在基础资料和共享文本中查找原文。</p>
+        <div className="suggestions">{["陈皮的功效", "陈皮和青皮有什么区别", "帮我概括资料中的要点"].map((text) => <button onClick={() => props.onSuggestion(text)} key={text}>{text}<ArrowUpRightIcon size={17} /></button>)}</div>
+        <span className="welcome-demo">当前提供关键词原文检索，AI 问答尚未接入。</span>
       </div>}
       {props.messages.map((message) => <AnswerMessage key={message.id} message={message} onSource={props.onSource} onToast={props.onToast} />)}
       {props.busy && <div className="thinking" role="status"><SparkleIcon size={20} weight="fill" aria-hidden="true" /><span>正在整理资料片段…</span></div>}

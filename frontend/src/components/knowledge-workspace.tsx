@@ -2,7 +2,8 @@
 
 import { InfoIcon, ListIcon, PaperclipIcon, UploadSimpleIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { createAnswer, initialConversations, initialDocuments, libraries } from "@/lib/demo-data";
+import { initialConversations, initialDocuments, libraries } from "@/lib/demo-data";
+import { createAnswer } from "@/lib/knowledge-answer";
 import type { Conversation, KnowledgeDocument, Source } from "@/lib/types";
 import { api, errorMessage } from "@/lib/api";
 import { useAuth } from "./authenticated";
@@ -10,6 +11,7 @@ import { Sidebar } from "./sidebar";
 import { ConversationView } from "./conversation-view";
 import { UploadPanel } from "./upload-panel";
 import { SourceDialog } from "./source-dialog";
+import { ReferenceDocumentDialog } from "./reference-document-dialog";
 
 export default function KnowledgeWorkspace() {
   const { user } = useAuth();
@@ -19,7 +21,7 @@ export default function KnowledgeWorkspace() {
   const [documentsLoading, setDocumentsLoading] = useState(true);
   const [libraryId, setLibraryId] = useState("herbal");
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
-  const [activeId, setActiveId] = useState<string | null>("chenpi");
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [documents, setDocuments] = useState<KnowledgeDocument[]>(initialDocuments);
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [uploadsOpen, setUploadsOpen] = useState(true);
@@ -28,23 +30,29 @@ export default function KnowledgeWorkspace() {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [source, setSource] = useState<Source | null>(null);
+  const [referenceOpen, setReferenceOpen] = useState(false);
+  const [referenceDocument, setReferenceDocument] = useState<Source | null>(null);
   const [toast, setToast] = useState("");
   const [clock, setClock] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const responseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const queueReady = useRef(false);
   const currentLibrary = libraries.find((item) => item.id === libraryId)!;
   const currentConversation = conversations.find((item) => item.id === activeId);
   const libraryDocuments = documents.filter((item) => item.libraryId === libraryId);
   const closeSource = useCallback(() => setSource(null), []);
+  const closeReference = useCallback(() => setReferenceOpen(false), []);
   const loadDocuments = useCallback(async () => {
     setDocumentsLoading(true);
     setDocumentError("");
     try {
-      const stored = await api<KnowledgeDocument[]>("/documents");
+      const [stored, reference] = await Promise.all([
+        api<KnowledgeDocument[]>("/documents"),
+        api<Source>("/reference-document"),
+      ]);
       setDocuments((current) => [...current.filter((doc) => !doc.stored), ...stored]);
+      setReferenceDocument(reference);
     } catch (cause) { setDocumentError(errorMessage(cause)); }
     finally { setDocumentsLoading(false); }
   }, []);
@@ -61,21 +69,6 @@ export default function KnowledgeWorkspace() {
     adapt();
     media.addEventListener("change", adapt);
     small.addEventListener("change", adapt);
-    const initialDelay = setTimeout(() => { queueReady.current = true; }, 10000);
-    const ticker = setInterval(() => {
-      if (!queueReady.current) return;
-      setDocuments((current) => {
-        const item = current.find((doc) => doc.demo && doc.status === "parsing") ?? current.find((doc) => doc.demo && doc.status === "queued");
-        if (!item) return current;
-        return current.map((doc) => {
-          if (doc.id !== item.id) return doc;
-          if (doc.status === "queued") return { ...doc, status: "parsing", progress: 12 };
-          const progress = Math.min(100, doc.progress + 16);
-          if (progress < 100) return { ...doc, progress };
-          return { ...doc, progress: 100, status: doc.content.trim() ? "ready" : "needs-parser" };
-        });
-      });
-    }, 700);
     const updateClock = () => {
       const date = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date());
       setClock(date + " · 上海时间");
@@ -85,8 +78,6 @@ export default function KnowledgeWorkspace() {
     return () => {
       media.removeEventListener("change", adapt);
       small.removeEventListener("change", adapt);
-      clearTimeout(initialDelay);
-      clearInterval(ticker);
       clearInterval(clockTimer);
       if (responseTimer.current) clearTimeout(responseTimer.current);
     };
@@ -104,23 +95,23 @@ export default function KnowledgeWorkspace() {
 
   useEffect(() => {
     function escape(event: globalThis.KeyboardEvent) {
-      if (event.key !== "Escape" || source) return;
+      if (event.key !== "Escape" || source || referenceOpen) return;
       setNavigationOpen(false);
       if (window.matchMedia("(max-width: 1100px)").matches) setUploadsOpen(false);
     }
     document.addEventListener("keydown", escape);
     return () => document.removeEventListener("keydown", escape);
-  }, [source]);
+  }, [source, referenceOpen]);
 
   useEffect(() => {
     const selector = navigationOpen && mobile ? ".sidebar" : uploadsOpen && compact ? ".upload-panel" : null;
-    if (!selector || source) return;
+    if (!selector) return;
     const panel = document.querySelector<HTMLElement>(selector);
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const visibleControls = () => Array.from(panel?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]):not([tabindex="-1"]), select:not([disabled]), [tabindex="0"]') ?? []).filter((element) => element.getClientRects().length);
     visibleControls()[0]?.focus();
     function containFocus(event: globalThis.KeyboardEvent) {
-      if (event.key !== "Tab") return;
+      if (event.key !== "Tab" || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
       const controls = visibleControls();
       const first = controls[0], last = controls[controls.length - 1];
       if (!first) return;
@@ -129,7 +120,7 @@ export default function KnowledgeWorkspace() {
     }
     document.addEventListener("keydown", containFocus);
     return () => { document.removeEventListener("keydown", containFocus); previous?.focus(); };
-  }, [navigationOpen, uploadsOpen, compact, mobile, source]);
+  }, [navigationOpen, uploadsOpen, compact, mobile]);
 
   function cancelPending() {
     if (responseTimer.current) clearTimeout(responseTimer.current);
@@ -144,11 +135,8 @@ export default function KnowledgeWorkspace() {
     requestAnimationFrame(() => composerRef.current?.focus());
   }
   function selectLibrary(id: string) {
-    cancelPending();
     setLibraryId(id);
-    setActiveId(null);
-    setDraft("");
-    setNavigationOpen(false);
+    setReferenceOpen(true);
   }
   function selectConversation(id: string) {
     cancelPending();
@@ -162,7 +150,7 @@ export default function KnowledgeWorkspace() {
     setBusy(true);
     setDraft("");
     const conversationId = activeId ?? crypto.randomUUID();
-    const answer = createAnswer(text, libraryDocuments);
+    const answer = createAnswer(text, libraryDocuments, referenceDocument ?? undefined);
     const time = "今天 " + new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date());
     responseTimer.current = setTimeout(() => {
       const message = { id: crypto.randomUUID(), question: text, answer, time };
@@ -188,7 +176,6 @@ export default function KnowledgeWorkspace() {
     if (!files.length || !canWrite || uploading || documentsLoading) return;
     setUploadsOpen(true);
     setUploading(true);
-    queueReady.current = true;
     for (const file of files) {
       const base: KnowledgeDocument = { id: crypto.randomUUID(), libraryId, name: file.name, status: "parsing", progress: 0, content: "", demo: false };
       setDocuments((current) => [...current, base]);
@@ -231,16 +218,16 @@ export default function KnowledgeWorkspace() {
       {navigationOpen && <button className="drawer-backdrop navigation-backdrop" aria-label="关闭导航遮罩" onClick={() => setNavigationOpen(false)} />}
       {uploadsOpen && <button className="drawer-backdrop upload-backdrop" aria-label="关闭上传遮罩" onClick={() => setUploadsOpen(false)} />}
       <Sidebar libraryId={libraryId} activeId={activeId} conversations={conversations} open={navigationOpen} onLibrary={selectLibrary} onConversation={selectConversation} onNew={newConversation} onClose={() => setNavigationOpen(false)} />
-      <main className="main-panel" id="main-content" inert={!!source || (navigationOpen && mobile) || (uploadsOpen && compact)}>
+      <main className="main-panel" id="main-content" inert={!!source || referenceOpen || (navigationOpen && mobile) || (uploadsOpen && compact)}>
         <header className="main-header">
           <button className="icon-button mobile-menu" aria-label="打开导航" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(true)}><ListIcon size={25} /></button>
           <div className="header-context">
-            <div className="breadcrumb"><span className="breadcrumb-root">知识库<span className="breadcrumb-slash">/</span></span><h1>{currentLibrary.name}</h1><span className="demo-label">问答演示</span></div>
-            <p>从你上传的资料中查找答案</p>
+            <div className="breadcrumb"><span className="breadcrumb-root">知识库<span className="breadcrumb-slash">/</span></span><h1>{currentLibrary.name}</h1><span className="demo-label">原文检索</span></div>
+            <p>从中药基础资料和共享文本中查找原文</p>
           </div>
           <button className="upload-trigger" aria-label={canWrite ? "上传资料" : "查看资料"} onClick={() => setUploadsOpen(true)} aria-expanded={uploadsOpen}><UploadSimpleIcon size={22} aria-hidden="true" /><span>{canWrite ? "上传资料" : "查看资料"}</span></button>
         </header>
-        {(documentsLoading || documentError) && <div className="document-feedback" role={documentError ? "alert" : "status"}><span>{documentError || "正在读取共享资料…"}</span>{documentError && <button onClick={() => void loadDocuments()}>重新读取</button>}</div>}
+        {(documentsLoading || documentError) && <div className="document-feedback" role={documentError ? "alert" : "status"}><span>{documentError || "正在读取知识库资料…"}</span>{documentError && <button onClick={() => void loadDocuments()}>重新读取</button>}</div>}
         <div ref={scrollRef} className="conversation-scroll" aria-label="问答内容" aria-busy={busy}>
           <ConversationView messages={currentConversation?.messages ?? []} busy={busy} libraryName={currentLibrary.name} onSource={setSource} onToast={setToast} onSuggestion={ask} />
         </div>
@@ -251,11 +238,12 @@ export default function KnowledgeWorkspace() {
             <textarea id="question" ref={composerRef} rows={1} maxLength={2000} value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={composerKey} placeholder="向中药资料提问…" disabled={busy || documentsLoading || !!documentError} />
             <button className="send-button primary-button" type="submit" disabled={!draft.trim() || busy || documentsLoading || !!documentError}>{busy ? "整理中" : "发送"}</button>
           </form>
-          <div className="composer-meta"><p><InfoIcon size={16} aria-hidden="true" /><span>问答演示 · 请核对引用原文</span></p><time>{clock}</time></div>
+          <div className="composer-meta"><p><InfoIcon size={16} aria-hidden="true" /><span>原文检索 · 请核对引用原文</span></p><time>{clock}</time></div>
         </footer>
       </main>
       <UploadPanel canWrite={canWrite} uploading={uploading || documentsLoading} onRefresh={() => void loadDocuments()} documents={libraryDocuments} open={uploadsOpen} inputRef={inputRef} onFiles={addFiles} onClose={() => setUploadsOpen(false)} onRemove={(id) => void removeDocument(id)} onPreview={previewDocument} />
       {source && <SourceDialog source={source} onClose={closeSource} />}
+      {referenceOpen && <ReferenceDocumentDialog onClose={closeReference} />}
       {toast && <div className="toast" role="status">{toast}</div>}
     </div>
   );

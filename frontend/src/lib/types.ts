@@ -12,6 +12,11 @@ export type KnowledgeDocument = {
   error?: string;
 };
 
+export type DocumentBlock =
+  | { type: "paragraph"; text: string }
+  | { type: "heading"; level: 1 | 2 | 3; text: string }
+  | { type: "table"; rows: string[][] };
+
 export type Source = {
   id: string;
   name: string;
@@ -19,6 +24,8 @@ export type Source = {
   excerpt: string;
   fullText: string;
   demo: boolean;
+  blocks?: DocumentBlock[];
+  downloadUrl?: string;
 };
 
 export type AnswerSection = {

@@ -42,7 +42,7 @@ export default function LoginForm() {
           </form>
           <p className="login-help">请使用管理员分配的账号。忘记密码请联系管理员。</p>
           <div className="login-note"><ShieldCheckIcon size={19} aria-hidden="true" /><p>不同账号拥有不同操作权限，登录后可查看自己的角色。</p></div>
-        </div><p className="login-bottom">资料问答仍为演示，请核对引用原文</p>
+        </div><p className="login-bottom">当前提供关键词原文检索，请核对引用原文</p>
       </section>
     </main>
   );

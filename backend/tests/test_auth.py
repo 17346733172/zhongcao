@@ -1,3 +1,8 @@
+from hashlib import sha256
+import json
+import re
+from zipfile import ZipFile
+from xml.etree import ElementTree as ET
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import secrets
@@ -43,8 +48,48 @@ class AuthTests(unittest.TestCase):
 
     def test_anonymous_denied_and_health_available(self):
         self.assertEqual(self.client.get("/api/health").json()["status"], "ok")
-        for path in ("/api/auth/me", "/api/users", "/api/documents"):
+        for path in ("/api/auth/me", "/api/users", "/api/documents", "/api/reference-document", "/api/reference-document/file"):
             self.assertEqual(self.client.get(path).status_code, 401)
+
+    def test_reference_document_content_and_download_for_all_roles(self):
+        resources = Path(__file__).resolve().parents[1] / "resources"
+        source = (resources / "herbal-reference.docx").read_bytes()
+        imported = json.loads((resources / "herbal-reference.json").read_text(encoding="utf-8"))
+        with ZipFile(io.BytesIO(source)) as package:
+            ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+            body = ET.fromstring(package.read("word/document.xml")).find("w:body", ns)
+            original_text = "".join(t.text or "" for t in body.findall(".//w:t", ns))
+        rendered_text = "".join(
+            "".join(cell for row in block["rows"] for cell in row) if block["type"] == "table" else block["text"]
+            for block in imported["blocks"]
+        )
+        self.assertEqual(re.sub(r"\s+", "", original_text), re.sub(r"\s+", "", rendered_text))
+        self.assertEqual(re.sub(r"\s+", "", original_text), re.sub(r"\s+", "", imported["fullText"]))
+        self.assertEqual(imported["paragraphCount"], 1397)
+        self.assertEqual(sum(block["type"] == "table" for block in imported["blocks"]), 7)
+        self.assertEqual(imported["sourceSha256"], sha256(source).hexdigest())
+        for role in ("viewer", "editor", "admin"):
+            with self.subTest(role=role):
+                self.login(role)
+                response = self.client.get("/api/reference-document")
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json(), imported)
+                self.assertFalse(response.json()["demo"])
+                self.assertEqual(response.headers["cache-control"], "no-store")
+                download = self.client.get("/api/reference-document/file")
+                self.assertEqual(download.status_code, 200)
+                self.assertEqual(download.content, source)
+                self.assertIn("attachment;", download.headers["content-disposition"])
+                self.assertIn("wordprocessingml.document", download.headers["content-type"])
+
+    def test_reference_document_missing_returns_readable_error(self):
+        self.login("viewer")
+        with patch("app.reference_document.RESOURCE_DIR", Path(self.temp.name) / "missing"):
+            for endpoint in ("/api/reference-document", "/api/reference-document/file"):
+                response = self.client.get(endpoint)
+                self.assertEqual(response.status_code, 503)
+                self.assertIn("暂时无法读取", response.json()["detail"])
+                self.assertNotIn(self.temp.name, response.text)
 
     def test_login_cookie_hash_and_logout_revocation(self):
         response = self.login()

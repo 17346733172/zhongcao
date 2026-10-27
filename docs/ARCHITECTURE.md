@@ -21,8 +21,13 @@
 | frontend/src/components/knowledge-workspace.tsx | 资料加载、问答演示与文件状态编排 |
 | frontend/src/components/sidebar.tsx、upload-panel.tsx | 导航、账号入口与按权限展示资料操作 |
 | frontend/src/components/conversation-view.tsx、source-dialog.tsx | 回答、引用和完整原文 |
+| frontend/src/components/reference-document-dialog.tsx、document-content.tsx | 正式基础资料加载、重试和章节 / 表格阅读 |
+| frontend/src/lib/reference-document.ts | 内置资料元信息与只读 API 请求 |
+| backend/app/reference_document.py、resources/ | 内置文档正文与 Word 原文件，仅经鉴权接口读取 |
+| backend/scripts/import_reference_document.py | 从指定 Word 一次性生成阅读数据并保留原文件 |
 | frontend/src/lib/api.ts | 同源请求、错误转换与账号类型 |
-| frontend/src/lib/types.ts、demo-data.ts | 资料 / 来源类型、演示与文本摘录适配 |
+| frontend/src/lib/types.ts、demo-data.ts | 资料 / 来源类型、知识库配置及空的初始状态 |
+| frontend/src/lib/knowledge-answer.ts | 中文分词、章节匹配与真实原文摘录；无命中不生成引用 |
 | frontend/next.config.ts | /api/* 代理至 FastAPI，后端地址仅在服务端使用 |
 | backend/app/config.py、database.py | 环境配置、SQLite 连接与幂等建表 |
 | backend/app/security.py、schemas.py | Argon2id、令牌摘要、权限映射与输入模型 |
@@ -44,6 +49,8 @@
 
 SQLite 默认位于 backend/data/bencao.db，保存用户、会话、登录尝试与共享文本。目录不进入版本库。SQL 使用参数绑定。
 
-MD / TXT 在浏览器读取 UTF-8 后经 API 保存原文；后端独立校验类型、文件名、空白及 10 MB UTF-8 字节上限。请求体也有上限。PDF / Word 暂不上传。示例资料和真实资料通过 demo 字段隔离，stored 标识持久化资料。
+MD / TXT 在浏览器读取 UTF-8 后经 API 保存原文；后端独立校验类型、文件名、空白及 10 MB UTF-8 字节上限。请求体也有上限。PDF / Word 暂不上传。demo 字段用于隔离示例资料（默认不再预置），检索排除所有 demo 条目；stored 标识持久化资料。
 
-回答仍由 demo-data.ts 根据正文生成摘录或明确标识的演示内容。会话只在页面内存中，不持久化。AI、检索、PDF / Word 解析、个人知识库隔离与迁移框架未实现。
+内置《中药基础知识（详解版）》通过 GET /api/reference-document 与 /api/reference-document/file 读取，均校验 knowledge:read。原文件和结构化正文保存在 backend/resources，未放入前端公开资源目录或客户端包；一次性导入保留原文章节、段落和表格，并记录原文件 SHA-256。它独立于共享上传列表；工作区加载时与共享文本一同经鉴权接口读取，参与关键词原文检索，引用保留结构化正文与 Word 下载入口。
+
+结果由 knowledge-answer.ts 根据关键词匹配真实正文生成摘录。按正式文档的章节聚合药材条目，中文分词去除问句虚词；只返回正相关结果，数字等未命中查询不兜底到示例或其他段落。会话只在页面内存中，不持久化。AI、检索、PDF / Word 解析、个人知识库隔离与迁移框架未实现。
