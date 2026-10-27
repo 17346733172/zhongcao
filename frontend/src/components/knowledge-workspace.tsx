@@ -4,12 +4,19 @@ import { InfoIcon, ListIcon, PaperclipIcon, UploadSimpleIcon } from "@phosphor-i
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { createAnswer, initialConversations, initialDocuments, libraries } from "@/lib/demo-data";
 import type { Conversation, KnowledgeDocument, Source } from "@/lib/types";
+import { api, errorMessage } from "@/lib/api";
+import { useAuth } from "./authenticated";
 import { Sidebar } from "./sidebar";
 import { ConversationView } from "./conversation-view";
 import { UploadPanel } from "./upload-panel";
 import { SourceDialog } from "./source-dialog";
 
 export default function KnowledgeWorkspace() {
+  const { user } = useAuth();
+  const canWrite = user.permissions.includes("knowledge:write");
+  const [uploading, setUploading] = useState(false);
+  const [documentError, setDocumentError] = useState("");
+  const [documentsLoading, setDocumentsLoading] = useState(true);
   const [libraryId, setLibraryId] = useState("herbal");
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [activeId, setActiveId] = useState<string | null>("chenpi");
@@ -32,6 +39,16 @@ export default function KnowledgeWorkspace() {
   const currentConversation = conversations.find((item) => item.id === activeId);
   const libraryDocuments = documents.filter((item) => item.libraryId === libraryId);
   const closeSource = useCallback(() => setSource(null), []);
+  const loadDocuments = useCallback(async () => {
+    setDocumentsLoading(true);
+    setDocumentError("");
+    try {
+      const stored = await api<KnowledgeDocument[]>("/documents");
+      setDocuments((current) => [...current.filter((doc) => !doc.stored), ...stored]);
+    } catch (cause) { setDocumentError(errorMessage(cause)); }
+    finally { setDocumentsLoading(false); }
+  }, []);
+  useEffect(() => { void loadDocuments(); }, [loadDocuments]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 1100px)");
@@ -48,7 +65,7 @@ export default function KnowledgeWorkspace() {
     const ticker = setInterval(() => {
       if (!queueReady.current) return;
       setDocuments((current) => {
-        const item = current.find((doc) => doc.status === "parsing") ?? current.find((doc) => doc.status === "queued");
+        const item = current.find((doc) => doc.demo && doc.status === "parsing") ?? current.find((doc) => doc.demo && doc.status === "queued");
         if (!item) return current;
         return current.map((doc) => {
           if (doc.id !== item.id) return doc;
@@ -100,7 +117,7 @@ export default function KnowledgeWorkspace() {
     if (!selector || source) return;
     const panel = document.querySelector<HTMLElement>(selector);
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const visibleControls = () => Array.from(panel?.querySelectorAll<HTMLElement>('button:not([disabled]), [tabindex="0"]') ?? []).filter((element) => element.getClientRects().length);
+    const visibleControls = () => Array.from(panel?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]):not([tabindex="-1"]), select:not([disabled]), [tabindex="0"]') ?? []).filter((element) => element.getClientRects().length);
     visibleControls()[0]?.focus();
     function containFocus(event: globalThis.KeyboardEvent) {
       if (event.key !== "Tab") return;
@@ -141,7 +158,7 @@ export default function KnowledgeWorkspace() {
   }
   function ask(question: string) {
     const text = question.trim();
-    if (!text || busy) return;
+    if (!text || busy || documentsLoading || documentError) return;
     setBusy(true);
     setDraft("");
     const conversationId = activeId ?? crypto.randomUUID();
@@ -168,28 +185,43 @@ export default function KnowledgeWorkspace() {
     }
   }
   async function addFiles(files: File[]) {
-    if (!files.length) return;
+    if (!files.length || !canWrite || uploading || documentsLoading) return;
     setUploadsOpen(true);
+    setUploading(true);
     queueReady.current = true;
-    const entries = await Promise.all(files.map(async (file): Promise<KnowledgeDocument> => {
-      const base: KnowledgeDocument = { id: crypto.randomUUID(), libraryId, name: file.name, status: "queued", progress: 0, content: "", demo: false };
-      if (!/\.(md|txt|pdf|docx)$/i.test(file.name)) return { ...base, status: "error", error: "格式不支持，请选择 MD、TXT、PDF 或 Word" };
-      if (file.size > 10 * 1024 * 1024) return { ...base, status: "error", error: "文件超过本地演示的 10 MB 限制" };
-      if (!/\.(md|txt)$/i.test(file.name)) return base;
-      try {
-        const content = (await file.text()).replace(/^\uFEFF/, "");
-        return content.trim() ? { ...base, content } : { ...base, status: "error", error: "资料内容为空" };
-      } catch {
-        return { ...base, status: "error", error: "文件读取失败，请重新选择" };
+    for (const file of files) {
+      const base: KnowledgeDocument = { id: crypto.randomUUID(), libraryId, name: file.name, status: "parsing", progress: 0, content: "", demo: false };
+      setDocuments((current) => [...current, base]);
+      let result: KnowledgeDocument;
+      if (!/\.(md|txt|pdf|docx)$/i.test(file.name)) result = { ...base, status: "error", error: "格式不支持，请选择 MD、TXT、PDF 或 Word" };
+      else if (file.size > 10 * 1024 * 1024) result = { ...base, status: "error", error: "文件超过 10 MB 限制" };
+      else if (!/\.(md|txt)$/i.test(file.name)) result = { ...base, status: "needs-parser", progress: 100 };
+      else {
+        try {
+          const content = new TextDecoder("utf-8", { fatal: true }).decode(await file.arrayBuffer()).replace(/^\uFEFF/, "");
+          if (!content.trim()) throw new Error("资料内容为空");
+          result = await api<KnowledgeDocument>("/documents", { method: "POST", body: JSON.stringify({ name: file.name, content }) });
+          setToast("文本资料已保存到共享知识库");
+        } catch (cause) { result = { ...base, status: "error", error: cause instanceof TypeError ? "请使用 UTF-8 编码的文本文件" : errorMessage(cause) }; }
       }
-    }));
-    setDocuments((current) => [...current, ...entries]);
-    setToast("已加入当前知识库的本地处理队列");
+      setDocuments((current) => current.map((doc) => doc.id === base.id ? result : doc));
+    }
+    setUploading(false);
+  }
+  async function removeDocument(id: string) {
+    if (!canWrite || uploading || documentsLoading) return;
+    const doc = documents.find((item) => item.id === id);
+    try {
+      if (doc?.stored) await api<void>(`/documents/${id}`, { method: "DELETE" });
+      setDocuments((current) => current.filter((item) => item.id !== id));
+      setToast(doc?.stored ? "资料已从共享知识库移除" : "已移除本页条目");
+    } catch (cause) { setToast(errorMessage(cause)); }
   }
   function previewDocument(doc: KnowledgeDocument) {
     setSource({ id: doc.id, name: doc.name, excerpt: doc.content.slice(0, 300), fullText: doc.content, demo: doc.demo });
   }
   function attach() {
+    if (!canWrite || uploading) return;
     setUploadsOpen(true);
     inputRef.current?.click();
   }
@@ -203,25 +235,26 @@ export default function KnowledgeWorkspace() {
         <header className="main-header">
           <button className="icon-button mobile-menu" aria-label="打开导航" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(true)}><ListIcon size={25} /></button>
           <div className="header-context">
-            <div className="breadcrumb"><span className="breadcrumb-root">知识库<span className="breadcrumb-slash">/</span></span><h1>{currentLibrary.name}</h1><span className="demo-label">演示资料</span></div>
+            <div className="breadcrumb"><span className="breadcrumb-root">知识库<span className="breadcrumb-slash">/</span></span><h1>{currentLibrary.name}</h1><span className="demo-label">问答演示</span></div>
             <p>从你上传的资料中查找答案</p>
           </div>
-          <button className="upload-trigger" aria-label="上传资料" onClick={() => setUploadsOpen(true)} aria-expanded={uploadsOpen}><UploadSimpleIcon size={22} aria-hidden="true" /><span>上传资料</span></button>
+          <button className="upload-trigger" aria-label={canWrite ? "上传资料" : "查看资料"} onClick={() => setUploadsOpen(true)} aria-expanded={uploadsOpen}><UploadSimpleIcon size={22} aria-hidden="true" /><span>{canWrite ? "上传资料" : "查看资料"}</span></button>
         </header>
+        {(documentsLoading || documentError) && <div className="document-feedback" role={documentError ? "alert" : "status"}><span>{documentError || "正在读取共享资料…"}</span>{documentError && <button onClick={() => void loadDocuments()}>重新读取</button>}</div>}
         <div ref={scrollRef} className="conversation-scroll" aria-label="问答内容" aria-busy={busy}>
           <ConversationView messages={currentConversation?.messages ?? []} busy={busy} libraryName={currentLibrary.name} onSource={setSource} onToast={setToast} onSuggestion={ask} />
         </div>
         <footer className="composer-footer">
           <form className="composer" onSubmit={submit}>
-            <button type="button" className="icon-button attach-button" aria-label="添加资料附件" onClick={attach}><PaperclipIcon size={22} /></button>
+            {canWrite && <button type="button" disabled={uploading || documentsLoading} className="icon-button attach-button" aria-label="添加资料附件" onClick={attach}><PaperclipIcon size={22} /></button>}
             <label className="visually-hidden" htmlFor="question">向中药资料提问</label>
-            <textarea id="question" ref={composerRef} rows={1} maxLength={2000} value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={composerKey} placeholder="向中药资料提问…" disabled={busy} />
-            <button className="send-button primary-button" type="submit" disabled={!draft.trim() || busy}>{busy ? "整理中" : "发送"}</button>
+            <textarea id="question" ref={composerRef} rows={1} maxLength={2000} value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={composerKey} placeholder="向中药资料提问…" disabled={busy || documentsLoading || !!documentError} />
+            <button className="send-button primary-button" type="submit" disabled={!draft.trim() || busy || documentsLoading || !!documentError}>{busy ? "整理中" : "发送"}</button>
           </form>
-          <div className="composer-meta"><p><InfoIcon size={16} aria-hidden="true" /><span>前端演示 · 请核对引用原文</span></p><time>{clock}</time></div>
+          <div className="composer-meta"><p><InfoIcon size={16} aria-hidden="true" /><span>问答演示 · 请核对引用原文</span></p><time>{clock}</time></div>
         </footer>
       </main>
-      <UploadPanel documents={libraryDocuments} open={uploadsOpen} inputRef={inputRef} onFiles={addFiles} onClose={() => setUploadsOpen(false)} onRemove={(id) => setDocuments((current) => current.filter((doc) => doc.id !== id))} onPreview={previewDocument} />
+      <UploadPanel canWrite={canWrite} uploading={uploading || documentsLoading} onRefresh={() => void loadDocuments()} documents={libraryDocuments} open={uploadsOpen} inputRef={inputRef} onFiles={addFiles} onClose={() => setUploadsOpen(false)} onRemove={(id) => void removeDocument(id)} onPreview={previewDocument} />
       {source && <SourceDialog source={source} onClose={closeSource} />}
       {toast && <div className="toast" role="status">{toast}</div>}
     </div>

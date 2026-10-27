@@ -54,7 +54,7 @@ function AnswerMessage({ message, onSource, onToast }: { message: Message; onSou
         {expanded && <div className="source-card">
           <div className="source-card-top">
             <button className="source-file" onClick={() => onSource(source)}>{/\.pdf$/i.test(source.name) ? <FilePdfIcon size={24} weight="fill" className="pdf-color" /> : <FileTextIcon size={24} weight="fill" />}<span>{source.name}{source.page ? " · 第 " + source.page + " 页" : ""}</span><ArrowUpRightIcon size={15} className="source-open-icon" /></button>
-            <span className="source-kind">{source.demo ? "演示原文" : "本地原文"}</span>
+            <span className="source-kind">{source.demo ? "演示原文" : "资料原文"}</span>
           </div>
           <p className="source-excerpt">{source.excerpt}</p>
         </div>}
@@ -81,7 +81,7 @@ export function ConversationView(props: Props) {
         <h2>从一份资料，开始理解。</h2>
         <p>上传你的中药资料，提出问题，<br />让每一次阅读都有原文可循。</p>
         <div className="suggestions">{["帮我概括资料中的要点", "查看当前资料的收录范围", "帮我查找相关原文"].map((text) => <button onClick={() => props.onSuggestion(text)} key={text}>{text}<ArrowUpRightIcon size={17} /></button>)}</div>
-        <span className="welcome-demo">前端演示：文本可本地读取，AI 问答待接入。</span>
+        <span className="welcome-demo">文本资料由知识库共享，AI 问答待接入。</span>
       </div>}
       {props.messages.map((message) => <AnswerMessage key={message.id} message={message} onSource={props.onSource} onToast={props.onToast} />)}
       {props.busy && <div className="thinking" role="status"><SparkleIcon size={20} weight="fill" aria-hidden="true" /><span>正在整理资料片段…</span></div>}

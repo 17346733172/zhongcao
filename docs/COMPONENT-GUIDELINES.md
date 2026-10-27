@@ -61,3 +61,10 @@
 组件站中的示例应与实际组件同步。若示例依赖尚未实现的接口，明确展示其演示性质。
 
 独立发布时还需满足 [REGISTRY.md](REGISTRY.md) 的登记和校验要求。
+
+
+## 后端与账号组件约定（2026-10-27）
+
+Python 位于 backend/app，文件和函数采用 snake_case；配置、数据库、密码 / 权限、输入模型与 HTTP 接口分开。新增后端依赖维护 requirements.txt、requirements-dev.txt 与 requirements-lock.txt。
+
+前端页面只负责组装 Authenticated 与业务组件；API 及账号类型集中在 src/lib/api.ts。后端最终校验权限，前端根据权限调整按钮和入口。账号样式在 auth.css；共享资料的 stored 字段与示例 demo 字段分别表示持久化和演示，不将二者混淆。

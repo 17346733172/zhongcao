@@ -8,6 +8,7 @@ export type KnowledgeDocument = {
   progress: number;
   content: string;
   demo: boolean;
+  stored?: boolean;
   error?: string;
 };
 

@@ -1,10 +1,10 @@
 # 项目协作与代码开发规范
 
-适用范围：本项目目录及其子目录。最后更新：2026-10-26。
+适用范围：本项目目录及其子目录。最后更新：2026-10-27。
 
 ## 项目状态
 
-当前项目为“本草知问”中药知识库问答前端，采用 Next.js 16、React 19、TypeScript。代码位于 frontend/，设计参考位于 design/。当前只有前端与本地文本读取，AI、服务器上传、PDF / Word 解析和持久化仍待接入。运行命令以 README 与 docs/DEVELOPMENT.md 为准。
+当前项目为“本草知问”中药知识库问答应用，前端采用 Next.js 16、React 19、TypeScript，后端采用 Python / FastAPI / SQLite。代码位于 frontend/ 和 backend/，设计参考位于 design/。已实现登录、角色权限、账号管理与共享文本持久化；AI、PDF / Word 解析和会话持久化仍待接入。运行命令以 README 与 docs/DEVELOPMENT.md 为准。
 
 ## 工作前先阅读
 

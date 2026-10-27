@@ -10,3 +10,10 @@ coverage/
 !.env.*.example
 .DS_Store
 Thumbs.db
+
+# Python backend
+backend/.venv/
+backend/data/
+backend/.qa/
+__pycache__/
+*.py[cod]

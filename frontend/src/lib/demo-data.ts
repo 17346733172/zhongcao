@@ -117,7 +117,7 @@ export function createAnswer(question: string, documents: KnowledgeDocument[]): 
     const matches = candidates.slice(0, 3);
     return {
       title: "从你的资料中找到这些内容",
-      introduction: "以下为本地文本原文摘录，未调用 AI，也未生成医学结论。可点击引用核对完整内容。",
+      introduction: "以下为资料原文摘录，未调用 AI，也未生成医学结论。可点击引用核对完整内容。",
       sections: matches.map((match, index) => ({
         title: match.doc.name + " · 片段 " + (match.index + 1),
         content: match.text.slice(0, 300),

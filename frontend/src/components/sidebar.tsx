@@ -1,6 +1,7 @@
 "use client";
 
 import { BookOpenTextIcon, BooksIcon, ChatTextIcon, ClockCounterClockwiseIcon, PlusCircleIcon, XIcon } from "@phosphor-icons/react";
+import { AccountNavigation } from "./authenticated";
 import { libraries } from "@/lib/demo-data";
 import type { Conversation } from "@/lib/types";
 
@@ -50,7 +51,8 @@ export function Sidebar(props: Props) {
           </div>
         </section>
       </nav>
-      <div className="sidebar-foot"><span className="demo-dot" />前端演示 · 会话仅本次保留</div>
+      <AccountNavigation />
+      <div className="sidebar-foot"><span className="demo-dot" />问答演示 · 对话仅本次保留</div>
     </aside>
   );
 }

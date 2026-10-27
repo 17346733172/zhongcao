@@ -1,4 +1,5 @@
 @import "./workspace.css";
+@import "./auth.css";
 
 :root {
   --blue: #0862e8;
