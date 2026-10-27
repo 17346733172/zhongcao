@@ -69,3 +69,12 @@ class CreateDocument(Input):
         if len(value.encode("utf-8")) > 10 * 1024 * 1024:
             raise ValueError("资料超过 10 MB 限制")
         return value
+
+
+class ChatQuestion(Input):
+    question: str = Field(min_length=1, max_length=2000)
+
+    @field_validator("question", mode="before")
+    @classmethod
+    def strip_question(cls, value):
+        return value.strip() if isinstance(value, str) else value

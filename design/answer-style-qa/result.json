@@ -1,0 +1,134 @@
+{
+  "date": "2026-10-27",
+  "status": "passed",
+  "transport": "real production Next proxy + current FastAPI + live DeepSeek; existing unchanged frontend build reused; isolated temporary SQLite account",
+  "checks": [
+    "陈皮 -> generated, 2 sections, 1 sources",
+    "陈皮有什么功效 -> generated, 2 sections, 1 sources",
+    "陈皮和青皮有什么区别 -> generated, 3 sections, 2 sources",
+    "陈皮的现代药理机制是什么 -> no_match, 0 sections, 0 sources",
+    "111 -> no_match, 0 sections, 0 sources"
+  ],
+  "pageErrors": [],
+  "records": [
+    {
+      "question": "陈皮",
+      "mode": "generated",
+      "model": "deepseek-flash",
+      "title": "陈皮的核心特点与学习要点",
+      "sections": [
+        {
+          "title": "资料所载核心特点",
+          "content": "陈皮性味苦、辛，温，归肺、脾经；功效为理气健脾、燥湿化痰。其应用涉及脾胃气滞、脘腹胀满、食少吐泻，湿痰寒痰咳嗽，以及呕吐、呃逆。",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        },
+        {
+          "title": "用法与使用注意",
+          "content": "资料记载陈皮煎服，用量为3～10 g；气虚、阴虚燥咳及吐血者慎用。",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "name": "中药基础知识（详解版）.docx",
+          "excerpt": "陈皮（《神农本草经》）\n【性味归经】苦、辛，温。归肺、脾经。\n【功效】理气健脾，燥湿化痰。\n【应用】脾胃气滞、脘腹胀满、食少吐泻；湿痰寒痰咳嗽；呕吐、呃逆。\n【用法用量】煎服，3～10 g。\n【使用注意】气虚、阴虚燥咳及吐血者慎用。"
+        }
+      ]
+    },
+    {
+      "question": "陈皮有什么功效",
+      "mode": "generated",
+      "model": "deepseek-flash",
+      "title": "陈皮的资料记载功效",
+      "sections": [
+        {
+          "title": "功效与应用",
+          "content": "资料记载陈皮的功效为理气健脾、燥湿化痰；其应用包括脾胃气滞、脘腹胀满、食少吐泻，湿痰寒痰咳嗽，以及呕吐、呃逆。",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        },
+        {
+          "title": "使用注意",
+          "content": "资料同时提示，气虚、阴虚燥咳及吐血者慎用。",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "name": "中药基础知识（详解版）.docx",
+          "excerpt": "陈皮（《神农本草经》）\n【功效】理气健脾，燥湿化痰。\n【应用】脾胃气滞、脘腹胀满、食少吐泻；湿痰寒痰咳嗽；呕吐、呃逆。\n【使用注意】气虚、阴虚燥咳及吐血者慎用。"
+        }
+      ]
+    },
+    {
+      "question": "陈皮和青皮有什么区别",
+      "mode": "generated",
+      "model": "deepseek-flash",
+      "title": "陈皮与青皮的区别",
+      "sections": [
+        {
+          "title": "共同点",
+          "content": "陈皮与青皮均味苦、辛，性温，煎服常用量为3～10 g。二者都属于理气类药材，可用于气滞所致的脘腹胀痛等。",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0,
+            1
+          ]
+        },
+        {
+          "title": "归经与功效差异",
+          "content": "陈皮的归经为归肺、脾经，功效是理气健脾、燥湿化痰；青皮归肝、胆、胃经，功效是疏肝破气、消积化滞。前者偏于理气健脾与化痰，后者偏于疏肝破气与消积。",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0,
+            1
+          ]
+        },
+        {
+          "title": "应用与使用注意差异",
+          "content": "陈皮多用于脾胃气滞、脘腹胀满、食少吐泻，湿痰寒痰咳嗽及呕吐、呃逆；使用注意为气虚、阴虚燥咳及吐血者慎用。青皮多用于肝郁气滞之胸胁胀痛、疝气疼痛、乳癖乳痈，食积气滞、脘腹胀痛，以及癥瘕积聚、久疟痞块；使用注意为性烈耗气，气虚者慎用，孕妇慎用。",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0,
+            1
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "name": "中药基础知识（详解版）.docx",
+          "excerpt": "陈皮（《神农本草经》）\n【性味归经】苦、辛，温。归肺、脾经。\n【功效】理气健脾，燥湿化痰。\n【应用】脾胃气滞、脘腹胀满、食少吐泻；湿痰寒痰咳嗽；呕吐、呃逆。\n【用法用量】煎服，3～10 g。\n【使用注意】气虚、阴虚燥咳及吐血者慎用。"
+        },
+        {
+          "name": "中药基础知识（详解版）.docx",
+          "excerpt": "青皮（《本草图经》）\n【性味归经】苦、辛，温。归肝、胆、胃经。\n【功效】疏肝破气，消积化滞。\n【应用】肝郁气滞之胸胁胀痛、疝气疼痛、乳癖乳痈；食积气滞、脘腹胀痛；癥瘕积聚、久疟痞块。\n【用法用量】煎服，3～10 g。\n【使用注意】性烈耗气，气虚者慎用；孕妇慎用。"
+        }
+      ]
+    },
+    {
+      "question": "陈皮的现代药理机制是什么",
+      "mode": "no_match",
+      "title": "资料不足以回答这个问题",
+      "sections": [],
+      "sources": []
+    },
+    {
+      "question": "111",
+      "mode": "no_match",
+      "title": "未找到相关内容",
+      "sections": [],
+      "sources": []
+    }
+  ]
+}

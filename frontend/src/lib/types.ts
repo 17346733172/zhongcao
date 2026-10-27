@@ -28,13 +28,19 @@ export type Source = {
   downloadUrl?: string;
 };
 
+export type AnswerMode = "extract" | "ai";
+
 export type AnswerSection = {
   title: string;
   content: string;
-  sourceIndex: number;
+  origin?: "document" | "ai_supplement";
+  sourceIndex?: number;
+  sourceIndices?: number[];
 };
 
 export type Answer = {
+  mode?: "extract" | "generated" | "no_match";
+  model?: string;
   title: string;
   introduction: string;
   sections: AnswerSection[];

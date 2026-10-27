@@ -35,7 +35,7 @@ export function UploadPanel({ documents, open, canWrite, uploading, inputRef, on
         </div>)}
         {!documents.length && <div className="empty-uploads"><UploadSimpleIcon size={29} aria-hidden="true" /><p>暂无共享文本资料</p><span>{canWrite ? "添加第一份文本资料" : "等待编辑员添加资料"}</span></div>}
       </div>
-      <div className="upload-note"><InfoIcon size={19} aria-hidden="true" /><p>点击资料名称可查看原文</p></div><p className="privacy-note">已保存文本供本系统所有登录用户查看。示例有单独标识；PDF / Word 尚不上传。当前提供关键词原文检索；对话仅本次保留。</p>
+      <div className="upload-note"><InfoIcon size={19} aria-hidden="true" /><p>点击资料名称可查看原文</p></div><p className="privacy-note">已保存文本供本系统所有登录用户查看。示例有单独标识；PDF / Word 尚不上传。支持原文检索；AI 回答需配置服务，对话仅本次保留。</p>
     </aside>
   );
 }

@@ -2,7 +2,7 @@
 
 import { ArrowUpRightIcon, BookOpenTextIcon, CaretDownIcon, CheckIcon, CopyIcon, FilePdfIcon, FileTextIcon, LinkIcon, SparkleIcon, UserIcon } from "@phosphor-icons/react";
 import { useState } from "react";
-import type { Message, Source } from "@/lib/types";
+import type { AnswerMode, Message, Source } from "@/lib/types";
 
 function AnswerMessage({ message, onSource, onToast }: { message: Message; onSource: (source: Source) => void; onToast: (text: string) => void }) {
   const [activeSource, setActiveSource] = useState(0);
@@ -11,7 +11,7 @@ function AnswerMessage({ message, onSource, onToast }: { message: Message; onSou
   const source = message.answer.sources[activeSource];
   async function copyAnswer() {
     const answer = message.answer;
-    const text = [answer.title, answer.introduction, ...answer.sections.map((section) => section.title + "\n" + section.content)].join("\n\n");
+    const text = [answer.title, answer.introduction, ...answer.sections.map((section) => (section.origin === "ai_supplement" ? "【AI 补充，非文档原文】\n" : section.origin === "document" ? "【资料依据】\n" : "") + section.title + "\n" + section.content)].join("\n\n");
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -35,13 +35,15 @@ function AnswerMessage({ message, onSource, onToast }: { message: Message; onSou
         <div className="avatar assistant-avatar"><SparkleIcon size={26} weight="fill" aria-hidden="true" /></div>
         <div className="answer-content">
           <div className="answer-paper">
+            <p className="answer-origin">{message.answer.mode === "generated" ? `DeepSeek 生成回答 · ${message.answer.model}` : message.answer.mode === "no_match" ? "资料未命中 / 不足" : "原文摘录"}</p>
             <h2>{message.answer.title}</h2>
             <p className="answer-introduction">{message.answer.introduction}</p>
             <div className="answer-sections">
               {message.answer.sections.map((section, index) => (
-                <section className="answer-section" key={index}>
+                <section className={"answer-section" + (section.origin === "ai_supplement" ? " ai-supplement" : "")} key={index}>
+                  {section.origin && <p className="section-origin">{section.origin === "ai_supplement" ? "AI 补充，非文档原文" : "资料依据"}</p>}
                   <h3>{section.title}</h3>
-                  <p>{section.content} {message.answer.sources[section.sourceIndex] && <button className="citation" aria-label={"查看引用" + (section.sourceIndex + 1)} onClick={() => cite(section.sourceIndex)}>[{section.sourceIndex + 1}]</button>}</p>
+                  <p>{section.content} {(section.sourceIndices ?? (typeof section.sourceIndex === "number" ? [section.sourceIndex] : [])).filter((sourceIndex) => message.answer.sources[sourceIndex]).map((sourceIndex) => <button key={sourceIndex} className="citation" aria-label={"查看引用" + (sourceIndex + 1)} onClick={() => cite(sourceIndex)}>[{sourceIndex + 1}]</button>)}</p>
                 </section>
               ))}
             </div>
@@ -64,6 +66,7 @@ function AnswerMessage({ message, onSource, onToast }: { message: Message; onSou
 }
 
 type Props = {
+  mode: AnswerMode;
   messages: Message[];
   busy: boolean;
   libraryName: string;
@@ -81,10 +84,10 @@ export function ConversationView(props: Props) {
         <h2>从一份资料，开始理解。</h2>
         <p>输入药材名称或问题，<br />在基础资料和共享文本中查找原文。</p>
         <div className="suggestions">{["陈皮的功效", "陈皮和青皮有什么区别", "帮我概括资料中的要点"].map((text) => <button onClick={() => props.onSuggestion(text)} key={text}>{text}<ArrowUpRightIcon size={17} /></button>)}</div>
-        <span className="welcome-demo">当前提供关键词原文检索，AI 问答尚未接入。</span>
+        <span className="welcome-demo">{props.mode === "ai" ? "AI 优先依据资料回答；资料之外的补充会单独标注。" : "当前提供关键词原文检索，可核对完整来源。"}</span>
       </div>}
       {props.messages.map((message) => <AnswerMessage key={message.id} message={message} onSource={props.onSource} onToast={props.onToast} />)}
-      {props.busy && <div className="thinking" role="status"><SparkleIcon size={20} weight="fill" aria-hidden="true" /><span>正在整理资料片段…</span></div>}
+      {props.busy && <div className="thinking" role="status"><SparkleIcon size={20} weight="fill" aria-hidden="true" /><span>{props.mode === "ai" ? "正在检索资料并等待 DeepSeek 生成回答…" : "正在检索资料片段…"}</span></div>}
     </>
   );
 }

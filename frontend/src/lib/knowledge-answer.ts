@@ -57,7 +57,7 @@ export function createAnswer(question: string, documents: KnowledgeDocument[], r
   if (!sources.length) return {
     title: "这个知识库还没有可读取的真实资料",
     introduction: "请先加载中药基础资料或添加 MD / TXT 文本，再尝试提问。",
-    sections: [], sources: [],
+    sections: [], sources: [], mode: "no_match",
   };
 
   const query = normalize(question);
@@ -77,10 +77,11 @@ export function createAnswer(question: string, documents: KnowledgeDocument[], r
   const matches = overview ? sources.flatMap((source) => candidates.find((passage) => passage.source.id === source.id) ?? []).slice(0, 3) : candidates.slice(0, 3);
   if (!matches.length) return {
     title: "未找到相关内容",
-    introduction: "当前资料中没有找到匹配的原文。请尝试其他药材名称或关键词。当前尚未接入 AI 问答。",
-    sections: [], sources: [],
+    introduction: "当前资料中没有找到匹配的原文。请尝试其他药材名称或关键词。可尝试其他关键词，或切换回答方式。",
+    sections: [], sources: [], mode: "no_match",
   };
   return {
+    mode: "extract",
     title: overview ? "当前资料概览 · 原文摘录" : "找到与问题相关的原文",
     introduction: "以下为关键词匹配到的资料原文摘录，未调用 AI。可点击引用核对完整文档。",
     sections: matches.map((match, index) => ({ title: match.title, content: match.text.length > 1500 ? match.text.slice(0, 1500) + "…" : match.text, sourceIndex: index })),

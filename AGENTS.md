@@ -4,7 +4,7 @@
 
 ## 项目状态
 
-当前项目为“本草知问”中药知识库问答应用，前端采用 Next.js 16、React 19、TypeScript，后端采用 Python / FastAPI / SQLite。代码位于 frontend/ 和 backend/，设计参考位于 design/。已实现登录、角色权限、账号管理与共享文本持久化；AI、PDF / Word 解析和会话持久化仍待接入。运行命令以 README 与 docs/DEVELOPMENT.md 为准。
+当前项目为“本草知问”中药知识库问答应用，前端采用 Next.js 16、React 19、TypeScript，后端采用 Python / FastAPI / SQLite。代码位于 frontend/ 和 backend/，设计参考位于 design/。已实现登录、角色权限、账号管理、共享文本持久化与关键词检索 + DeepSeek 回答；向量语义检索、通用 PDF / Word 上传解析和会话持久化仍待接入。运行命令以 README 与 docs/DEVELOPMENT.md 为准。
 
 ## 工作前先阅读
 

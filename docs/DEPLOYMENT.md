@@ -22,12 +22,12 @@ dev 和 start 共用 3000 端口，启动其中一个即可。前端代理 /api/
 
 需要支持 Node.js 20.9+ / Next.js 16 和 Python 3.11+ 的运行环境；SQLite 所在目录必须持久保存。当前实现面向单机共享资料库，没有分布式存储或多租户隔离。
 
-生产 HTTPS 下设置后端 COOKIE_SECURE=true，将 ALLOWED_ORIGINS 设置为真实前端域名；前端 BACKEND_URL 指向内部 FastAPI 地址，修改后重新构建。后端不开放跨域 CORS，浏览器统一通过前端同源访问。
+生产 HTTPS 下设置后端 COOKIE_SECURE=true，将 ALLOWED_ORIGINS 设置为真实前端域名；前端 BACKEND_URL 指向内部 FastAPI 地址，修改后重新构建。后端不开放跨域 CORS，浏览器统一通过前端同源访问。需要 AI 回答时，只在后端配置 DEEPSEEK_API_KEY、DEEPSEEK_BASE_URL 和 DEEPSEEK_MODEL；不要使用 NEXT_PUBLIC_ 变量或将真实 .env 打包提交。配置后重启后端。
 
 只在可信代理拓扑下另行启用代理头。默认 Uvicorn 使用 --no-proxy-headers，登录限流按连接 IP 和账号计数。备份 SQLite 应使用 SQLite backup API，或停止服务后保存完整数据库文件；在线直接复制主文件可能遗漏 WAL 中的数据。
 
 ## 发布验收
 
-验证登录、三种权限、账号停用、改密、退出、文本持久化、移动布局和控制台。真实 AI、PDF / Word 解析与会话持久化仍未实现，界面保留演示标识。
+验证登录、三种权限、账号停用、改密、退出、文本持久化、DeepSeek 生成 / 引用 / 未命中 / 失败状态、移动布局和控制台。未配置密钥时保留原文检索。通用 PDF / Word 上传解析、会话持久化、向量语义检索与流式回答仍未实现。
 
 只有用户明确请求发布或分享时才执行线上部署。

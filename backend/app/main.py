@@ -9,14 +9,16 @@ from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 from .config import Settings
 from .database import Database
+from .chat import ChatService
 from .reference_document import download_reference_document, load_reference_document
-from .schemas import ChangePassword, CreateDocument, CreateUser, Login, ResetPassword, UpdateUser
+from .schemas import ChatQuestion, ChangePassword, CreateDocument, CreateUser, Login, ResetPassword, UpdateUser
 from .security import PERMISSIONS, hash_password, public_user, token_hash, verify_password
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.from_env()
     database = Database(settings.database)
+    chat_service = ChatService(settings)
 
     @asynccontextmanager
     async def lifespan(app):
@@ -68,6 +70,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def validation_error(request, error):
         # Never echo submitted passwords or document content in errors.
         fields = ", ".join(str(item["loc"][-1]) for item in error.errors())
+        if request.url.path == "/api/chat":
+            return JSONResponse({"detail": "问题需为 1–2000 字的非空文本，且只接受 question 字段。"}, status_code=422)
         return JSONResponse({"detail": f"请检查输入（{fields}）：账号 3–32 位字母、数字或下划线，密码 10–128 位，资料仅支持非空 MD / TXT（10 MB 内）"}, status_code=422)
 
     def current_user(request: Request):
@@ -200,6 +204,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 raise HTTPException(404, "账号不存在")
             db.execute("UPDATE users SET password_hash = ? WHERE id = ?", (encoded, user_id))
             db.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+
+    @app.get("/api/ai/status")
+    def ai_status(user=Depends(require("knowledge:read"))):
+        return {"provider": "DeepSeek", "configured": bool(settings.deepseek_api_key), "model": settings.deepseek_model}
+
+    @app.post("/api/chat")
+    def chat(payload: ChatQuestion, user=Depends(require("knowledge:read"))):
+        reference = load_reference_document()
+        with database.connect() as db:
+            documents = [document(row) for row in db.execute("SELECT * FROM documents ORDER BY created_at, id").fetchall()]
+        return chat_service.answer(payload.question, documents, reference)
 
     @app.get("/api/reference-document")
     def reference_document(user=Depends(require("knowledge:read"))):
