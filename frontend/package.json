@@ -9,7 +9,7 @@
     "build": "next build",
     "start": "next start --hostname 127.0.0.1 --port 3000",
     "typecheck": "tsc --noEmit",
-    "test": "node --test scripts/check-demo.mjs"
+    "test": "node --test scripts/check-demo.mjs scripts/check-follow-up.mjs scripts/check-answer-mode.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

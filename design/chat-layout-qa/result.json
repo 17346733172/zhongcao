@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-28",
+  "status": "passed",
+  "productionBuild": "next build --webpack",
+  "transport": "isolated production Next proxy + FastAPI + actual DeepSeek; temporary SQLite account, no API fixtures",
+  "checks": [
+    "隔离生产构建通过",
+    "桌面1919×908两栏、居中欢迎输入框、无衬线字体与默认关闭资料",
+    "侧栏收起和展开可操作",
+    "基础资料阅读不丢失草稿",
+    "桌面资料抽屉焦点约束、上传、原文和移除",
+    "真实DeepSeek回答、白底无衬线正文、问题右对齐和引用左边对齐",
+    "手机390px导航、资料抽屉、Shift+Enter换行和Enter发送、16px正文",
+    "768px平板欢迎布局与输入框无溢出",
+    "320px窄屏发送和模式按钮可见"
+  ],
+  "pageErrors": [],
+  "records": [
+    {
+      "viewport": {
+        "width": 1919,
+        "height": 908
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "width": 330,
+        "height": 908,
+        "right": 330,
+        "bottom": 908
+      },
+      "composer": {
+        "x": 639.5,
+        "y": 390.65625,
+        "width": 970,
+        "height": 156.375,
+        "right": 1609.5,
+        "bottom": 547.03125
+      },
+      "welcome": {
+        "x": 358,
+        "y": 313.65625,
+        "width": 1533,
+        "height": 45,
+        "right": 1891,
+        "bottom": 358.65625
+      },
+      "font": "Arial, \"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif"
+    }
+  ]
+}

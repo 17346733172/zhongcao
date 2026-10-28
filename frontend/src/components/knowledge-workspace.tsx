@@ -1,15 +1,17 @@
 "use client";
 
-import { InfoIcon, ListIcon, PaperclipIcon, UploadSimpleIcon } from "@phosphor-icons/react";
+import { ListIcon, UploadSimpleIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { initialConversations, initialDocuments, libraries } from "@/lib/demo-data";
 import { createAnswer } from "@/lib/knowledge-answer";
 import { generateAnswer, loadAIStatus, type AIStatus } from "@/lib/chat-api";
-import type { AnswerMode, Conversation, KnowledgeDocument, Source } from "@/lib/types";
+import { answerModeInfo, runAnswerMode, toggleAnswerOption } from "@/lib/answer-mode";
+import type { AnswerMode, AnswerOption, Conversation, KnowledgeDocument, Source } from "@/lib/types";
 import { api, errorMessage } from "@/lib/api";
 import { useAuth } from "./authenticated";
 import { Sidebar } from "./sidebar";
 import { ConversationView } from "./conversation-view";
+import { QuestionComposer } from "./question-composer";
 import { UploadPanel } from "./upload-panel";
 import { SourceDialog } from "./source-dialog";
 import { ReferenceDocumentDialog } from "./reference-document-dialog";
@@ -25,8 +27,8 @@ export default function KnowledgeWorkspace() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [documents, setDocuments] = useState<KnowledgeDocument[]>(initialDocuments);
   const [navigationOpen, setNavigationOpen] = useState(false);
-  const [uploadsOpen, setUploadsOpen] = useState(true);
-  const [compact, setCompact] = useState(false);
+  const [uploadsOpen, setUploadsOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -39,7 +41,6 @@ export default function KnowledgeWorkspace() {
   const [referenceOpen, setReferenceOpen] = useState(false);
   const [referenceDocument, setReferenceDocument] = useState<Source | null>(null);
   const [toast, setToast] = useState("");
-  const [clock, setClock] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -74,28 +75,15 @@ export default function KnowledgeWorkspace() {
   }, []);
 
   useEffect(() => {
-    const media = window.matchMedia("(max-width: 1100px)");
     const small = window.matchMedia("(max-width: 720px)");
     const adapt = () => {
-      setCompact(media.matches);
       setMobile(small.matches);
-      if (media.matches) setUploadsOpen(false);
+      setNavigationOpen(false);
+      setUploadsOpen(false);
     };
     adapt();
-    media.addEventListener("change", adapt);
     small.addEventListener("change", adapt);
-    const updateClock = () => {
-      const date = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date());
-      setClock(date + " · 上海时间");
-    };
-    updateClock();
-    const clockTimer = setInterval(updateClock, 60000);
-    return () => {
-      media.removeEventListener("change", adapt);
-      small.removeEventListener("change", adapt);
-      clearInterval(clockTimer);
-      answerRequest.current?.abort();
-    };
+    return () => small.removeEventListener("change", adapt);
   }, []);
 
   useEffect(() => {
@@ -112,21 +100,21 @@ export default function KnowledgeWorkspace() {
     function escape(event: globalThis.KeyboardEvent) {
       if (event.key !== "Escape" || source || referenceOpen) return;
       setNavigationOpen(false);
-      if (window.matchMedia("(max-width: 1100px)").matches) setUploadsOpen(false);
+      setUploadsOpen(false);
     }
     document.addEventListener("keydown", escape);
     return () => document.removeEventListener("keydown", escape);
   }, [source, referenceOpen]);
 
   useEffect(() => {
-    const selector = navigationOpen && mobile ? ".sidebar" : uploadsOpen && compact ? ".upload-panel" : null;
+    const selector = navigationOpen && mobile ? ".sidebar" : uploadsOpen ? ".upload-panel" : null;
     if (!selector) return;
     const panel = document.querySelector<HTMLElement>(selector);
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const visibleControls = () => Array.from(panel?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]):not([tabindex="-1"]), select:not([disabled]), [tabindex="0"]') ?? []).filter((element) => element.getClientRects().length);
     visibleControls()[0]?.focus();
     function containFocus(event: globalThis.KeyboardEvent) {
-      if (event.key !== "Tab" || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+      if (event.key !== "Tab" || document.querySelector('.source-dialog[role="dialog"][aria-modal="true"]')) return;
       const controls = visibleControls();
       const first = controls[0], last = controls[controls.length - 1];
       if (!first) return;
@@ -135,7 +123,7 @@ export default function KnowledgeWorkspace() {
     }
     document.addEventListener("keydown", containFocus);
     return () => { document.removeEventListener("keydown", containFocus); previous?.focus(); };
-  }, [navigationOpen, uploadsOpen, compact, mobile]);
+  }, [navigationOpen, uploadsOpen, mobile]);
 
   function cancelPending() {
     answerRequest.current?.abort();
@@ -163,6 +151,10 @@ export default function KnowledgeWorkspace() {
   async function ask(question: string) {
     const text = question.trim();
     if (!text || busy || answerRequest.current || documentsLoading || documentError) return;
+    if (mode === "none") {
+      setAnswerError("请选择 AI 回答或原文检索后再发送。");
+      return;
+    }
     const controller = new AbortController();
     answerRequest.current = controller;
     setBusy(true);
@@ -171,11 +163,12 @@ export default function KnowledgeWorkspace() {
     const conversationId = activeId ?? crypto.randomUUID();
     const time = "今天 " + new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date());
     try {
-      const answer = mode === "ai"
-        ? await generateAnswer(text, controller.signal)
-        : createAnswer(text, libraryDocuments, referenceDocument ?? undefined);
+      const result = await runAnswerMode(mode, text,
+        (question) => generateAnswer(question, controller.signal, currentConversation?.messages ?? []),
+        (question) => createAnswer(question, libraryDocuments, referenceDocument ?? undefined),
+      );
       if (controller.signal.aborted || answerRequest.current !== controller) return;
-      const message = { id: crypto.randomUUID(), question: text, answer, time };
+      const message = { id: crypto.randomUUID(), question: text, ...result, time };
       setConversations((current) => {
         const exists = current.find((item) => item.id === conversationId);
         if (exists) return current.map((item) => item.id === conversationId ? { ...item, messages: [...item.messages, message] } : item);
@@ -193,9 +186,10 @@ export default function KnowledgeWorkspace() {
       }
     }
   }
-  function chooseMode(nextMode: AnswerMode) {
+  function chooseMode(option: AnswerOption) {
+    if (busy) return;
     modeChosen.current = true;
-    setMode(nextMode);
+    setMode((current) => toggleAnswerOption(current, option));
     setAnswerError("");
   }
   function submit(event: FormEvent) { event.preventDefault(); void ask(draft); }
@@ -247,40 +241,26 @@ export default function KnowledgeWorkspace() {
   }
 
   return (
-    <div className={"workspace" + (!uploadsOpen ? " uploads-hidden" : "")}>
+    <div className={"workspace" + (!uploadsOpen ? " uploads-hidden" : "") + (sidebarCollapsed ? " nav-collapsed" : "")}>
       {navigationOpen && <button className="drawer-backdrop navigation-backdrop" aria-label="关闭导航遮罩" onClick={() => setNavigationOpen(false)} />}
       {uploadsOpen && <button className="drawer-backdrop upload-backdrop" aria-label="关闭上传遮罩" onClick={() => setUploadsOpen(false)} />}
-      <Sidebar libraryId={libraryId} activeId={activeId} conversations={conversations} open={navigationOpen} onLibrary={selectLibrary} onConversation={selectConversation} onNew={newConversation} onClose={() => setNavigationOpen(false)} />
-      <main className="main-panel" id="main-content" inert={!!source || referenceOpen || (navigationOpen && mobile) || (uploadsOpen && compact)}>
+      <Sidebar libraryId={libraryId} activeId={activeId} conversations={conversations} open={navigationOpen} onLibrary={selectLibrary} onConversation={selectConversation} onNew={newConversation} onClose={() => setNavigationOpen(false)} onCollapse={() => setSidebarCollapsed(true)} />
+      <main className="main-panel" id="main-content" inert={!!source || referenceOpen || (navigationOpen && mobile) || uploadsOpen}>
         <header className="main-header">
-          <button className="icon-button mobile-menu" aria-label="打开导航" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(true)}><ListIcon size={25} /></button>
+          <button className={"icon-button mobile-menu" + (sidebarCollapsed ? " desktop-visible" : "")} aria-label={mobile ? "打开导航" : "展开侧栏"} aria-expanded={mobile ? navigationOpen : !sidebarCollapsed} onClick={() => mobile ? setNavigationOpen(true) : setSidebarCollapsed(false)}><ListIcon size={25} /></button>
           <div className="header-context">
-            <div className="breadcrumb"><span className="breadcrumb-root">知识库<span className="breadcrumb-slash">/</span></span><h1>{currentLibrary.name}</h1><span className="demo-label">{mode === "ai" ? "AI 问答" : "原文检索"}</span></div>
-            <p>{mode === "ai" ? "优先依据知识库资料，AI 补充单独标注" : "从中药基础资料和共享文本中查找原文"}</p>
+            <div className="breadcrumb"><span className="breadcrumb-root">知识库<span className="breadcrumb-slash">/</span></span><h1>{currentLibrary.name}</h1><span className="demo-label">{answerModeInfo[mode].label}</span></div>
+            <p>{answerModeInfo[mode].description}</p>
           </div>
           <button className="upload-trigger" aria-label={canWrite ? "上传资料" : "查看资料"} onClick={() => setUploadsOpen(true)} aria-expanded={uploadsOpen}><UploadSimpleIcon size={22} aria-hidden="true" /><span>{canWrite ? "上传资料" : "查看资料"}</span></button>
         </header>
         {(documentsLoading || documentError) && <div className="document-feedback" role={documentError ? "alert" : "status"}><span>{documentError || "正在读取知识库资料…"}</span>{documentError && <button onClick={() => void loadDocuments()}>重新读取</button>}</div>}
-        <div ref={scrollRef} className="conversation-scroll" aria-label="问答内容" aria-busy={busy}>
-          <ConversationView mode={mode} messages={currentConversation?.messages ?? []} busy={busy} libraryName={currentLibrary.name} onSource={setSource} onToast={setToast} onSuggestion={(text) => void ask(text)} />
-        </div>
-        <footer className="composer-footer">
-          <div className="answer-mode-controls">
-            <div className="answer-mode-switch" role="group" aria-label="回答方式">
-              <button type="button" aria-pressed={mode === "ai"} disabled={busy || !aiStatus?.configured} onClick={() => chooseMode("ai")}>AI 回答</button>
-              <button type="button" aria-pressed={mode === "extract"} disabled={busy} onClick={() => chooseMode("extract")}>原文检索</button>
-            </div>
-            <span className="ai-status-note">{aiStatusError || (aiStatus ? aiStatus.configured ? "DeepSeek 已配置" : "AI 服务尚未配置，可先使用原文检索。" : "正在检查 AI 服务…")}</span>
+        <div className={"chat-body" + (!(currentConversation?.messages.length) ? " welcome-state" : "")}>
+          <div ref={scrollRef} className="conversation-scroll" aria-label="问答内容" aria-busy={busy}>
+            <ConversationView mode={mode} messages={currentConversation?.messages ?? []} busy={busy} libraryName={currentLibrary.name} onSource={setSource} onToast={setToast} />
           </div>
-          {answerError && <p className="answer-error" role="alert">{answerError}</p>}
-          <form className="composer" onSubmit={submit}>
-            {canWrite && <button type="button" disabled={uploading || documentsLoading} className="icon-button attach-button" aria-label="添加资料附件" onClick={attach}><PaperclipIcon size={22} /></button>}
-            <label className="visually-hidden" htmlFor="question">向中药资料提问</label>
-            <textarea id="question" ref={composerRef} rows={1} maxLength={2000} value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={composerKey} placeholder="向中药资料提问…" disabled={busy || documentsLoading || !!documentError} />
-            <button className="send-button primary-button" type="submit" disabled={!draft.trim() || busy || documentsLoading || !!documentError}>{busy ? (mode === "ai" ? "生成中" : "检索中") : "发送"}</button>
-          </form>
-          <div className="composer-meta"><p><InfoIcon size={16} aria-hidden="true" /><span>{mode === "ai" ? "资料优先 · AI 补充单独标注" : "原文检索 · 请核对引用原文"}</span></p><time>{clock}</time></div>
-        </footer>
+          <QuestionComposer draft={draft} mode={mode} busy={busy} disabled={documentsLoading || !!documentError} canWrite={canWrite} uploading={uploading} error={answerError} status={aiStatus} statusError={aiStatusError} inputRef={composerRef} onDraft={setDraft} onMode={chooseMode} onSubmit={submit} onKeyDown={composerKey} onAttach={attach} />
+        </div>
       </main>
       <UploadPanel canWrite={canWrite} uploading={uploading || documentsLoading} onRefresh={() => void loadDocuments()} documents={libraryDocuments} open={uploadsOpen} inputRef={inputRef} onFiles={addFiles} onClose={() => setUploadsOpen(false)} onRemove={(id) => void removeDocument(id)} onPreview={previewDocument} />
       {source && <SourceDialog source={source} onClose={closeSource} />}

@@ -52,7 +52,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             if request.headers.get("x-csrf-protection") != "1" or (origin and origin not in settings.allowed_origins):
                 return JSONResponse({"detail": "请求来源校验失败，请刷新页面后重试"}, status_code=403)
             # Bound request bytes even for chunked requests before JSON parsing.
-            maximum = 12 * 1024 * 1024 if request.url.path == "/api/documents" else 16 * 1024
+            maximum = 12 * 1024 * 1024 if request.url.path == "/api/documents" else (64 * 1024 if request.url.path == "/api/chat" else 16 * 1024)
             size = 0
             chunks = []
             async for chunk in request.stream():
@@ -71,7 +71,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         # Never echo submitted passwords or document content in errors.
         fields = ", ".join(str(item["loc"][-1]) for item in error.errors())
         if request.url.path == "/api/chat":
-            return JSONResponse({"detail": "问题需为 1–2000 字的非空文本，且只接受 question 字段。"}, status_code=422)
+            return JSONResponse({"detail": "问题需为 1–2000 字；history 最多 5 轮，每轮 question 1–500 字、answer 最多 1000 字，且不接受其他字段。"}, status_code=422)
         return JSONResponse({"detail": f"请检查输入（{fields}）：账号 3–32 位字母、数字或下划线，密码 10–128 位，资料仅支持非空 MD / TXT（10 MB 内）"}, status_code=422)
 
     def current_user(request: Request):
@@ -214,7 +214,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         reference = load_reference_document()
         with database.connect() as db:
             documents = [document(row) for row in db.execute("SELECT * FROM documents ORDER BY created_at, id").fetchall()]
-        return chat_service.answer(payload.question, documents, reference)
+        return chat_service.answer(payload.question, documents, reference, [turn.model_dump() for turn in payload.history])
 
     @app.get("/api/reference-document")
     def reference_document(user=Depends(require("knowledge:read"))):

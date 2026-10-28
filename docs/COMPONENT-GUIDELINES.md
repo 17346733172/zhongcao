@@ -42,7 +42,9 @@
 
 新增依赖应有具体用途，并确认项目现有能力是否足够。版本写入真实依赖清单与锁文件，避免同时维护多种包管理器锁文件。
 
-当前依赖清单为 frontend/package.json，锁文件为 frontend/pnpm-lock.yaml。使用 Phosphor React 图标、系统字体与普通 CSS；设计变量位于 src/app/globals.css，布局位于 workspace.css。
+当前依赖清单为 frontend/package.json，锁文件为 frontend/pnpm-lock.yaml。使用 Phosphor React 图标、系统字体与普通 CSS；设计变量位于 src/app/globals.css，布局位于 workspace.css，用户新选聊天布局的工作区令牌与覆盖样式集中在 chat-layout.css。
+
+2026-10-28：工作区按最新参考使用本地 DM Sans 与系统中文回退，字体文件和 OFL 许可位于 frontend/public/fonts；字体声明、18px 主标签 / 14px 辅助文字、手机 16px 主标签与统一字重在 chat-layout.css 集中维护。账号页与登录页沿用原有样式，工作区账号导航使用工作区字体变量。
 
 ## 6. 无障碍
 

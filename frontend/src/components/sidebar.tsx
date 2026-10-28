@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpenTextIcon, BooksIcon, ChatTextIcon, ClockCounterClockwiseIcon, PlusCircleIcon, XIcon } from "@phosphor-icons/react";
+import { BookOpenTextIcon, BooksIcon, ChatTextIcon, ClockCounterClockwiseIcon, PlusCircleIcon, SidebarSimpleIcon, XIcon } from "@phosphor-icons/react";
 import { AccountNavigation } from "./authenticated";
 import { libraries } from "@/lib/demo-data";
 import type { Conversation } from "@/lib/types";
@@ -14,6 +14,7 @@ type Props = {
   onConversation: (id: string) => void;
   onNew: () => void;
   onClose: () => void;
+  onCollapse: () => void;
 };
 
 export function Sidebar(props: Props) {
@@ -23,10 +24,11 @@ export function Sidebar(props: Props) {
       <div className="brand">
         <BookOpenTextIcon size={34} weight="fill" aria-hidden="true" />
         <span>本草知问</span>
+        <button className="icon-button desktop-sidebar-toggle" aria-label="收起侧栏" onClick={props.onCollapse}><SidebarSimpleIcon size={22} /></button>
         <button className="icon-button sidebar-close" aria-label="关闭导航" onClick={props.onClose}><XIcon size={21} /></button>
       </div>
-      <button className="new-chat primary-button" onClick={props.onNew}>
-        <PlusCircleIcon size={23} weight="fill" aria-hidden="true" />新建对话
+      <button className="new-chat" onClick={props.onNew}>
+        <PlusCircleIcon size={21} aria-hidden="true" />新建对话
       </button>
       <nav className="sidebar-navigation">
         <section aria-labelledby="library-label">

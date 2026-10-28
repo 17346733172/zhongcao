@@ -71,8 +71,19 @@ class CreateDocument(Input):
         return value
 
 
+class ChatTurn(Input):
+    question: str = Field(min_length=1, max_length=500)
+    answer: str = Field(max_length=1000)
+
+    @field_validator("question", mode="before")
+    @classmethod
+    def strip_question(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
+
 class ChatQuestion(Input):
     question: str = Field(min_length=1, max_length=2000)
+    history: list[ChatTurn] = Field(default_factory=list, max_length=5)
 
     @field_validator("question", mode="before")
     @classmethod
