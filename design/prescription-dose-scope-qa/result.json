@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-28",
+  "status": "passed",
+  "checks": [
+    "Reused unchanged production build",
+    "Keyboard bulk action sets every current row to per-dose, preserves drug data and clears prior confirmation",
+    "Individual override stays available; actual backend receives per-dose rows and removes dosage-scope findings",
+    "390px and 320px bulk control fits, remains operable and retains all prescription amounts",
+    "New prescriptions keep unknown scope; empty tables cannot run bulk action"
+  ],
+  "responses": [
+    {
+      "path": "/api/prescriptions/status",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    }
+  ],
+  "errors": [],
+  "environment": "Edge; isolated production Next.js 3111 -> FastAPI 8111; temporary SQLite; fictitious manually entered prescription; no model calls or API mocks"
+}

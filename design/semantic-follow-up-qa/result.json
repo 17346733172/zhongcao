@@ -1,0 +1,232 @@
+{
+  "date": "2026-10-27",
+  "status": "passed",
+  "productionBuild": "next build --webpack",
+  "transport": "isolated production Next proxy + FastAPI + actual DeepSeek; temporary SQLite account, no API fixtures",
+  "checks": [
+    "隔离生产构建通过",
+    "党参 -> generated, resolved=党参, history=0",
+    "有什么不要的药效吗? -> generated, resolved=党参有什么不良反应或用药风险？, history=1",
+    "截图原句结合党参理解为不良反应/禁忌，生成真实回答",
+    "那吃了会不会不舒服 -> generated, resolved=服用党参会不会引起不舒服或不良反应？, history=2",
+    "手机自然口语连续追问保留党参主题与来源标签",
+    "陈皮 -> generated, resolved=陈皮, history=3",
+    "有什么不要的药效吗? -> generated, resolved=陈皮有什么不良反应或用药风险？, history=4",
+    "明确换成陈皮后，相同错字追问承接最新主题",
+    "111 -> no_match, resolved=none, history=5",
+    "数字无意义输入仍无回答、无引用",
+    "今天天气怎么样 -> no_match, resolved=none, history=5",
+    "无关中文新话题不强行复用陈皮",
+    "有什么不要的药效吗? -> clarification, resolved=none, history=0",
+    "无上文的口语错字问题先询问药材，不凭空作答"
+  ],
+  "pageErrors": [],
+  "records": [
+    {
+      "question": "党参",
+      "mode": "generated",
+      "resolvedQuestion": "党参",
+      "title": "党参的核心特点与学习要点",
+      "historyQuestions": [],
+      "sections": [
+        {
+          "title": "基本性能与功效",
+          "content": "党参味甘、性平，归脾、肺经，核心功效为健脾益肺、养血生津。其甘平之性使其作用较为平和，既能补益脾胃之气，又能养肺气、生津养血，常用于脾胃虚弱、食少倦怠，气血两虚、面色萎黄、心悸气短，肺气亏虚、咳嗽虚喘，以及津伤口渴、内热消渴等。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        },
+        {
+          "title": "用法与使用注意",
+          "content": "党参一般煎服，用量9～30 g。不宜与藜芦同用；实热证不宜使用。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "name": "中药基础知识（详解版）.docx",
+          "excerpt": "党参（《本草从新》）\n【性味归经】甘，平。归脾、肺经。\n【功效】健脾益肺，养血生津。\n【应用】脾胃虚弱、食少倦怠、气血两虚、面色萎黄、心悸气短；肺气亏虚、咳嗽虚喘；津伤口渴、内热消渴。\n【用法用量】煎服，9～30 g。\n【使用注意】不宜与藜芦同用；实热证不宜。"
+        }
+      ]
+    },
+    {
+      "question": "有什么不要的药效吗?",
+      "mode": "generated",
+      "resolvedQuestion": "党参有什么不良反应或用药风险？",
+      "title": "党参的不良反应与用药风险",
+      "historyQuestions": [
+        "党参"
+      ],
+      "sections": [
+        {
+          "title": "资料记载的使用注意",
+          "content": "资料中党参的使用注意为：不宜与藜芦同用；实热证不宜使用。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        },
+        {
+          "title": "一般知识中的可能不良反应",
+          "content": "现有资料没有具体记载党参的不良反应。按一般中药知识，党参药性平和，常规用量下不良反应并不多见；个别人可能出现胃部不适、腹胀、口干等反应。实热证或存在明显热象时使用，可能加重烦躁、口干、便秘等表现。党参与藜芦属于传统“十八反”配伍禁忌，不宜同用。以上为一般知识，具体用法用量和是否适用应咨询中医师或药师，不建议自行长期服用。",
+          "origin": "ai_supplement",
+          "sourceIndices": []
+        }
+      ],
+      "sources": [
+        {
+          "name": "中药基础知识（详解版）.docx",
+          "excerpt": "党参（《本草从新》）\n【使用注意】不宜与藜芦同用；实热证不宜。"
+        }
+      ]
+    },
+    {
+      "question": "那吃了会不会不舒服",
+      "mode": "generated",
+      "resolvedQuestion": "服用党参会不会引起不舒服或不良反应？",
+      "title": "服用党参会不会引起不舒服或不良反应",
+      "historyQuestions": [
+        "党参",
+        "党参有什么不良反应或用药风险？"
+      ],
+      "sections": [
+        {
+          "title": "资料明确的注意点",
+          "content": "资料对党参的记载集中在使用注意：不宜与藜芦同用，实热证不宜使用。也就是说，若属于实热证，或与藜芦同用，可能带来用药风险，应避免。资料本身没有具体描述服后会出现哪些不适症状。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        },
+        {
+          "title": "一般知识下的可能不适",
+          "content": "按一般中药知识，党参药性较平和，常规用量下明显不良反应并不常见；个别人可能出现胃部不适、腹胀、口干等反应。实热证或热象明显者使用，可能使烦躁、口干、便秘等表现加重。这些属于一般知识层面的提示，并非资料原文记载；具体是否适合服用、用量如何，应咨询中医师或药师，不建议自行长期服用。",
+          "origin": "ai_supplement",
+          "sourceIndices": []
+        }
+      ],
+      "sources": [
+        {
+          "name": "中药基础知识（详解版）.docx",
+          "excerpt": "党参（《本草从新》）\n【使用注意】不宜与藜芦同用；实热证不宜。"
+        }
+      ]
+    },
+    {
+      "question": "陈皮",
+      "mode": "generated",
+      "resolvedQuestion": "陈皮",
+      "title": "陈皮的核心特点与学习要点",
+      "historyQuestions": [
+        "党参",
+        "党参有什么不良反应或用药风险？",
+        "服用党参会不会引起不舒服或不良反应？"
+      ],
+      "sections": [
+        {
+          "title": "基本性能与功效",
+          "content": "陈皮性味苦、辛，温，归肺、脾经。核心功效是理气健脾、燥湿化痰，常用于脾胃气滞所致的脘腹胀满、食少吐泻，湿痰寒痰咳嗽，以及呕吐、呃逆。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        },
+        {
+          "title": "用法用量与使用注意",
+          "content": "陈皮多煎服，用量3～10 g。气虚、阴虚燥咳及吐血者应慎用。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "name": "中药基础知识（详解版）.docx",
+          "excerpt": "陈皮（《神农本草经》）\n【性味归经】苦、辛，温。归肺、脾经。\n【功效】理气健脾，燥湿化痰。\n【应用】脾胃气滞、脘腹胀满、食少吐泻；湿痰寒痰咳嗽；呕吐、呃逆。\n【用法用量】煎服，3～10 g。\n【使用注意】气虚、阴虚燥咳及吐血者慎用。"
+        }
+      ]
+    },
+    {
+      "question": "有什么不要的药效吗?",
+      "mode": "generated",
+      "resolvedQuestion": "陈皮有什么不良反应或用药风险？",
+      "title": "陈皮的不良反应与用药风险",
+      "historyQuestions": [
+        "党参",
+        "党参有什么不良反应或用药风险？",
+        "服用党参会不会引起不舒服或不良反应？",
+        "陈皮"
+      ],
+      "sections": [
+        {
+          "title": "资料记载的慎用人群",
+          "content": "资料对陈皮的使用注意为：气虚、阴虚燥咳及吐血者慎用。也就是说，气虚体质、阴虚所致的干咳少痰，以及有吐血情况的人群不宜自行使用，应谨慎并先咨询专业人员。资料没有进一步描述服用陈皮后具体会出现哪些不良反应。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        },
+        {
+          "title": "一般知识中的可能不适",
+          "content": "按一般中药知识，陈皮性温而偏燥，常规用量下不良反应通常不常见；但个别人可能出现口干、咽干、胃部不适等反应。因其辛温燥湿，阴虚或津液不足者使用后可能使口干、干咳等表现加重；气虚者过量或长期使用也可能不合适。上述为一般知识层面提示，并非资料原文记载；具体是否适用及用量应咨询中医师或药师。",
+          "origin": "ai_supplement",
+          "sourceIndices": []
+        }
+      ],
+      "sources": [
+        {
+          "name": "中药基础知识（详解版）.docx",
+          "excerpt": "陈皮（《神农本草经》）\n【使用注意】气虚、阴虚燥咳及吐血者慎用。"
+        }
+      ]
+    },
+    {
+      "question": "111",
+      "mode": "no_match",
+      "title": "未找到相关内容",
+      "historyQuestions": [
+        "党参",
+        "党参有什么不良反应或用药风险？",
+        "服用党参会不会引起不舒服或不良反应？",
+        "陈皮",
+        "陈皮有什么不良反应或用药风险？"
+      ],
+      "sections": [],
+      "sources": []
+    },
+    {
+      "question": "今天天气怎么样",
+      "mode": "no_match",
+      "title": "未找到相关内容",
+      "historyQuestions": [
+        "党参有什么不良反应或用药风险？",
+        "服用党参会不会引起不舒服或不良反应？",
+        "陈皮",
+        "陈皮有什么不良反应或用药风险？",
+        "111"
+      ],
+      "sections": [],
+      "sources": []
+    },
+    {
+      "question": "有什么不要的药效吗?",
+      "mode": "clarification",
+      "title": "请补充问题的主题",
+      "historyQuestions": [],
+      "sections": [],
+      "sources": []
+    }
+  ]
+}

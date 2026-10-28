@@ -1,0 +1,73 @@
+.rx-dialog { width: min(980px, 100%); max-height: 90dvh; min-width: 0; display: flex; flex-direction: column; background: #fff; color: var(--text); border-radius: 18px; box-shadow: 0 20px 80px #18243f35; overflow: hidden; outline: none; }
+.rx-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 23px 28px 18px; border-bottom: 1px solid var(--line); }
+.rx-header h2 { color: var(--navy); font-size: 23px; }
+.rx-header p { margin-top: 7px; font-size: 13px; color: var(--ui-muted); line-height: 1.7; }
+.rx-steps { display: flex; gap: 22px; list-style: none; margin: 0; padding: 17px 28px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+.rx-steps li { display: flex; align-items: center; gap: 7px; font-size: 14px; color: var(--ui-muted); }
+.rx-steps li span { display: inline-grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; background: #f0f2f6; }
+.rx-steps li[aria-current] { color: #435bd1; font-weight: 500; }
+.rx-steps li[aria-current] span { background: #e9edff; }
+.rx-body { padding: 22px 28px; overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
+.rx-help { color: var(--ui-muted); font-size: 13px; line-height: 1.8; margin-bottom: 14px; }
+.rx-drop { display: flex; align-items: center; flex-direction: column; gap: 12px; border: 1px dashed #9eafff; border-radius: 13px; background: #f8faff; padding: 25px 16px; margin-bottom: 18px; color: #4b5d7c; }
+.rx-drop p { overflow-wrap: anywhere; max-width: 100%; }
+.rx-drop > span { font-size: 12px; color: var(--ui-muted); }
+.rx-upload-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.rx-upload-actions button { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; }
+.rx-label, .rx-meta-grid label { display: flex; flex-direction: column; gap: 7px; font-size: 14px; line-height: 1.6; margin-bottom: 15px; }
+.rx-label input, .rx-label textarea, .rx-label select, .rx-fields input, .rx-fields select { width: 100%; min-width: 0; border: 1px solid #d5dbe7; border-radius: 7px; background: #fff; color: var(--text); padding: 9px 10px; font: inherit; }
+.rx-label textarea { resize: vertical; min-height: 110px; line-height: 1.7; }
+.rx-label textarea:disabled { background: #f5f6f9; }
+.rx-notice { background: #f5f7fc; color: #576176; padding: 13px 15px; border-radius: 9px; font-size: 13px; line-height: 1.8; margin: 13px 0; overflow-wrap: anywhere; }
+.rx-notice ul { margin: 7px 0 0; padding-left: 19px; }
+.rx-busy { color: #435bd1; font-size: 14px; line-height: 1.8; margin-top: 15px; }
+.rx-footer { display: flex; justify-content: space-between; gap: 12px; flex-shrink: 0; padding: 16px 28px; border-top: 1px solid var(--line); background: #fff; }
+.rx-fields { border: 0; padding: 0; margin: 18px 0; min-width: 0; }
+.rx-fields legend { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
+.rx-meta-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 14px; }
+.rx-meta-grid label:nth-child(5), .rx-meta-grid label:nth-child(6) { grid-column: span 2; }
+.rx-meta-grid .rx-wide { grid-column: 1 / -1; }
+.rx-case-scope { padding: 13px 15px; background: #f5f7fc; border-radius: 9px; }
+.rx-case-scope select { min-height: 42px; }
+.rx-case-scope .rx-help { margin: 0; }
+.rx-table-scroll { width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: 9px; margin: 8px 0 13px; }
+.rx-table-scroll table { width: 100%; min-width: 790px; border-collapse: collapse; font-size: 13px; }
+.rx-table-scroll th { text-align: left; background: #f5f7fb; font-weight: 500; }
+.rx-table-scroll td, .rx-table-scroll th { padding: 9px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.rx-table-scroll input { min-width: 60px; }
+.rx-table-scroll td:first-child { min-width: 130px; }
+.rx-table-scroll td:nth-child(4) { min-width: 115px; }
+.rx-table-scroll details { width: 75px; overflow-wrap: anywhere; }
+.rx-table-scroll details p { margin-top: 9px; line-height: 1.7; }
+.rx-confirm { display: flex; align-items: flex-start; gap: 9px; font-size: 14px; line-height: 1.8; padding: 12px 0; }
+.rx-confirm input { width: 18px; height: 18px; flex-shrink: 0; margin-top: 4px; accent-color: var(--blue); }
+.rx-original { max-height: 260px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; padding: 14px; font: 13px/1.8 var(--sans); background: #f6f7fa; border-radius: 8px; }
+.rx-image-preview { display: block; max-width: 100%; max-height: 340px; object-fit: contain; margin: 12px auto 20px; border: 1px solid var(--line); border-radius: 8px; }
+.rx-body summary { cursor: pointer; font-size: 13px; color: #53627d; padding: 9px 0; }
+.rx-report-tools { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+.rx-narrative-section { margin-bottom: 27px; font-size: 15px; line-height: 1.95; overflow-wrap: anywhere; }
+.rx-narrative-section h3 { font-size: 18px; line-height: 1.7; margin: 0 0 12px; color: var(--navy); font-weight: 700; }
+.rx-narrative-section p { margin: 0 0 12px; }
+.rx-narrative-section ul, .rx-narrative-section ol { padding-left: 23px; margin: 0; }
+.rx-narrative-section li { padding-left: 2px; margin-bottom: 11px; }
+.rx-narrative-section li ul { margin-top: 8px; }
+.rx-narrative-section strong { font-weight: 700; }
+.rx-supplement-action { margin-top: 12px; min-height: 42px; }
+.rx-narrative-sources { font-size: 12px; color: var(--ui-muted); }
+.rx-narrative-sources a { color: #435bd1; text-underline-offset: 3px; }
+@media (max-width: 720px) {
+  .rx-backdrop { padding: 10px; }
+  .rx-dialog { max-height: 95dvh; border-radius: 13px; }
+  .rx-header { padding: 18px 16px 14px; }
+  .rx-header h2 { font-size: 21px; }
+  .rx-steps { gap: 10px; padding: 13px 16px; }
+  .rx-steps li { font-size: 12px; gap: 4px; }
+  .rx-steps li span { width: 21px; height: 21px; }
+  .rx-body { padding: 17px 16px; }
+  .rx-footer { padding: 13px 16px max(13px, env(safe-area-inset-bottom)); gap: 8px; }
+  .rx-footer button { padding-left: 12px; padding-right: 12px; font-size: 13px; }
+  .rx-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rx-label input, .rx-label textarea, .rx-label select, .rx-fields input, .rx-fields select { font-size: 16px; }
+  .rx-narrative-section { font-size: 14px; }
+  .rx-narrative-section h3 { font-size: 17px; }
+}

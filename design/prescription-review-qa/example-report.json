@@ -1,0 +1,155 @@
+{
+  "status": "issues_found",
+  "title": "发现需要处理的处方数据问题",
+  "prescription": {
+    "dose_scope": "per_dose",
+    "age": 58,
+    "sex": "male",
+    "pregnancy": "no",
+    "diagnosis": "胃脘痛（脾胃虚寒、痰饮内停证）",
+    "allergies": "无（样例）",
+    "regimen": "水煎服，每日 1 剂，分 2 次温服；共 3 剂。",
+    "doses": 3,
+    "medicines": [
+      {
+        "name": "制附子",
+        "dose": "10",
+        "unit": "g",
+        "method": "先煎 60 分钟",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "法半夏",
+        "dose": "9",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "干姜",
+        "dose": "6",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "党参",
+        "dose": "12",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "白术",
+        "dose": "12",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "茯苓",
+        "dose": "15",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "陈皮",
+        "dose": "9",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "砂仁",
+        "dose": "6",
+        "unit": "g",
+        "method": "后下",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "甘草",
+        "dose": "6",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "生姜",
+        "dose": "3",
+        "unit": "片",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      }
+    ]
+  },
+  "findings": [
+    {
+      "code": "aconite_review",
+      "level": "risk",
+      "title": "乌头类饮片需专项复核",
+      "detail": "请核对炮制品种、实际剂量、煎法与配伍。本工具不能验证炮制质量和实际煎煮，不能据此调配或服用。",
+      "medicines": [
+        "制附子"
+      ],
+      "basis": "香港卫生署：安全使用含乌头类生物碱中药材",
+      "url": "https://www.cmro.gov.hk/html/b5/useful_information/public_health/exhibit_boards/The_Safe_Use_of_Chinese_Medicines_Containing_Aconitum_Alkaloids.html"
+    },
+    {
+      "code": "incompatible_pair",
+      "level": "risk",
+      "title": "十八反配伍疑点",
+      "detail": "「附子」与「半夏」同方，命中已登记配伍规则。请联系处方医师与药师确认依据及处理，不自动给出替代处方。",
+      "medicines": [
+        "附子",
+        "半夏"
+      ],
+      "basis": "乌头类公开用药提示",
+      "url": "https://www.cmro.gov.hk/html/b5/useful_information/public_health/exhibit_boards/The_Safe_Use_of_Chinese_Medicines_Containing_Aconitum_Alkaloids.html"
+    }
+  ],
+  "counts": {
+    "error": 0,
+    "risk": 2,
+    "missing": 0,
+    "review": 0
+  },
+  "conclusion": {
+    "status": "not_passed",
+    "result": "不通过。",
+    "detail": "处方存在“十八反”配伍禁忌，建议暂缓调配，联系处方医师确认或修改。",
+    "finding_codes": [
+      "aconite_review",
+      "incompatible_pair"
+    ],
+    "note": "系统辅助审核结论，须经药师复核确认。"
+  },
+  "steps": [
+    "check_data",
+    "build_report"
+  ],
+  "framework": "LangGraph",
+  "rules_version": "2026-10-28.4",
+  "scope": [
+    "基本信息完整性",
+    "药名、数值、单位和每剂量口径",
+    "重复饮片",
+    "有限十八反配伍规则",
+    "本地资料参考剂量与部分特殊煎法"
+  ],
+  "limitations": [
+    "仅检查用户已确认的数据；OCR 与模型提取可能有误。",
+    "不是完整现行药典数据库，未覆盖全部十九畏、妊娠禁忌、西药相互作用、诊断适宜性、机构授权和签章。",
+    "未命中规则不等于安全或审核通过；须由具备资质的医师 / 药师复核，不得据此调配、改方或服药。"
+  ]
+}

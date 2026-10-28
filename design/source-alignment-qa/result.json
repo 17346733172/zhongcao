@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-27",
+  "status": "passed",
+  "transport": "current development frontend; mocked login / API transport with actual imported Word reference; real component layout and interactions",
+  "checks": [
+    {
+      "label": "desktop",
+      "viewport": {
+        "width": 1487,
+        "height": 1058
+      },
+      "left": 366,
+      "right": 1124,
+      "status": "passed"
+    },
+    {
+      "label": "small-desktop",
+      "viewport": {
+        "width": 1024,
+        "height": 900
+      },
+      "left": 326,
+      "right": 998,
+      "status": "passed"
+    },
+    {
+      "label": "tablet",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "left": 326,
+      "right": 742,
+      "status": "passed"
+    },
+    {
+      "label": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "left": 58,
+      "right": 375,
+      "status": "passed"
+    }
+  ],
+  "pageErrors": []
+}

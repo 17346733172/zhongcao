@@ -1,0 +1,173 @@
+{
+  "date": "2026-10-28",
+  "status": "passed",
+  "checks": [
+    "Reuse unchanged successful isolated production build",
+    "All 11 screenshot text targets use local DM Sans stack, regular weight, readable sizes; platform glyphs confirmed",
+    "Upload drawer, account navigation and original-text search remain usable",
+    "390px and 320px mobile labels, wrapped notice, navigation and send button fit",
+    "768px tablet layout fits"
+  ],
+  "records": [
+    {
+      "viewport": "1440x900",
+      "styles": [
+        {
+          "selector": ".account-identity span",
+          "text": "管理员",
+          "family": "\"DM Sans\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "size": "18px",
+          "weight": "400",
+          "lineHeight": "29.7px",
+          "color": "rgb(75, 85, 99)"
+        },
+        {
+          "selector": ".account-identity small",
+          "text": "管理员 · qa_admin",
+          "family": "\"DM Sans\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "size": "14px",
+          "weight": "400",
+          "lineHeight": "23.1px",
+          "color": "rgb(103, 113, 131)"
+        },
+        {
+          "selector": ".account-link",
+          "text": "账号管理",
+          "family": "\"DM Sans\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "size": "14px",
+          "weight": "400",
+          "lineHeight": "23.1px",
+          "color": "rgb(75, 85, 99)"
+        },
+        {
+          "selector": ".sidebar-foot",
+          "text": "对话仅本次保留",
+          "family": "\"DM Sans\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "size": "14px",
+          "weight": "400",
+          "lineHeight": "23.1px",
+          "color": "rgb(103, 113, 131)"
+        },
+        {
+          "selector": "#library-label",
+          "text": "知识库",
+          "family": "\"DM Sans\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "size": "18px",
+          "weight": "400",
+          "lineHeight": "29.7px",
+          "color": "rgb(75, 85, 99)"
+        },
+        {
+          "selector": "#history-label",
+          "text": "历史对话",
+          "family": "\"DM Sans\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "size": "18px",
+          "weight": "400",
+          "lineHeight": "29.7px",
+          "color": "rgb(75, 85, 99)"
+        },
+        {
+          "selector": ".breadcrumb h1",
+          "text": "中药基础资料",
+          "family": "\"DM Sans\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "size": "18px",
+          "weight": "400",
+          "lineHeight": "29.7px",
+          "color": "rgb(75, 85, 99)"
+        },
+        {
+          "selector": ".demo-label",
+          "text": "AI 问答",
+          "family": "\"DM Sans\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "size": "14px",
+          "weight": "400",
+          "lineHeight": "23.1px",
+          "color": "rgb(103, 113, 131)"
+        },
+        {
+          "selector": ".upload-trigger",
+          "text": "上传资料",
+          "family": "\"DM Sans\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "size": "18px",
+          "weight": "400",
+          "lineHeight": "29.7px",
+          "color": "rgb(75, 85, 99)"
+        },
+        {
+          "selector": ".composer-meta > p",
+          "text": "内容由 AI 生成，请核对引用资料；AI 补充单独标注",
+          "family": "\"DM Sans\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "size": "14px",
+          "weight": "400",
+          "lineHeight": "23.1px",
+          "color": "rgb(103, 113, 131)"
+        },
+        {
+          "selector": ".ai-status-note",
+          "text": "DeepSeek 已配置",
+          "family": "\"DM Sans\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "size": "14px",
+          "weight": "400",
+          "lineHeight": "23.1px",
+          "color": "rgb(103, 113, 131)"
+        }
+      ],
+      "platformFonts": [
+        {
+          "selector": ".ai-status-note",
+          "fonts": [
+            {
+              "familyName": "DM Sans 9pt",
+              "postScriptName": "DMSans9pt-Regular",
+              "isCustomFont": true,
+              "glyphCount": 9
+            },
+            {
+              "familyName": "Microsoft YaHei UI",
+              "postScriptName": "MicrosoftYaHeiUI",
+              "isCustomFont": false,
+              "glyphCount": 3
+            }
+          ]
+        },
+        {
+          "selector": "#library-label",
+          "fonts": [
+            {
+              "familyName": "Microsoft YaHei UI",
+              "postScriptName": "MicrosoftYaHeiUI",
+              "isCustomFont": false,
+              "glyphCount": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "fontSize": "16px",
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "fontSize": "16px",
+      "noOverflow": true
+    }
+  ],
+  "fontRequests": [
+    {
+      "url": "http://127.0.0.1:3108/fonts/dm-sans-700.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:3108/fonts/dm-sans-400.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:3108/fonts/dm-sans-500.woff2",
+      "status": 200
+    }
+  ],
+  "errors": [],
+  "environment": "Edge, isolated production Next.js + FastAPI + temporary SQLite, no API mocks or model requests"
+}

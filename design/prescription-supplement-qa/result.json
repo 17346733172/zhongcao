@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-28",
+  "status": "passed",
+  "checks": [
+    "Isolated next build --webpack",
+    "3.1 lists only actual age/allergy gaps, clipboard includes the list; supplement action focuses age and preserves existing data; completed items disappear after confirmed recheck",
+    "Medicine hint distinguishes a missing unit from a missing dose, identifies the exact row/name, and focuses the matching unit field",
+    "390px / 320px prompts fit the viewport; action preserves data and focuses metadata or horizontally scrolled medicine field, requiring reconfirmation",
+    "Higher-priority incompatibility verdict still shows true missing items; filling them removes the prompt while preserving the failed contraindication result and doses"
+  ],
+  "responses": [
+    {
+      "path": "/api/prescriptions/status",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    }
+  ],
+  "errors": [],
+  "environment": "Edge; isolated production Next.js 3117 -> FastAPI 8117; temporary SQLite; fictitious prescriptions; actual backend rules; no API mocks or model calls"
+}

@@ -1,0 +1,346 @@
+{
+  "status": "issues_found",
+  "title": "发现需要处理的处方数据问题",
+  "prescription": {
+    "dose_scope": "per_dose",
+    "age": 58,
+    "sex": "male",
+    "pregnancy": "no",
+    "diagnosis": "胃脘痛（脾胃虚寒、痰饮内停证）",
+    "allergies": "无（样例）",
+    "regimen": "水煎服，每日 1 剂，分 2 次温服；共 3 剂。",
+    "doses": 3,
+    "medicines": [
+      {
+        "name": "制附子",
+        "dose": "10",
+        "unit": "g",
+        "method": "先煎 60 分钟",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "法半夏",
+        "dose": "9",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "干姜",
+        "dose": "6",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "党参",
+        "dose": "12",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "白术",
+        "dose": "12",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "茯苓",
+        "dose": "15",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "陈皮",
+        "dose": "9",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "砂仁",
+        "dose": "6",
+        "unit": "g",
+        "method": "后下",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "甘草",
+        "dose": "6",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "生姜",
+        "dose": "3",
+        "unit": "片",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      }
+    ]
+  },
+  "findings": [
+    {
+      "code": "aconite_review",
+      "level": "risk",
+      "title": "乌头类饮片需专项复核",
+      "detail": "请核对炮制品种、实际剂量、煎法与配伍。本工具不能验证炮制质量和实际煎煮，不能据此调配或服用。",
+      "medicines": [
+        "制附子"
+      ],
+      "basis": "香港卫生署：安全使用含乌头类生物碱中药材",
+      "url": "https://www.cmro.gov.hk/html/b5/useful_information/public_health/exhibit_boards/The_Safe_Use_of_Chinese_Medicines_Containing_Aconitum_Alkaloids.html"
+    },
+    {
+      "code": "incompatible_pair",
+      "level": "risk",
+      "title": "十八反配伍疑点",
+      "detail": "「附子」与「半夏」同方，命中已登记配伍规则。请联系处方医师与药师确认依据及处理，不自动给出替代处方。",
+      "medicines": [
+        "附子",
+        "半夏"
+      ],
+      "basis": "乌头类公开用药提示",
+      "url": "https://www.cmro.gov.hk/html/b5/useful_information/public_health/exhibit_boards/The_Safe_Use_of_Chinese_Medicines_Containing_Aconitum_Alkaloids.html"
+    }
+  ],
+  "counts": {
+    "error": 0,
+    "risk": 2,
+    "missing": 0,
+    "review": 0
+  },
+  "conclusion": {
+    "status": "not_passed",
+    "result": "不通过。",
+    "detail": "处方存在“十八反”配伍禁忌，建议暂缓调配，联系处方医师确认或修改。",
+    "finding_codes": [
+      "aconite_review",
+      "incompatible_pair"
+    ],
+    "note": "系统辅助审核结论，须经药师复核确认。"
+  },
+  "sections": [
+    {
+      "number": "3.1",
+      "title": "审核结论",
+      "paragraphs": [
+        {
+          "text": "处方存在“十八反”配伍禁忌，建议暂缓调配，联系处方医师确认或修改。",
+          "lead": "不通过。",
+          "children": [],
+          "sources": []
+        }
+      ],
+      "items": [],
+      "ordered": false
+    },
+    {
+      "number": "3.2",
+      "title": "主要问题：制附子与法半夏同方",
+      "paragraphs": [],
+      "items": [
+        {
+          "text": "制附子与法半夏同方。制附子按附子类饮片核查；法半夏按半夏类饮片核查，命中“十八反”配伍规则。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "配伍依据",
+              "url": "https://www.cmro.gov.hk/html/b5/useful_information/public_health/exhibit_boards/The_Safe_Use_of_Chinese_Medicines_Containing_Aconitum_Alkaloids.html"
+            }
+          ]
+        },
+        {
+          "text": "用药资料提示：附子、川乌、草乌等乌头类饮片不宜与半夏、瓜蒌、贝母、白蔹、白及等同用；炮制品也需按相应配伍注意核查。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "乌头类用药注意",
+              "url": "https://www.cmro.gov.hk/html/b5/useful_information/public_health/exhibit_boards/The_Safe_Use_of_Chinese_Medicines_Containing_Aconitum_Alkaloids.html"
+            },
+            {
+              "label": "半夏用药注意",
+              "url": "https://www.cmro.gov.hk/html/b5/useful_information/public_health/publication/AdverseEvents7.html"
+            }
+          ]
+        },
+        {
+          "text": "应重点关注含乌头类饮片的中毒风险，包括口舌或肢体麻木、恶心呕吐、心悸、心律紊乱等；不得仅因已炮制或注明先煎而忽略配伍问题。",
+          "lead": "风险提示：",
+          "children": [],
+          "sources": [
+            {
+              "label": "风险依据",
+              "url": "https://www.cmro.gov.hk/html/b5/useful_information/public_health/exhibit_boards/The_Safe_Use_of_Chinese_Medicines_Containing_Aconitum_Alkaloids.html"
+            }
+          ]
+        }
+      ],
+      "ordered": false
+    },
+    {
+      "number": "3.3",
+      "title": "毒性药材与煎法核查",
+      "paragraphs": [],
+      "items": [
+        {
+          "text": "制附子 10 g（每剂）：按每剂 10 g 记录，位于公开资料所列 3～15 g 参考范围；个体用量仍须结合病情复核。原处方注明“先煎 60 分钟”。须核实合规炮制品及先煎、久煎的实际落实情况。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "附子用药资料",
+              "url": "https://www.cmro.gov.hk/html/b5/useful_information/public_health/publication/AdverseEvents8.html"
+            }
+          ]
+        },
+        {
+          "text": "法半夏 9 g（每剂）：按每剂 9 g 记录，位于公开资料所列 3～9 g 参考范围；个体用量仍须结合病情复核。原处方注明“同煎”。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "半夏用药资料",
+              "url": "https://www.cmro.gov.hk/html/b5/useful_information/public_health/publication/AdverseEvents7.html"
+            }
+          ]
+        },
+        {
+          "text": "砂仁 6 g（每剂）：原处方注明“后下”。应对照原方核实后下、打碎等要求及实际操作；记录不等于已完成煎煮。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "砂仁煎法资料",
+              "url": "/api/reference-document/file"
+            }
+          ]
+        },
+        {
+          "text": "含乌头类饮片，应按本机构毒性 / 高风险饮片管理制度核对储存、复核、单包先煎标识及发药交代。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "饮片管理要求",
+              "url": "https://wsjk.ln.gov.cn/wsjk/zfxxgk/zc/gjjwj/2026042809553322479/index.shtml"
+            }
+          ]
+        }
+      ],
+      "ordered": false
+    },
+    {
+      "number": "3.4",
+      "title": "其他核查",
+      "paragraphs": [],
+      "items": [
+        {
+          "text": "十九畏配伍尚需药师依据完整清单进一步核查，本次不作已排除判断。",
+          "lead": "",
+          "children": [],
+          "sources": []
+        },
+        {
+          "text": "已确认非妊娠 / 不适用。",
+          "lead": "妊娠相关核查：",
+          "children": [],
+          "sources": []
+        },
+        {
+          "text": "方中含甘草，需询问是否长期或大量使用甘草制剂、有无高血压或低钾风险，并由医师按需评估血压和电解质。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "甘草用药提示",
+              "url": "https://zyj.beijing.gov.cn/sy/whkp/202610/t20261009_4894097.html"
+            }
+          ]
+        },
+        {
+          "text": "请核对同时使用的西药、中成药及其他长期用药，由药师评估重复用药与相互作用。",
+          "lead": "合并用药：",
+          "children": [],
+          "sources": []
+        },
+        {
+          "text": "若后续经审核调配含乌头类饮片，须交代避免饮酒；出现口舌麻木、心悸、恶心呕吐、头晕等不适应立即停药并就医。",
+          "lead": "发药交代：",
+          "children": [],
+          "sources": [
+            {
+              "label": "乌头类用药提示",
+              "url": "https://www.cmro.gov.hk/html/b5/useful_information/public_health/exhibit_boards/The_Safe_Use_of_Chinese_Medicines_Containing_Aconitum_Alkaloids.html"
+            }
+          ]
+        }
+      ],
+      "ordered": false
+    },
+    {
+      "number": "3.5",
+      "title": "处理建议",
+      "paragraphs": [],
+      "items": [
+        {
+          "text": "请处方医师结合证候修改处方，避免制附子与法半夏同方。",
+          "lead": "首选：",
+          "children": [
+            "保留制附子：由医师调整或移除法半夏，并决定是否需要替代方案。",
+            "保留法半夏：由医师调整或移除制附子，并决定是否需要替代方案。",
+            "修改后重新核对配伍、每剂量和煎法，再交药师复核。"
+          ],
+          "sources": []
+        },
+        {
+          "text": "请按适用规范与本机构制度核实合用依据、必要签字、知情沟通及监测安排；药师保留审核意见和沟通记录。在问题解决前继续暂缓调配。",
+          "lead": "如医师认为必须合用：",
+          "children": [],
+          "sources": []
+        },
+        {
+          "text": "保留核对、医师沟通及药师复核记录；本报告为系统辅助意见，最终由具备资质的药师确认。",
+          "lead": "记录与确认：",
+          "children": [],
+          "sources": []
+        }
+      ],
+      "ordered": true
+    }
+  ],
+  "steps": [
+    "check_data",
+    "build_report"
+  ],
+  "framework": "LangGraph",
+  "rules_version": "2026-10-28.5",
+  "scope": [
+    "基本信息完整性",
+    "药名、数值、单位和每剂量口径",
+    "重复饮片",
+    "有限十八反配伍规则",
+    "本地资料参考剂量与部分特殊煎法"
+  ],
+  "limitations": [
+    "仅检查用户已确认的数据；OCR 与模型提取可能有误。",
+    "不是完整现行药典数据库，未覆盖全部十九畏、妊娠禁忌、西药相互作用、诊断适宜性、机构授权和签章。",
+    "未命中规则不等于安全或审核通过；须由具备资质的医师 / 药师复核，不得据此调配、改方或服药。"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-27",
+  "status": "passed",
+  "desktop": "1487x1058",
+  "mobile": "390x844",
+  "tablet": "768x1024",
+  "flows": 12,
+  "mode": "real HTTP through isolated Next.js production proxy; no API mocks; temporary SQLite",
+  "frontendPort": 3107,
+  "backendPort": 8107,
+  "apiResponses": 71,
+  "unexpected5xx": [],
+  "pageErrors": []
+}

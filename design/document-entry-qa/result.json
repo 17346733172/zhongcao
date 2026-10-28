@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-27",
+  "status": "passed",
+  "auth": "mocked UI session and API transport; actual imported document and original file used; backend auth verified separately by 16 tests",
+  "desktop": "1487x1058",
+  "mobile": "390x844",
+  "paragraphs": 1397,
+  "tables": 7,
+  "downloadSha256": "567c5a9bdfd3448a6ccb4c19e4de3b862777775e4a687b89a7c04e1b3769b2af",
+  "browserDownloadLimitations": [
+    "desktop: headless Edge cancels all downloads including the independent TXT control; API bytes validated separately",
+    "mobile: headless Edge cancels all downloads including the independent TXT control; API bytes validated separately"
+  ],
+  "pageErrors": []
+}

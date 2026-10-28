@@ -1,0 +1,53 @@
+{
+  "data": "fictitious prescription for tests only",
+  "verified_flows": [
+    {
+      "fixture": "sample.txt",
+      "status": "needs_confirmation",
+      "method": "text",
+      "steps": [
+        "read_upload",
+        "recognize_intent",
+        "extract_prescription",
+        "confirm_data"
+      ],
+      "medicine_count": 3
+    },
+    {
+      "fixture": "sample.docx",
+      "status": "needs_confirmation",
+      "method": "docx",
+      "steps": [
+        "read_upload",
+        "recognize_intent",
+        "extract_prescription",
+        "confirm_data"
+      ],
+      "medicine_count": 3
+    },
+    {
+      "fixture": "sample.png",
+      "status": "needs_confirmation",
+      "method": "image_ocr",
+      "steps": [
+        "read_upload",
+        "recognize_intent",
+        "extract_prescription",
+        "confirm_data"
+      ],
+      "medicine_count": 3
+    },
+    {
+      "fixture": "sample.pdf",
+      "status": "needs_confirmation",
+      "method": "pdf_ocr",
+      "steps": [
+        "read_upload",
+        "recognize_intent",
+        "extract_prescription",
+        "confirm_data"
+      ],
+      "medicine_count": 3
+    }
+  ]
+}

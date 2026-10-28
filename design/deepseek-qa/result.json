@@ -1,0 +1,112 @@
+{
+  "date": "2026-10-27",
+  "status": "passed",
+  "transport": "isolated production Next proxy + FastAPI + temporary SQLite accounts + live DeepSeek; only error, cancellation and unconfigured UI states use route fixtures",
+  "checks": [
+    "隔离生产构建通过",
+    "真实登录、服务状态与默认 AI 模式",
+    "真实 DeepSeek 比较回答、多来源引用与完整原文阅读",
+    "连续输入 111 无资料片段或引用",
+    "切回原文检索，保留旧回答与真实摘录",
+    "模拟服务失败：真实错误反馈、保留草稿且不加入假回答",
+    "生成中切换新对话取消旧请求",
+    "手机模式切换、未命中、原文检索与无横向溢出",
+    "模拟未配置状态：禁用 AI 并保留可用的原文检索"
+  ],
+  "pageErrors": [],
+  "responses": [
+    {
+      "path": "/api/auth/me",
+      "status": 401,
+      "method": "GET"
+    },
+    {
+      "path": "/api/auth/login",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/ai/status",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/documents",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/reference-document",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/chat",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/chat",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/chat",
+      "status": 503,
+      "method": "POST"
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 401,
+      "method": "GET"
+    },
+    {
+      "path": "/api/auth/login",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/documents",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/ai/status",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/reference-document",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/chat",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/ai/status",
+      "status": 200,
+      "method": "GET"
+    }
+  ],
+  "model": "deepseek-flash",
+  "liveSourceCount": 2,
+  "productionBuild": "next build --webpack"
+}

@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-28",
+  "status": "passed",
+  "checks": [
+    "Isolated next build --webpack",
+    "Reproduced three actual unknown-scope findings from a checked prescription",
+    "Report action sends updated full snapshot, blocks conflicting actions, removes scope warnings and retains real missing data",
+    "390px and 320px can correct the current report directly and retain corrected values when editing again",
+    "Confirmed total is classified as review, not missing information"
+  ],
+  "responses": [
+    {
+      "path": "/api/prescriptions/status",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    }
+  ],
+  "errors": [],
+  "environment": "Edge; isolated production Next.js 3112 -> FastAPI 8112; temporary SQLite; fictitious data; real backend requests, one delayed request, no response mocks or model calls"
+}

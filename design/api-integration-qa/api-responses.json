@@ -1,0 +1,357 @@
+[
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/login",
+    "status": 401
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/login",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/users",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/users",
+    "status": 201
+  },
+  {
+    "method": "POST",
+    "path": "/api/users",
+    "status": 201
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/users/3",
+    "status": 200
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/users/3",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/users/3/password",
+    "status": 204
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/login",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/documents",
+    "status": 201
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/login",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/users",
+    "status": 403
+  },
+  {
+    "method": "POST",
+    "path": "/api/documents",
+    "status": 403
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/reference-document",
+    "status": 200
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/users/2",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/users/2",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/login",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents",
+    "status": 200
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/documents/21f97a56-01ff-4949-ae05-eecf4bb26e4e",
+    "status": 204
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/password",
+    "status": 204
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/login",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/logout",
+    "status": 204
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/login",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/login",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/users",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/reference-document",
+    "status": 200
+  }
+]

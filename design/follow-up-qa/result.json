@@ -1,0 +1,225 @@
+{
+  "date": "2026-10-27",
+  "status": "passed",
+  "productionBuild": "next build --webpack",
+  "transport": "isolated production Next proxy + FastAPI + actual DeepSeek; temporary SQLite account, no API fixtures",
+  "checks": [
+    "隔离生产构建通过",
+    "陈皮 -> generated, resolved=陈皮, history=0",
+    "作用? -> generated, resolved=陈皮：作用?, history=1",
+    "先陈皮再作用：主题正确且引用重新检索",
+    "用量呢 -> generated, resolved=陈皮：用量呢, history=2",
+    "手机连续省略主题，保持当前药材和有效引用",
+    "黄芪 -> generated, resolved=黄芪, history=3",
+    "作用? -> generated, resolved=黄芪：作用?, history=4",
+    "明确换成黄芪后，后续作用承接黄芪",
+    "111 -> no_match, resolved=none, history=5",
+    "上下文达到五轮时仍不让 111 借用旧药材",
+    "作用? -> clarification, resolved=none, history=0",
+    "新建对话使用空上下文，缺少主题时提示补充药材"
+  ],
+  "pageErrors": [],
+  "records": [
+    {
+      "question": "陈皮",
+      "mode": "generated",
+      "resolvedQuestion": "陈皮",
+      "title": "陈皮核心要点",
+      "historyQuestions": [],
+      "sections": [
+        {
+          "title": "核心功效与性味",
+          "content": "陈皮性味苦、辛，温，归肺、脾经。其核心功效为理气健脾、燥湿化痰。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        },
+        {
+          "title": "学习要点",
+          "content": "陈皮的应用侧重于脾胃气滞所致的脘腹胀满、食少吐泻，以及湿痰寒痰咳嗽和呕吐、呃逆。常规煎服剂量为3～10 g；气虚、阴虚燥咳及吐血者慎用。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "name": "中药基础知识（详解版）.docx",
+          "excerpt": "陈皮（《神农本草经》）\n【性味归经】苦、辛，温。归肺、脾经。\n【功效】理气健脾，燥湿化痰。\n【应用】脾胃气滞、脘腹胀满、食少吐泻；湿痰寒痰咳嗽；呕吐、呃逆。\n【用法用量】煎服，3～10 g。\n【使用注意】气虚、阴虚燥咳及吐血者慎用。"
+        }
+      ]
+    },
+    {
+      "question": "作用?",
+      "mode": "generated",
+      "resolvedQuestion": "陈皮：作用?",
+      "title": "陈皮的作用",
+      "historyQuestions": [
+        "陈皮"
+      ],
+      "sections": [
+        {
+          "title": "核心功效",
+          "content": "陈皮的主要功效是理气健脾、燥湿化痰，适用于脾胃气滞所致的脘腹胀满、食少吐泻，以及湿痰寒痰咳嗽和呕吐、呃逆。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        },
+        {
+          "title": "使用注意",
+          "content": "气虚、阴虚燥咳及吐血者应慎用陈皮。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "name": "中药基础知识（详解版）.docx",
+          "excerpt": "陈皮（《神农本草经》）\n【功效】理气健脾，燥湿化痰。\n【应用】脾胃气滞、脘腹胀满、食少吐泻；湿痰寒痰咳嗽；呕吐、呃逆。\n【使用注意】气虚、阴虚燥咳及吐血者慎用。"
+        }
+      ]
+    },
+    {
+      "question": "用量呢",
+      "mode": "generated",
+      "resolvedQuestion": "陈皮：用量呢",
+      "title": "陈皮的用量",
+      "historyQuestions": [
+        "陈皮",
+        "陈皮：作用?"
+      ],
+      "sections": [
+        {
+          "title": "煎服用量",
+          "content": "陈皮常规煎服剂量为3～10 g。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "name": "中药基础知识（详解版）.docx",
+          "excerpt": "陈皮（《神农本草经》）\n【用法用量】煎服，3～10 g。\n【使用注意】气虚、阴虚燥咳及吐血者慎用。"
+        }
+      ]
+    },
+    {
+      "question": "黄芪",
+      "mode": "generated",
+      "resolvedQuestion": "黄芪",
+      "title": "黄芪核心要点",
+      "historyQuestions": [
+        "陈皮",
+        "陈皮：作用?",
+        "陈皮：用量呢"
+      ],
+      "sections": [
+        {
+          "title": "性味、功效与应用要点",
+          "content": "黄芪味甘、性微温，归肺、脾经。主要功效为补气升阳、固表止汗、利水消肿、生津养血、行滞通痹、托毒排脓、敛疮生肌。常用于气虚乏力、食少便溏、中气下陷、久泻脱肛、便血崩漏，以及表虚自汗、气虚水肿、内热消渴、血虚萎黄、半身不遂、痹痛麻木、痈疽难溃或久溃不敛等。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        },
+        {
+          "title": "用法与使用注意",
+          "content": "黄芪常规煎服，9～30 g。表实邪盛、气滞湿阻、食积内停、阴虚阳亢、疮疡初起或溃后热毒尚盛者均不宜用。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "name": "中药基础知识（详解版）.docx",
+          "excerpt": "黄芪（《神农本草经》）\n【性味归经】甘，微温。归肺、脾经。\n【功效】补气升阳，固表止汗，利水消肿，生津养血，行滞通痹，托毒排脓，敛疮生肌。\n【应用】气虚乏力、食少便溏、中气下陷、久泻脱肛、便血崩漏；表虚自汗；气虚水肿；内热消渴；血虚萎黄；半身不遂、痹痛麻木；痈疽难溃、久溃不敛。\n【用法用量】煎服，9～30 g。\n【使用注意】表实邪盛、气滞湿阻、食积内停、阴虚阳亢、疮疡初起或溃后热毒尚盛者均不宜用。"
+        }
+      ]
+    },
+    {
+      "question": "作用?",
+      "mode": "generated",
+      "resolvedQuestion": "黄芪：作用?",
+      "title": "黄芪的作用",
+      "historyQuestions": [
+        "陈皮",
+        "陈皮：作用?",
+        "陈皮：用量呢",
+        "黄芪"
+      ],
+      "sections": [
+        {
+          "title": "核心功效",
+          "content": "黄芪的主要功效是补气升阳、固表止汗、利水消肿、生津养血、行滞通痹、托毒排脓、敛疮生肌。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        },
+        {
+          "title": "对应应用",
+          "content": "黄芪常用于气虚乏力、食少便溏、中气下陷、久泻脱肛、便血崩漏；也用于表虚自汗、气虚水肿、内热消渴、血虚萎黄、半身不遂、痹痛麻木，以及痈疽难溃、久溃不敛等。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        },
+        {
+          "title": "使用注意",
+          "content": "表实邪盛、气滞湿阻、食积内停、阴虚阳亢，以及疮疡初起或溃后热毒尚盛者，均不宜用黄芪。",
+          "origin": "document",
+          "sourceIndex": 0,
+          "sourceIndices": [
+            0
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "name": "中药基础知识（详解版）.docx",
+          "excerpt": "黄芪（《神农本草经》）\n【功效】补气升阳，固表止汗，利水消肿，生津养血，行滞通痹，托毒排脓，敛疮生肌。\n【应用】气虚乏力、食少便溏、中气下陷、久泻脱肛、便血崩漏；表虚自汗；气虚水肿；内热消渴；血虚萎黄；半身不遂、痹痛麻木；痈疽难溃、久溃不敛。\n【使用注意】表实邪盛、气滞湿阻、食积内停、阴虚阳亢、疮疡初起或溃后热毒尚盛者均不宜用。"
+        }
+      ]
+    },
+    {
+      "question": "111",
+      "mode": "no_match",
+      "title": "未找到相关内容",
+      "historyQuestions": [
+        "陈皮",
+        "陈皮：作用?",
+        "陈皮：用量呢",
+        "黄芪",
+        "黄芪：作用?"
+      ],
+      "sections": [],
+      "sources": []
+    },
+    {
+      "question": "作用?",
+      "mode": "clarification",
+      "title": "请补充问题的主题",
+      "historyQuestions": [],
+      "sections": [],
+      "sources": []
+    }
+  ]
+}

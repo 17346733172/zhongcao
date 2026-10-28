@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-28",
+  "status": "passed",
+  "checks": [
+    "Isolated next build --webpack",
+    "Neither selected: no request, disabled send, Enter guidance and preserved draft",
+    "Extract only: keyboard toggle and actual original text without AI request",
+    "Both: one actual DeepSeek request, one question with two results, separate citations and copies",
+    "AI only: actual generated answer, no appended original-text result",
+    "390px and 320px: all four states fit; mode changes preserve draft",
+    "Delayed real AI status does not overwrite a manual deselection"
+  ],
+  "chatRequests": 2,
+  "errors": [],
+  "environment": "Edge + isolated production Next.js 3109 -> FastAPI 8109 + temporary SQLite; two actual DeepSeek calls; no API response mocks"
+}
