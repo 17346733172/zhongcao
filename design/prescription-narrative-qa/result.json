@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-28",
+  "status": "passed",
+  "checks": [
+    "Reused unchanged production build",
+    "User example displays exactly five numbered sections with current drug names, conclusion, prose bullets and ordered suggestions; all old cards/counts/detail/scope panels removed; clipboard uses the same Markdown format",
+    "390px / 320px: five-section text, long primary-issue title, inline sources and nested numbered advice wrap without horizontal overflow",
+    "Removing the incompatible drug and editing the prescription regenerates all five sections; original failed conclusion, pair title and previous dose facts do not remain",
+    "Actual missing information and unknown dose scope remain readable within 3.4, without restoring old alert cards or inventing normal findings"
+  ],
+  "responses": [
+    {
+      "path": "/api/prescriptions/status",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    }
+  ],
+  "errors": [],
+  "environment": "Edge; isolated production Next.js 3116 -> FastAPI 8116; temporary SQLite; virtual user example; actual backend checks; no API mocks or model calls"
+}

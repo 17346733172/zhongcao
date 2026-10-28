@@ -1,6 +1,7 @@
 @import "./workspace.css";
 @import "./auth.css";
 @import "./chat-layout.css";
+@import "./prescription.css";
 
 :root {
   --blue: #0862e8;

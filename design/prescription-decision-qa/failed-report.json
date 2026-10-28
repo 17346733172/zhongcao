@@ -1,0 +1,432 @@
+{
+  "status": "not_passed",
+  "title": "本次系统审核不通过",
+  "prescription": {
+    "dose_scope": "per_dose",
+    "age": 62,
+    "sex": "male",
+    "pregnancy": "no",
+    "diagnosis": "胃脘痛（脾胃气虚、寒凝血瘀证，虚构）",
+    "allergies": "无",
+    "regimen": "水煎服，每日1剂，分2次温服；共5剂（虚构）",
+    "doses": 5,
+    "medicines": [
+      {
+        "name": "人参",
+        "dose": "9",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "五灵脂",
+        "dose": "10",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "麸炒白术",
+        "dose": "12",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "茯苓",
+        "dose": "15",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "陈皮",
+        "dose": "9",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "法半夏",
+        "dose": "9",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "延胡索",
+        "dose": "10",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "吴茱萸",
+        "dose": "10",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "炙甘草",
+        "dose": "6",
+        "unit": "g",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      },
+      {
+        "name": "生姜",
+        "dose": "3",
+        "unit": "片",
+        "method": "同煎",
+        "dose_scope": "per_dose",
+        "source": ""
+      }
+    ]
+  },
+  "findings": [
+    {
+      "code": "required_method",
+      "level": "review",
+      "title": "另煎兑服要求未明确",
+      "detail": "原处方记为“同煎”，未明确另煎兑服。",
+      "medicines": [
+        "人参"
+      ],
+      "basis": "岳阳市卫健委转载《中国药典》（2025年版）人参条目",
+      "url": "https://wsj.yueyang.gov.cn/75523/75526/content_2349014.html",
+      "blocking": true
+    },
+    {
+      "code": "required_method",
+      "level": "review",
+      "title": "包煎要求未明确",
+      "detail": "原处方记为“同煎”，未明确包煎。",
+      "medicines": [
+        "五灵脂"
+      ],
+      "basis": "用户提供的五灵脂常用参考量（非已核验药典条目）",
+      "url": "https://www.wuhe.gov.cn/zfxxgk/public/25641/51091076.html",
+      "blocking": true
+    },
+    {
+      "code": "evodia_notice",
+      "level": "review",
+      "title": "吴茱萸用药提醒",
+      "detail": "吴茱萸有小毒，不宜多用久服，应结合疗程及患者情况观察。",
+      "medicines": [
+        "吴茱萸"
+      ],
+      "basis": "内置基础资料：吴茱萸",
+      "url": "/api/reference-document/file",
+      "blocking": false
+    },
+    {
+      "code": "nineteen_incompatible_pair",
+      "level": "risk",
+      "title": "十九畏：人参与五灵脂同方",
+      "detail": "人参与五灵脂同方，命中十九畏配伍禁忌；公开人参条目提示不宜与五灵脂同用。",
+      "medicines": [
+        "人参",
+        "五灵脂"
+      ],
+      "basis": "《中国药典》（2025年版）人参条目官方转载及内置十九畏",
+      "url": "https://wsj.yueyang.gov.cn/75523/75526/content_2349014.html",
+      "blocking": true
+    },
+    {
+      "code": "profile_dose",
+      "level": "review",
+      "title": "未满足采用参考剂量条件",
+      "detail": "已确认每剂合计 10 g，采用参考范围为 2～5 g，当前剂量超出该范围。",
+      "medicines": [
+        "吴茱萸"
+      ],
+      "basis": "内置基础资料与用户提供的吴茱萸参考口径",
+      "url": "/api/reference-document/file",
+      "blocking": true
+    }
+  ],
+  "counts": {
+    "error": 0,
+    "risk": 1,
+    "missing": 0,
+    "review": 4
+  },
+  "conclusion": {
+    "status": "not_passed",
+    "result": "不通过。",
+    "detail": "处方存在“十九畏”配伍禁忌，其中人参与五灵脂同方；系统判定本次审核不通过，建议暂缓调配并联系处方医师修改。",
+    "finding_codes": [
+      "evodia_notice",
+      "nineteen_incompatible_pair",
+      "profile_dose",
+      "required_method"
+    ],
+    "decision_reasons": [
+      "人参与五灵脂同方，命中十九畏配伍禁忌；公开人参条目提示不宜与五灵脂同用。",
+      "吴茱萸：已确认每剂合计 10 g，采用参考范围为 2～5 g，当前剂量超出该范围。",
+      "人参：原处方记为“同煎”，未明确另煎兑服。",
+      "五灵脂：原处方记为“同煎”，未明确包煎。"
+    ],
+    "note": "系统辅助审核结论，须经药师复核确认。"
+  },
+  "sections": [
+    {
+      "number": "3.1",
+      "title": "审核结论",
+      "paragraphs": [
+        {
+          "text": "处方存在“十九畏”配伍禁忌，其中人参与五灵脂同方；系统判定本次审核不通过，建议暂缓调配并联系处方医师修改。",
+          "lead": "不通过。",
+          "children": [],
+          "sources": []
+        },
+        {
+          "text": "人参与五灵脂同方，命中十九畏配伍禁忌；公开人参条目提示不宜与五灵脂同用；吴茱萸：已确认每剂合计 10 g，采用参考范围为 2～5 g，当前剂量超出该范围；人参：原处方记为“同煎”，未明确另煎兑服；五灵脂：原处方记为“同煎”，未明确包煎。",
+          "lead": "判断依据：",
+          "children": [],
+          "sources": []
+        }
+      ],
+      "items": [],
+      "ordered": false
+    },
+    {
+      "number": "3.2",
+      "title": "主要问题：人参与五灵脂同方",
+      "paragraphs": [],
+      "items": [
+        {
+          "text": "人参与五灵脂同方。人参按人参类饮片核查；五灵脂按五灵脂类饮片核查，命中“十九畏”配伍规则。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "配伍依据",
+              "url": "https://wsj.yueyang.gov.cn/75523/75526/content_2349014.html"
+            }
+          ]
+        },
+        {
+          "text": "“十九畏”歌诀载“人参最怕五灵脂”。公开转载的《中国药典》（2025年版）人参条目明确提示不宜与五灵脂同用，本次按该配伍条件判为不通过。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "人参条目依据",
+              "url": "https://wsj.yueyang.gov.cn/75523/75526/content_2349014.html"
+            }
+          ]
+        },
+        {
+          "text": "上述组合属于已核查的传统配伍禁忌，应联系处方医师确认或修改，问题解决前暂缓调配。",
+          "lead": "风险提示：",
+          "children": [],
+          "sources": [
+            {
+              "label": "用药禁忌",
+              "url": "/api/reference-document/file"
+            }
+          ]
+        }
+      ],
+      "ordered": false
+    },
+    {
+      "number": "3.3",
+      "title": "毒性药材与煎法核查",
+      "paragraphs": [],
+      "items": [
+        {
+          "text": "人参 9 g（每剂）：按每剂 9 g 记录，位于公开资料所列 3～9 g 参考范围；个体用量仍须结合病情复核。原处方注明“同煎”。应明确另煎兑服。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "核查依据",
+              "url": "https://wsj.yueyang.gov.cn/75523/75526/content_2349014.html"
+            }
+          ]
+        },
+        {
+          "text": "五灵脂 10 g（每剂）：按每剂 10 g 记录，位于本次采用的常用参考口径 5～10 g 参考范围；个体用量仍须结合病情复核。原处方注明“同煎”。应明确包煎。五灵脂常用量采用用户提供的参考口径，具体按适用饮片标准执行。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "核查依据",
+              "url": "https://www.wuhe.gov.cn/zfxxgk/public/25641/51091076.html"
+            }
+          ]
+        },
+        {
+          "text": "法半夏 9 g（每剂）：按每剂 9 g 记录，位于公开资料所列 3～9 g 参考范围；个体用量仍须结合病情复核。原处方注明“同煎”。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "半夏用药资料",
+              "url": "https://www.cmro.gov.hk/html/b5/useful_information/public_health/publication/AdverseEvents7.html"
+            }
+          ]
+        },
+        {
+          "text": "吴茱萸 10 g（每剂）：按每剂 10 g 记录，超出采用参考口径 2～5 g 参考范围；个体用量仍须结合病情复核。原处方注明“同煎”。有小毒，不宜多用久服，应结合疗程观察。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "核查依据",
+              "url": "/api/reference-document/file"
+            }
+          ]
+        }
+      ],
+      "ordered": false
+    },
+    {
+      "number": "3.4",
+      "title": "其他核查",
+      "paragraphs": [],
+      "items": [
+        {
+          "text": "人参—五灵脂十九畏组合：本次已命中，见 3.2。其他十九畏组合尚未全部覆盖，不作已排除判断。",
+          "lead": "",
+          "children": [],
+          "sources": []
+        },
+        {
+          "text": "已确认非妊娠 / 不适用。",
+          "lead": "妊娠相关核查：",
+          "children": [],
+          "sources": []
+        },
+        {
+          "text": "人参：原处方记为“同煎”，未明确另煎兑服。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "核查依据",
+              "url": "https://wsj.yueyang.gov.cn/75523/75526/content_2349014.html"
+            }
+          ]
+        },
+        {
+          "text": "五灵脂：原处方记为“同煎”，未明确包煎。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "核查依据",
+              "url": "https://www.wuhe.gov.cn/zfxxgk/public/25641/51091076.html"
+            }
+          ]
+        },
+        {
+          "text": "吴茱萸：已确认每剂合计 10 g，采用参考范围为 2～5 g，当前剂量超出该范围。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "核查依据",
+              "url": "/api/reference-document/file"
+            }
+          ]
+        },
+        {
+          "text": "方中含甘草，需询问是否长期或大量使用甘草制剂、有无高血压或低钾风险，并由医师按需评估血压和电解质。",
+          "lead": "",
+          "children": [],
+          "sources": [
+            {
+              "label": "甘草用药提示",
+              "url": "https://zyj.beijing.gov.cn/sy/whkp/202610/t20261009_4894097.html"
+            }
+          ]
+        },
+        {
+          "text": "请核对同时使用的西药、中成药及其他长期用药，由药师评估重复用药与相互作用。",
+          "lead": "合并用药：",
+          "children": [],
+          "sources": []
+        }
+      ],
+      "ordered": false
+    },
+    {
+      "number": "3.5",
+      "title": "处理建议",
+      "paragraphs": [],
+      "items": [
+        {
+          "text": "请处方医师结合证候修改处方，避免人参与五灵脂同方。",
+          "lead": "首选：",
+          "children": [
+            "保留人参：由医师调整或移除五灵脂，并决定是否需要替代方案。",
+            "保留五灵脂：由医师调整或移除人参，并决定是否需要替代方案。",
+            "修改后重新核对配伍、每剂量和煎法，再交药师复核。"
+          ],
+          "sources": []
+        },
+        {
+          "text": "请按适用规范与本机构制度核实合用依据、必要签字、知情沟通及监测安排；药师保留审核意见和沟通记录。在问题解决前继续暂缓调配。",
+          "lead": "如医师认为必须合用：",
+          "children": [],
+          "sources": []
+        },
+        {
+          "text": "保留核对、医师沟通及药师复核记录；本报告为系统辅助意见，最终由具备资质的药师确认。",
+          "lead": "记录与确认：",
+          "children": [],
+          "sources": []
+        },
+        {
+          "text": "存在严重不合理用药或用药错误时，应拒绝调剂，告知医师并记录、按规定报告；未解决的问题不能因系统重查而自动解除。",
+          "lead": "处置依据：",
+          "children": [],
+          "sources": [
+            {
+              "label": "处方管理办法",
+              "url": "https://www.nhc.gov.cn/yzygj/c100068/200602/890d7c8eb1d64405a060922c93c9f900.shtml"
+            },
+            {
+              "label": "处方审核规范",
+              "url": "https://www.nhc.gov.cn/wjw/c100175/201807/1774578ad7ad410491c060f684947639.shtml"
+            }
+          ]
+        }
+      ],
+      "ordered": true
+    }
+  ],
+  "missing_information": [],
+  "steps": [
+    "check_data",
+    "build_report"
+  ],
+  "framework": "LangGraph",
+  "rules_version": "2026-10-28.7",
+  "scope": [
+    "基本信息完整性",
+    "药名、数值、单位和每剂量口径",
+    "重复饮片",
+    "有限十八反与十九畏（人参—五灵脂）配伍规则",
+    "采用参考剂量与特殊煎法"
+  ],
+  "limitations": [
+    "仅检查用户已确认的数据；OCR 与模型提取可能有误。",
+    "不是完整现行药典数据库，未覆盖全部十九畏、妊娠禁忌、西药相互作用、诊断适宜性、机构授权和签章。",
+    "通过仅表示本次已覆盖项目的系统辅助审核通过，不代表药师签署或实际调配授权。"
+  ]
+}

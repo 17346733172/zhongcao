@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-28",
+  "status": "passed",
+  "checks": [
+    "Reused unchanged production build",
+    "Real user example (10 medicines): actual DeepSeek -> prepare -> editable fields -> actual LangGraph check keeps per-dose scope and original numbers, no dose-scope findings; incompatibility remains",
+    "Manual input and added rows start per-dose without an extra scope confirmation; actual missing allergy history remains",
+    "Intentional individual overrides switch to per-row mode; a genuinely unknown row still reports missing scope",
+    "Total mode propagates to new rows and backend report, without division or missing-scope misclassification",
+    "Legacy report contract automatically rechecks the current snapshot as per-dose with no extra user action (explicit legacy response adapter, actual backend checks)",
+    "390px / 320px upload, manual scope selection and report checked; new prescriptions default to the user-requested per-dose mode"
+  ],
+  "responses": [
+    {
+      "path": "/api/prescriptions/status",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/prepare",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    }
+  ],
+  "errors": [],
+  "environment": "Edge; isolated production Next.js 3113 -> FastAPI 8113; temporary SQLite; fictitious user example; real DeepSeek and backend checks; one explicitly simulated legacy response contract"
+}

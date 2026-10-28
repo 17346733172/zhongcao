@@ -24,7 +24,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
       credentials: "same-origin",
       cache: "no-store",
       signal: options.signal ?? AbortSignal.timeout(20000),
-      headers: { "Content-Type": "application/json", "X-CSRF-Protection": "1", ...options.headers },
+      headers: { ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }), "X-CSRF-Protection": "1", ...options.headers },
     });
   } catch {
     throw new ApiError(0, "暂时无法连接服务，请稍后重试。");

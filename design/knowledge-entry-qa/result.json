@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-28",
+  "status": "passed",
+  "checks": [
+    "Isolated next build --webpack",
+    "Admin: renamed accessible entry opens shared documents by keyboard; duplicate prescription entry removed; actual upload, original preview, refresh persistence and original retrieval still work",
+    "Left prescription entry retains file/image controls, manual input, actual backend audit and closing preserves chat draft",
+    "Viewer: same knowledge entry opens read-only shared list and original text; no upload/remove controls; left prescription entry remains available",
+    "Editor retains actual shared-document removal; admin refresh reflects the change, with user data isolated to temporary SQLite",
+    "390px / 320px: knowledge icon has the correct accessible name, drawer contains shared tools only, left navigation opens prescription upload; layouts fit viewport"
+  ],
+  "errors": [],
+  "environment": "Edge; isolated production Next.js 3115 -> FastAPI 8115; temporary SQLite; admin/editor/viewer; actual shared-document APIs and prescription rule check; no API mocks or model calls"
+}

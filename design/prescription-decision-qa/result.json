@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-28",
+  "status": "passed",
+  "checks": [
+    "Reused unchanged production build",
+    "Full 10-medicine user example is explicitly rejected by the system with nineteen-incompatibility, evodia dose and separate/bag decoction reasons; clipboard agrees",
+    "After actual example edits, all blockers clear and the system explicitly passes its covered checks; ordinary evodia reminder remains without forcing a pending verdict; desktop/mobile and clipboard agree",
+    "Only real missing information yields a pending-information verdict; field-specific prompt and focus still work, and completion returns to the current system decision"
+  ],
+  "responses": [
+    {
+      "path": "/api/prescriptions/status",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    }
+  ],
+  "errors": [],
+  "environment": "Edge; isolated production Next.js 3118 -> FastAPI 8118; temporary SQLite; user fictitious demo 002; actual rule decisions and manual edits; no API mocks or model calls; passed denotes covered system checks"
+}

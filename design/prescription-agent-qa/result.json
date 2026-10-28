@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-28",
+  "status": "passed",
+  "checks": [
+    "Isolated next build --webpack",
+    "Upload-drawer entry, keyboard focus loop, Escape and preserved question draft",
+    "Actual local PNG OCR + DeepSeek intent/extraction, editable original comparison, mandatory reconfirmation, real rule findings and copy",
+    "Modified data produces a fresh report with invalid-dose finding",
+    "New prescription clears old data; actual intent classifier stops non-prescription input",
+    "390px/320px upload, manual entry, horizontal table scrolling and actual report fit without page overflow",
+    "Existing original-text Q&A works; prescription documents are absent from shared knowledge"
+  ],
+  "responses": [
+    {
+      "path": "/api/prescriptions/status",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/status",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/prepare",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/prepare",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/status",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/status",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    }
+  ],
+  "errors": [],
+  "environment": "Edge; isolated production Next.js 3110 -> FastAPI 8110; temporary SQLite; actual local OCR and DeepSeek, no API response mocks; fictitious test prescription"
+}

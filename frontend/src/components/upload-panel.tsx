@@ -16,8 +16,8 @@ export function UploadPanel({ documents, open, canWrite, uploading, inputRef, on
   }
   function dropped(event: DragEvent<HTMLButtonElement>) { event.preventDefault(); setDragging(false); if (canWrite && !uploading) onFiles(Array.from(event.dataTransfer.files)); }
   return (
-    <aside role="dialog" aria-modal="true" className={"upload-panel" + (open ? " panel-open" : "")} aria-label={canWrite ? "资料上传" : "知识库资料"}>
-      <div className="upload-heading"><h2>{canWrite ? "资料上传" : "知识库资料"}</h2><button className="icon-button" aria-label="关闭上传面板" onClick={onClose}><XIcon size={19} /></button></div>
+    <aside role="dialog" aria-modal="true" className={"upload-panel" + (open ? " panel-open" : "")} aria-label="知识库资料">
+      <div className="upload-heading"><h2>知识库资料</h2><button className="icon-button" aria-label="关闭资料面板" onClick={onClose}><XIcon size={19} /></button></div>
       {canWrite ? <><input ref={inputRef} className="visually-hidden" type="file" accept=".md,.txt,.pdf,.docx" multiple onChange={changed} aria-label="选择知识库资料" tabIndex={-1} disabled={uploading} />
         <button disabled={uploading} className={"drop-zone" + (dragging ? " is-dragging" : "")} onClick={() => inputRef.current?.click()} onDragOver={(event) => { event.preventDefault(); if (!uploading) setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={dropped}><FileIcon size={36} weight="light" aria-hidden="true" /><span>{uploading ? "正在处理资料…" : <>拖入文件，或<span className="link-color">点击选择</span></>}</span><span className="drop-hint">Markdown / TXT · 单个文件最多 10 MB</span></button>
         <p className="upload-capability">MD / TXT 保存到服务器 · PDF / Word 待接入解析</p></> : <p className="readonly-note"><InfoIcon size={20} aria-hidden="true" />当前为普通用户，可查看资料和提问。添加或移除资料请联系编辑员或管理员。</p>}

@@ -10,6 +10,7 @@ from fastapi.openapi.utils import get_openapi
 from .config import Settings
 from .database import Database
 from .chat import ChatService
+from .prescriptions.routes import register_prescription_routes
 from .reference_document import download_reference_document, load_reference_document
 from .schemas import ChatQuestion, ChangePassword, CreateDocument, CreateUser, Login, ResetPassword, UpdateUser
 from .security import PERMISSIONS, hash_password, public_user, token_hash, verify_password
@@ -52,7 +53,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             if request.headers.get("x-csrf-protection") != "1" or (origin and origin not in settings.allowed_origins):
                 return JSONResponse({"detail": "请求来源校验失败，请刷新页面后重试"}, status_code=403)
             # Bound request bytes even for chunked requests before JSON parsing.
-            maximum = 12 * 1024 * 1024 if request.url.path == "/api/documents" else (64 * 1024 if request.url.path == "/api/chat" else 16 * 1024)
+            maximum = (12 * 1024 * 1024 if request.url.path in {"/api/documents", "/api/prescriptions/prepare"}
+                       else 128 * 1024 if request.url.path == "/api/prescriptions/check"
+                       else 64 * 1024 if request.url.path == "/api/chat" else 16 * 1024)
             size = 0
             chunks = []
             async for chunk in request.stream():
@@ -70,6 +73,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def validation_error(request, error):
         # Never echo submitted passwords or document content in errors.
         fields = ", ".join(str(item["loc"][-1]) for item in error.errors())
+        if request.url.path.startswith("/api/prescriptions/"):
+            return JSONResponse({"detail": "请检查处方字段、文件、字数和数值范围，并确认已核对原文后再检查。"}, status_code=422)
         if request.url.path == "/api/chat":
             return JSONResponse({"detail": "问题需为 1–2000 字；history 最多 5 轮，每轮 question 1–500 字、answer 最多 1000 字，且不接受其他字段。"}, status_code=422)
         return JSONResponse({"detail": f"请检查输入（{fields}）：账号 3–32 位字母、数字或下划线，密码 10–128 位，资料仅支持非空 MD / TXT（10 MB 内）"}, status_code=422)
@@ -242,6 +247,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             if not db.execute("DELETE FROM documents WHERE id = ?", (document_id,)).rowcount:
                 raise HTTPException(404, "资料不存在或已移除")
 
+    register_prescription_routes(app, require, settings)
     return app
 
 

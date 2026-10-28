@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-28",
+  "status": "passed",
+  "checks": [
+    "Reused unchanged production build",
+    "User 10-medicine example returns the exact requested not-passed verdict; heading and bold text visible; clipboard includes the same conclusion",
+    "390px / 320px conclusion wraps within the dialog and remains readable without horizontal overflow",
+    "Editing the prescription recalculates the conclusion and removes the previous incompatibility verdict; no automatic pharmacist approval",
+    "Missing data has a distinct pending-information conclusion",
+    "Review-only findings have a distinct pharmacist-review conclusion",
+    "Invalid prescription data fails with the correct reason instead of inventing an incompatibility",
+    "Explicitly simulated missing conclusion is reported as an error, preserves editable data, and retries successfully against the actual backend"
+  ],
+  "responses": [
+    {
+      "path": "/api/prescriptions/status",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    },
+    {
+      "path": "/api/prescriptions/check",
+      "status": 200
+    }
+  ],
+  "errors": [],
+  "environment": "Edge; isolated production Next.js 3114 -> FastAPI 8114; temporary SQLite; user fictitious example entered from prior verified extraction; actual backend rules; no model calls; one explicit missing-conclusion response adapter"
+}

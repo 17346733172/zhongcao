@@ -48,6 +48,8 @@
 
 ## 6. 无障碍
 
+处方流程使用 prescription-dialog / prescription-fields / prescription-report 分离编排、编辑和结果展示，类型与请求集中在 prescription-api.ts，样式集中在 prescription.css。multipart 上传由浏览器生成 Content-Type boundary，不能手动设置 JSON Content-Type。编辑任意已确认字段须清除确认勾选；更换处方清空旧数据，关闭弹窗释放 Object URL 并恢复焦点。报告复制保留类别、依据和复核边界。
+
 - 用语义化按钮、链接和表单表达操作。
 - 输入有可见标签，错误提示关联到对应控件。
 - 图标按钮有可理解名称，焦点样式清楚可见。
@@ -70,3 +72,9 @@
 Python 位于 backend/app，文件和函数采用 snake_case；配置、数据库、密码 / 权限、输入模型与 HTTP 接口分开。新增后端依赖维护 requirements.txt、requirements-dev.txt 与 requirements-lock.txt。
 
 前端页面只负责组装 Authenticated 与业务组件；API 及账号类型集中在 src/lib/api.ts。后端最终校验权限，前端根据权限调整按钮和入口。账号样式在 auth.css；共享资料的 stored 字段与示例 demo 字段分别表示持久化和演示，不将二者混淆。
+
+处方口径通过 `PrescriptionDoseScope` 复用上传 / 核对控件，纯转换 `withDoseScope` 集中维护整方选择。默认每剂量遵循用户明确要求，单味修改主动切换逐味模式；禁止只删除 finding 而不更新后端检查数据。
+
+处方审核结论由后端 `review.py` 生成，`narrative.py` 将当前处方与 findings 转为固定五节 `sections`；`PrescriptionReport` 和复制函数共同消费该结构，不在客户端推断临床内容。旧格式报告自动重查，缺少完整五节的异常响应明确报错并保留可编辑数据。
+
+表单 data-field 与服务端 missing_information.field 一致；补充入口通过现有弹窗的确认步骤定位字段，不新增弹窗或丢弃已核对值。报告重查和复制继续消费同一 sections；清单只包含实际缺失项。

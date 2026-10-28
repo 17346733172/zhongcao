@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpenTextIcon, BooksIcon, ChatTextIcon, ClockCounterClockwiseIcon, PlusCircleIcon, SidebarSimpleIcon, XIcon } from "@phosphor-icons/react";
+import { BookOpenTextIcon, BooksIcon, ChatTextIcon, CheckCircleIcon, ClockCounterClockwiseIcon, PlusCircleIcon, SidebarSimpleIcon, XIcon } from "@phosphor-icons/react";
 import { AccountNavigation } from "./authenticated";
 import { libraries } from "@/lib/demo-data";
 import type { Conversation } from "@/lib/types";
@@ -15,6 +15,7 @@ type Props = {
   onNew: () => void;
   onClose: () => void;
   onCollapse: () => void;
+  onPrescription: () => void;
 };
 
 export function Sidebar(props: Props) {
@@ -40,6 +41,7 @@ export function Sidebar(props: Props) {
               </button>
             ))}
           </div>
+          <button className="nav-item" onClick={props.onPrescription} aria-haspopup="dialog"><CheckCircleIcon size={22} aria-hidden="true" /><span>处方检查</span></button>
         </section>
         <section className="history-section" aria-labelledby="history-label">
           <h2 className="nav-label" id="history-label"><ClockCounterClockwiseIcon size={23} aria-hidden="true" />历史对话</h2>

@@ -17,3 +17,6 @@ backend/data/
 backend/.qa/
 __pycache__/
 *.py[cod]
+
+# Temporary failed browser-verification captures
+design/*-qa/failure.png

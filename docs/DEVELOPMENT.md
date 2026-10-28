@@ -55,6 +55,19 @@ demo-data.ts 仅保留知识库配置与空初始状态；检索逻辑在 knowle
 
 AI 模式向配置的云服务发送问题及相关片段，优先依据资料，相关资料未覆盖的内容允许用模型一般知识单独补充；自然语言首次未命中可以先调用一次语义整理，再按整理后的完整问题重检；仍无相关片段时返回未找到，不调用回答生成。原文检索模式在浏览器直接摘录，不调用模型。AI 问题结合当前会话最近 5 轮承接，前端通过 resolvedQuestion 保留连续省略的主题；历史只辅助理解，不作为事实或引用来源，每轮重检原文。原文检索模式仍独立检索。基础关键词检索的召回范围有限，向量检索、流式回答与会话持久化仍需后续实现。官方配置参考：[接入说明](https://api-docs.deepseek.com/quick_start/agent_integrations/)、[Chat Completion](https://api-docs.deepseek.com/api/create-chat-completion/)、[JSON 输出](https://api-docs.deepseek.com/guides/json_mode/)。
 
+## 处方检查接口与本地识别
+
+安装后端 requirements.txt（含官方 PyPI 源、LangGraph、RapidOCR、PDFium、python-docx 与 multipart；完整版本受 requirements-lock.txt 约束），然后重启后端。复用已有 DEEPSEEK_API_KEY / BASE_URL / MODEL，不新增图片云服务密钥。模型随 OCR 依赖提供；本机验证为 Python 3.14，依赖元数据保留 Python 3.11+ 范围。
+
+- `GET /api/prescriptions/status`：需登录及 knowledge:read，返回服务是否配置、支持格式与大小限制，不返回密钥。
+- `POST /api/prescriptions/prepare`：multipart，提交 `file` 或 `text` 二选一，可附 `instruction`（500 字以内）与 `dose_scope`（`per_dose / total / unknown`，省略保持逐味口径；界面按用户要求默认发送 per_dose）。文件最多 10 MB，文字 2 万字符，PDF 8 页，整体请求上限 12 MB。返回读取方式、原文、识别提醒、意图、待核对处方和已执行节点；非处方 / 多个版本返回澄清，不自动检查。只处理正文和表格；DOCX 内嵌图片会明确提醒未识别。
+- `POST /api/prescriptions/check`：JSON `{prescription, confirmed: true}`，总请求上限 128 KB。最多 100 味药；`prescription.dose_scope` 为整方口径，per_dose / total 在执行规则前统一各行，unknown / 省略则保留逐味口径。报告返回归一化后的实际处方；数值与单位不作换算。用户确认数据后执行规则并返回分级 findings、依据、范围、规则版本和局限，不调用模型改方。新增 `conclusion` 包含 status / result / detail / finding_codes / note，status 为 passed、not_passed、needs_information，decision_reasons 列明具体系统依据；十八反 / 已登记十九畏及数据异常优先不通过，真实信息缺失待补充，其他阻断项不通过，无阻断项通过本次系统辅助审核。Finding.blocking 为 false 时仅为持续提醒，不代表已排除临床风险。新增 `sections` 为固定 3.1—3.5 五节：每节包含 number / title / paragraphs / items / ordered，每条内容包含 lead（加粗前缀）/ text / children / sources；页面与复制均使用此结构，原元数据字段保留兼容。`missing_information` 始终返回数组（无缺失时为空），每项含 field / label / prompt；field 为患者字段或 `medicines.<零基行号>.<字段>`，只用于定位已存在的核对控件，具体清单也写入 3.1 sections，复制无需另行拼接。
+- 三种角色均可使用个人处方流程，仍不能越权写共享资料；所有写请求沿用 `X-CSRF-Protection: 1` 和 Origin 校验。错误反馈不回显输入。无数据库写入、无检查点持久化，禁用该流程远程追踪。每进程最多两个处方任务。
+
+本地 OCR 不保证手写、低清图片与小数点准确；界面原图对照和人工确认不可跳过。前端上传识别等待最多 180 秒，关闭弹窗取消浏览器等待，已经发出的后端模型调用可能继续完成。基础标识遮盖不等于完整匿名化，真实文件应先脱敏。
+
+规则、来源及验收见 [处方 Agent](PRESCRIPTION-AGENT.md)。共享知识库 PDF / Word 解析仍未接入，不能把处方解析等同于共享资料上传成功。
+
 ## 自动验证
 
 前端 typecheck 检查类型，test 使用 Node 测试运行器检查来源隔离、追问摘要及 AI / 原文独立开关的组合与请求边界，build 执行生产构建。独立开关的桌面 / 手机浏览器结果见 [回答方式验收](ANSWER-OPTIONS-QA.md)。
