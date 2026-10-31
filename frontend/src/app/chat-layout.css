@@ -38,7 +38,14 @@
   --ui-text: #4b5563;
   --ui-muted: #677183;
   --sidebar-width: clamp(252px, 17.2vw, 330px);
-  --chat-width: 970px;
+  --chat-width: 800px;
+  --answer-font: Arial, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --answer-size: 16px;
+  --answer-heading-size: 22px;
+  --answer-line-height: 1.75;
+  --answer-color: #0f1115;
+  --answer-section-gap: 32px;
+  --answer-paragraph-gap: 16px;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   font-family: var(--sans);
   color: var(--text);
@@ -82,18 +89,43 @@
 .question-row { justify-content: flex-end; gap: 0; }
 .question-row > .avatar, .answer-row > .avatar, .message-time { display: none; }
 .question-content { max-width: 85%; }
-.question-bubble { padding: 13px 19px; font-size: 18px; line-height: 1.65; background: #eff3fc; color: #1c2029; border-radius: 22px; white-space: pre-wrap; }
+.question-bubble { padding: 13px 19px; font-family: var(--answer-font); font-size: var(--answer-size); line-height: 1.75; background: #eff3fc; color: #1c2029; border-radius: 22px; white-space: pre-wrap; }
 .answer-row { margin-top: 37px; gap: 0; }
-.answer-paper { background: #fff; padding: 0; border-radius: 0; }
-.answer-paper > h2 { color: var(--navy); font: 700 27px/1.5 var(--sans); letter-spacing: 0; }
+.answer-paper { background: #fff; padding: 0; border-radius: 0; font-family: var(--answer-font); color: var(--answer-color); font-size: var(--answer-size); line-height: var(--answer-line-height); }
+.answer-paper > h2 { color: var(--answer-color); font: 700 28px/1.4 var(--answer-font); letter-spacing: 0; }
 .answer-origin { margin-bottom: 12px; font-size: 11px; color: #9297a2; }
 .answer-introduction { border: 0; font-size: 14px; line-height: 1.85; color: #858b98; padding: 13px 0 0; }
-.answer-section { margin-top: 30px; }
-.answer-section h3 { font: 650 22px/1.6 var(--sans); border: 0; padding: 0; color: var(--navy); }
-.answer-section > p { color: var(--text); font-size: 17px; line-height: 1.9; margin-top: 9px; }
-.answer-section > .section-origin { font-size: 11px; color: #8d93a0; margin-bottom: 6px; }
+.answer-section { margin-top: var(--answer-section-gap); }
+.answer-without-title > .answer-sections:first-child > .answer-section:first-child { margin-top: 0; }
+.answer-section-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 16px; }
+.answer-section h3 { font: 700 var(--answer-heading-size)/1.4 var(--answer-font); border: 0; padding: 0; color: var(--answer-color); letter-spacing: 0; }
+.answer-section .section-origin { font: 400 12px/1.5 var(--answer-font); color: #858a96; white-space: normal; }
+.answer-section-body { color: var(--answer-color); font-size: var(--answer-size); line-height: var(--answer-line-height); overflow-wrap: anywhere; }
+.answer-extract { white-space: pre-wrap; }
+.answer-markdown { display: contents; }
+.answer-markdown > * { margin: 0 0 var(--answer-paragraph-gap); }
+.answer-markdown > :last-child { margin-bottom: 0; }
+.answer-markdown > p:last-child { display: inline; }
+.answer-markdown strong { font-weight: 700; }
+.answer-markdown :is(ul, ol) { padding-left: 1.35em; }
+.answer-markdown li { padding-left: .15em; margin: 6px 0; }
+.answer-markdown li::marker { color: #60656d; }
+.answer-markdown li > p { margin: 0 0 8px; }
+.answer-markdown li > :is(ul, ol) { margin: 6px 0; }
+.answer-markdown :is(h4, h5, h6) { font-size: 18px; line-height: 1.5; font-weight: 700; margin-top: 24px; }
+.answer-markdown blockquote { margin-left: 0; padding-left: 16px; border-left: 3px solid #dfe2e7; color: #60656d; }
+.answer-markdown blockquote p { margin: 0; }
+.answer-markdown a { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
+.answer-markdown code { font: .875em/1.6 Consolas, "SFMono-Regular", monospace; background: #f4f5f7; border-radius: 4px; padding: 2px 5px; }
+.answer-markdown pre { max-width: 100%; overflow-x: auto; background: #f6f7f9; padding: 16px; border-radius: 10px; }
+.answer-markdown pre code { background: none; padding: 0; }
+.answer-markdown hr { border: 0; border-top: 1px solid var(--line); margin: 24px 0; }
+.answer-table-scroll { max-width: 100%; overflow-x: auto; }
+.answer-table-scroll table { border-collapse: collapse; width: 100%; font-size: 14px; }
+.answer-table-scroll :is(th, td) { border: 1px solid #e3e5e9; padding: 10px 14px; text-align: left; min-width: 110px; }
+.answer-table-scroll th { font-weight: 700; background: #f8f9fb; }
 .answer-section.ai-supplement { border: 0; border-top: 1px solid #ededf1; padding: 21px 0 0; border-radius: 0; }
-.ai-supplement > .section-origin { color: var(--supplement-text); padding: 3px 8px; }
+.ai-supplement .section-origin { color: var(--supplement-text); background: var(--supplement-paper); padding: 3px 8px; border-radius: 4px; }
 .answer-actions { justify-content: flex-start; padding-top: 17px; }
 .copy-answer { color: #8b909d; font-size: 12px; }
 .sources-area { border-color: #e9ebf0; margin-top: 18px; padding-top: 17px; }
@@ -147,7 +179,7 @@
   .welcome-state { padding-bottom: 7vh; }
 }
 @media (max-width: 720px) {
-  .workspace, .workspace.uploads-hidden { --ui-font-size: 16px; display: block; }
+  .workspace, .workspace.uploads-hidden { --ui-font-size: 16px; --answer-heading-size: 20px; display: block; }
   .sidebar { width: 280px; padding: 23px 17px 16px; }
   .desktop-sidebar-toggle { display: none; }
   .workspace .sidebar .brand span { font-size: 25px; }
@@ -161,10 +193,8 @@
   .answer-paper > h2 { font-size: 24px; }
   .answer-origin { font-size: 10px; }
   .answer-introduction { font-size: 12px; line-height: 1.85; }
-  .answer-section { margin-top: 25px; }
-  .answer-section h3 { font-size: 20px; }
-  .answer-section > p { font-size: 16px; line-height: 1.9; }
-  .answer-section > .section-origin { font-size: 10px; }
+  .answer-section { margin-top: var(--answer-section-gap); }
+  .answer-section-heading { margin-bottom: 14px; }
   .composer-footer { width: calc(100% - 28px); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
   .composer { min-height: 145px; border-radius: 23px; padding: 12px; }
   .composer textarea { font-size: 16px; min-height: 60px; }

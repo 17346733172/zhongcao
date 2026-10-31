@@ -28,8 +28,7 @@ export type Source = {
   downloadUrl?: string;
 };
 
-export type AnswerOption = "extract" | "ai";
-export type AnswerMode = AnswerOption | "none" | "both";
+export type AnswerMode = "ai" | "both";
 
 export type AnswerSection = {
   title: string;
@@ -40,7 +39,7 @@ export type AnswerSection = {
 };
 
 export type Answer = {
-  mode?: "extract" | "generated" | "no_match" | "clarification";
+  mode?: "extract" | "generated" | "no_match" | "clarification" | "greeting";
   resolvedQuestion?: string;
   model?: string;
   title: string;
@@ -54,6 +53,7 @@ export type Message = {
   question: string;
   time: string;
   answer: Answer;
+  showSources: boolean;
   originalAnswer?: Answer;
 };
 

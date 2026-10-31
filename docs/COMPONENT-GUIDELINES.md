@@ -40,6 +40,8 @@
 
 ## 5. 依赖
 
+2026-10-31：生成回答的正文统一交给 `answer-markdown.tsx`，使用 react-markdown 与 remark-gfm 渲染段落、加粗、列表和表格；不执行 HTML、不渲染远程图片或交互表单。原文摘录保持纯文本，来源编号仍由真实 Answer.sources 生成，不能交由模型 Markdown 伪造。表格使用可聚焦的独立滚动区域，窄屏不撑宽页面。字体、字号和间距使用 chat-layout.css 内的 --answer-* 变量；页面复制仍保留模型 Markdown 和来源标识。
+
 新增依赖应有具体用途，并确认项目现有能力是否足够。版本写入真实依赖清单与锁文件，避免同时维护多种包管理器锁文件。
 
 当前依赖清单为 frontend/package.json，锁文件为 frontend/pnpm-lock.yaml。使用 Phosphor React 图标、系统字体与普通 CSS；设计变量位于 src/app/globals.css，布局位于 workspace.css，用户新选聊天布局的工作区令牌与覆盖样式集中在 chat-layout.css。

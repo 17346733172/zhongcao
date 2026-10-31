@@ -216,10 +216,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/api/chat")
     def chat(payload: ChatQuestion, user=Depends(require("knowledge:read"))):
+        history = [turn.model_dump() for turn in payload.history]
+        if not payload.use_knowledge:
+            return chat_service.answer_general(payload.question, history)
         reference = load_reference_document()
         with database.connect() as db:
             documents = [document(row) for row in db.execute("SELECT * FROM documents ORDER BY created_at, id").fetchall()]
-        return chat_service.answer(payload.question, documents, reference, [turn.model_dump() for turn in payload.history])
+        return chat_service.answer(payload.question, documents, reference, history)
 
     @app.get("/api/reference-document")
     def reference_document(user=Depends(require("knowledge:read"))):

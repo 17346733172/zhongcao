@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-31",
+  "checks": [
+    "1440px：字体/字号/行高实测、加粗/列表、复制/键盘引用/焦点与单份来源卡片通过",
+    "1440px：段落、编号、引用、表格与窄屏滚动正常，HTML 不执行",
+    "390px：字体/字号/行高实测、加粗/列表、复制/键盘引用/焦点与单份来源卡片通过",
+    "390px：段落、编号、引用、表格与窄屏滚动正常，HTML 不执行",
+    "320px：字体/字号/行高实测、加粗/列表、复制/键盘引用/焦点与单份来源卡片通过",
+    "320px：段落、编号、引用、表格与窄屏滚动正常，HTML 不执行"
+  ],
+  "errors": [],
+  "metrics": [
+    {
+      "width": 1440,
+      "font": "Arial, \"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", sans-serif",
+      "size": "16px",
+      "lineHeight": "28px",
+      "color": "rgb(15, 17, 21)",
+      "headingSize": "22px",
+      "headingWeight": "700",
+      "fonts": [
+        {
+          "familyName": "Arial",
+          "postScriptName": "ArialMT",
+          "isCustomFont": false,
+          "glyphCount": 8
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 113
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "font": "Arial, \"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", sans-serif",
+      "size": "16px",
+      "lineHeight": "28px",
+      "color": "rgb(15, 17, 21)",
+      "headingSize": "20px",
+      "headingWeight": "700",
+      "fonts": [
+        {
+          "familyName": "Arial",
+          "postScriptName": "ArialMT",
+          "isCustomFont": false,
+          "glyphCount": 8
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 113
+        }
+      ]
+    },
+    {
+      "width": 320,
+      "font": "Arial, \"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", sans-serif",
+      "size": "16px",
+      "lineHeight": "28px",
+      "color": "rgb(15, 17, 21)",
+      "headingSize": "20px",
+      "headingWeight": "700",
+      "fonts": [
+        {
+          "familyName": "Arial",
+          "postScriptName": "ArialMT",
+          "isCustomFont": false,
+          "glyphCount": 8
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 113
+        }
+      ]
+    }
+  ],
+  "environment": "Edge + 隔离生产 Next.js 3121；受控模拟 API，部分文字取自用户截图，仅验证排版；不修改真实数据、不调用外部模型。"
+}

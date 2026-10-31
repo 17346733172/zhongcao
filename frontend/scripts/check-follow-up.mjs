@@ -14,3 +14,26 @@ test("上下文有限长且不发送旧原文和引用对象", () => {
   assert.equal(result[0].question.length, 500); assert.equal(result[0].answer.length, 1000); assert.ok(!JSON.stringify(result).includes("不应发送的整本文档"));
 });
 test("历史摘要保留 AI 补充类别", () => { assert.match(buildChatHistory([message("陈皮", { sections: [{ title: "补充", content: "通用知识", origin: "ai_supplement" }] })])[0].answer, /AI 补充，非文档原文/); });
+test("问候不占用最近五轮主题，也不影响后续追问上下文", () => {
+  const greetings = Array.from({ length: 6 }, () => message("你好", { mode: "greeting" }));
+  assert.deepEqual(buildChatHistory(greetings), []);
+  assert.deepEqual(buildChatHistory([message("陈皮"), ...greetings]).map(turn => turn.question), ["陈皮"]);
+});
+
+test("普通 AI 与知识库追问历史隔离，不把文档回答带入未勾选请求", () => {
+  const plain = { ...message("普通问题", { sections: [{ title: "说明", content: "模型知识" }] }), showSources: false };
+  const knowledge = { ...message("文档问题", { sections: [{ title: "原文", content: "KNOWLEDGE_CANARY", origin: "document" }] }), showSources: true };
+  const messages = [plain, knowledge];
+  assert.deepEqual(buildChatHistory(messages, false).map(turn => turn.question), ["普通问题"]);
+  assert.ok(!JSON.stringify(buildChatHistory(messages, false)).includes("KNOWLEDGE_CANARY"));
+  assert.deepEqual(buildChatHistory(messages, true).map(turn => turn.question), ["文档问题"]);
+});
+
+test("最近五轮在同模式历史中选取，其他模式和问候不会挤掉上下文", () => {
+  const messages = Array.from({ length: 8 }, (_, index) => [
+    { ...message("普通" + index), showSources: false },
+    { ...message("文档" + index), showSources: true },
+  ]).flat();
+  assert.deepEqual(buildChatHistory(messages, false).map(turn => turn.question), ["普通3", "普通4", "普通5", "普通6", "普通7"]);
+  assert.deepEqual(buildChatHistory(messages, true).map(turn => turn.question), ["文档3", "文档4", "文档5", "文档6", "文档7"]);
+});

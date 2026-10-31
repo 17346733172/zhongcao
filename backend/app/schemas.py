@@ -84,6 +84,7 @@ class ChatTurn(Input):
 class ChatQuestion(Input):
     question: str = Field(min_length=1, max_length=2000)
     history: list[ChatTurn] = Field(default_factory=list, max_length=5)
+    use_knowledge: bool = Field(default=False, strict=True)
 
     @field_validator("question", mode="before")
     @classmethod

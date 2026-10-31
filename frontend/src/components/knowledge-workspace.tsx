@@ -5,8 +5,8 @@ import { useCallback, useEffect, useRef, useState, type FormEvent, type Keyboard
 import { initialConversations, initialDocuments, libraries } from "@/lib/demo-data";
 import { createAnswer } from "@/lib/knowledge-answer";
 import { generateAnswer, loadAIStatus, type AIStatus } from "@/lib/chat-api";
-import { answerModeInfo, runAnswerMode, toggleAnswerOption } from "@/lib/answer-mode";
-import type { AnswerMode, AnswerOption, Conversation, KnowledgeDocument, Source } from "@/lib/types";
+import { answerModeInfo, runAnswerMode, toggleOriginalSearch } from "@/lib/answer-mode";
+import type { AnswerMode, Conversation, KnowledgeDocument, Source } from "@/lib/types";
 import { api, errorMessage } from "@/lib/api";
 import { useAuth } from "./authenticated";
 import { Sidebar } from "./sidebar";
@@ -22,7 +22,8 @@ export default function KnowledgeWorkspace() {
   const canWrite = user.permissions.includes("knowledge:write");
   const [uploading, setUploading] = useState(false);
   const [documentError, setDocumentError] = useState("");
-  const [documentsLoading, setDocumentsLoading] = useState(true);
+  const [documentsLoading, setDocumentsLoading] = useState(false);
+  const [documentsLoaded, setDocumentsLoaded] = useState(false);
   const [libraryId, setLibraryId] = useState("herbal");
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -33,11 +34,10 @@ export default function KnowledgeWorkspace() {
   const [mobile, setMobile] = useState(false);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
-  const [mode, setMode] = useState<AnswerMode>("extract");
+  const [mode, setMode] = useState<AnswerMode>("ai");
   const [aiStatus, setAIStatus] = useState<AIStatus | null>(null);
   const [aiStatusError, setAIStatusError] = useState("");
   const [answerError, setAnswerError] = useState("");
-  const modeChosen = useRef(false);
   const [source, setSource] = useState<Source | null>(null);
   const [referenceOpen, setReferenceOpen] = useState(false);
   const [prescriptionOpen, setPrescriptionOpen] = useState(false);
@@ -62,17 +62,19 @@ export default function KnowledgeWorkspace() {
       ]);
       setDocuments((current) => [...current.filter((doc) => !doc.stored), ...stored]);
       setReferenceDocument(reference);
+      setDocumentsLoaded(true);
     } catch (cause) { setDocumentError(errorMessage(cause)); }
     finally { setDocumentsLoading(false); }
   }, []);
-  useEffect(() => { void loadDocuments(); }, [loadDocuments]);
+  useEffect(() => {
+    if ((mode === "both" || uploadsOpen) && !documentsLoaded && !documentsLoading && !documentError) void loadDocuments();
+  }, [mode, uploadsOpen, documentsLoaded, documentsLoading, documentError, loadDocuments]);
   useEffect(() => {
     let active = true;
     loadAIStatus().then((status) => {
       if (!active) return;
       setAIStatus(status);
-      if (status.configured && !modeChosen.current) setMode("ai");
-    }).catch(() => { if (active) setAIStatusError("AI 状态暂时无法读取，仍可使用原文检索。"); });
+    }).catch(() => { if (active) setAIStatusError("AI 状态暂时无法读取，发送时将尝试生成回答。"); });
     return () => { active = false; };
   }, []);
 
@@ -157,11 +159,7 @@ export default function KnowledgeWorkspace() {
   }
   async function ask(question: string) {
     const text = question.trim();
-    if (!text || busy || answerRequest.current || documentsLoading || documentError) return;
-    if (mode === "none") {
-      setAnswerError("请选择 AI 回答或原文检索后再发送。");
-      return;
-    }
+    if (!text || busy || answerRequest.current || (mode === "both" && (!documentsLoaded || documentsLoading || documentError))) return;
     const controller = new AbortController();
     answerRequest.current = controller;
     setBusy(true);
@@ -171,11 +169,11 @@ export default function KnowledgeWorkspace() {
     const time = "今天 " + new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date());
     try {
       const result = await runAnswerMode(mode, text,
-        (question) => generateAnswer(question, controller.signal, currentConversation?.messages ?? []),
+        (question) => generateAnswer(question, controller.signal, currentConversation?.messages ?? [], mode === "both"),
         (question) => createAnswer(question, libraryDocuments, referenceDocument ?? undefined),
       );
       if (controller.signal.aborted || answerRequest.current !== controller) return;
-      const message = { id: crypto.randomUUID(), question: text, ...result, time };
+      const message = { id: crypto.randomUUID(), question: text, ...result, showSources: mode === "both", time };
       setConversations((current) => {
         const exists = current.find((item) => item.id === conversationId);
         if (exists) return current.map((item) => item.id === conversationId ? { ...item, messages: [...item.messages, message] } : item);
@@ -193,10 +191,9 @@ export default function KnowledgeWorkspace() {
       }
     }
   }
-  function chooseMode(option: AnswerOption) {
+  function toggleOriginal() {
     if (busy) return;
-    modeChosen.current = true;
-    setMode((current) => toggleAnswerOption(current, option));
+    setMode(toggleOriginalSearch);
     setAnswerError("");
   }
   function submit(event: FormEvent) { event.preventDefault(); void ask(draft); }
@@ -266,7 +263,7 @@ export default function KnowledgeWorkspace() {
           <div ref={scrollRef} className="conversation-scroll" aria-label="问答内容" aria-busy={busy}>
             <ConversationView mode={mode} messages={currentConversation?.messages ?? []} busy={busy} libraryName={currentLibrary.name} onSource={setSource} onToast={setToast} />
           </div>
-          <QuestionComposer draft={draft} mode={mode} busy={busy} disabled={documentsLoading || !!documentError} canWrite={canWrite} uploading={uploading} error={answerError} status={aiStatus} statusError={aiStatusError} inputRef={composerRef} onDraft={setDraft} onMode={chooseMode} onSubmit={submit} onKeyDown={composerKey} onAttach={attach} />
+          <QuestionComposer draft={draft} mode={mode} busy={busy} disabled={mode === "both" && (!documentsLoaded || documentsLoading || !!documentError)} canWrite={canWrite} uploading={uploading} error={answerError} status={aiStatus} statusError={aiStatusError} inputRef={composerRef} onDraft={setDraft} onToggleOriginalSearch={toggleOriginal} onSubmit={submit} onKeyDown={composerKey} onAttach={attach} />
         </div>
       </main>
       <UploadPanel canWrite={canWrite} uploading={uploading || documentsLoading} onRefresh={() => void loadDocuments()} documents={libraryDocuments} open={uploadsOpen} inputRef={inputRef} onFiles={addFiles} onClose={() => setUploadsOpen(false)} onRemove={(id) => void removeDocument(id)} onPreview={previewDocument} />

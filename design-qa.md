@@ -1,5 +1,51 @@
 # 本草知问 · 聊天排版视觉验收
 
+## 最新验收：DeepSeek 回答排版（2026-10-31）
+
+范围：按用户第一张 DeepSeek 图调整现有回答的字体与排版，保留本草知问的真实业务、回答组织、复制、引用和来源类别。没有复制 DeepSeek 的深度思考、联网搜索或编辑问题功能。
+
+- Source visual truth：[用户 DeepSeek 截图](design/answer-typography-qa/reference-deepseek.png)，1144 × 802；[用户当前页面截图](design/answer-typography-qa/reference-before.png)，1445 × 720。
+- Implementation：[本机页面](http://127.0.0.1:3000/)，[回答区截图](design/answer-typography-qa/answer-comparison.png)，1144 × 804；对照捕获 CSS viewport 为 915 × 718，deviceScaleFactor=1.25，截取实际 .chat-body，不缩放字形。参考图未提供原始 CSS viewport / DPR，依据可见字形尺寸选择 1.25 密度；不宣称整页逐像素等同。
+- State：浅色、已登录、侧栏收起、用户问题「陈皮」、知识库回答。浏览器受控 API 模拟数据使用参考图中的两个分节文本；模拟数据未写入真实知识库。模型回答采用现有 title / sections，不人为重建参考图的开场概述；全图仅比较本次涉及的回答字体与排版，问题编辑区、输入工具和来源标识属于现有产品差异。
+- Full-view comparison：[完整同图对照](design/answer-typography-qa/comparison-full.png)。Focused comparison：[分节局部同图对照](design/answer-typography-qa/comparison-detail.png)，参考截取 948 × 166，实现截取 1001 × 165，均保留原像素密度；局部用于检查标题、正文、加粗和行距，未拉伸到相同宽度。两张对照均已打开复核。
+
+### Findings 与修正历史
+
+1. 首轮 [P2]：24px 分节标题略大。调整为桌面 22px / 700、手机 20px / 700，重新生产构建及浏览器捕获后，标题视觉尺度与参考接近；局部对照高度 165px 对参考 166px，剩余宽度差异见 P3。
+2. 字体确认：对相同中文生成 Arial + Microsoft YaHei、Microsoft YaHei UI、SimSun 和 SimHei 样张，与参考对照后采用 Arial / Microsoft YaHei。CDP 平台字形确认中文实际为 Microsoft YaHei、英文为 Arial。前一次对照使用缩放截图，最终已替换为浏览器原生 1.25 密度捕获，未使用插值放大字形。
+3. 最终没有剩余可操作的 P0 / P1 / P2 问题。来源小标签保留于标题旁，AI 补充继续单独标识；这属于资料真实性要求，不按 DeepSeek 图移除。
+
+### 五项视觉检查
+
+- 字体：正文为 16px / 28px、#0F1115，桌面分节标题 22px / 700、手机 20px / 700，加粗使用真实 strong，列表使用 ul / ol / li。普通与知识库模式使用同一回答正文样式；状态提示与原文说明保留辅助字号。
+- 间距 / 布局：阅读列与输入框最大宽度 800px，分节间距 32px、段落间距 16px；段落、列表和多行内容自然换行。320 / 390px 无页面横向溢出，长表格在可聚焦的自身区域滚动。
+- 颜色：黑色正文、白底、灰色列表标记和辅助来源标签；引用沿用既有蓝色，AI 补充沿用已有浅米色标签，语义保持明确。
+- 图片 / 资源：此次参考区没有需新建的位图资产；保留现有 Phosphor 图标、系统字体与本地界面字体，无新外部字体加载或手绘替代素材。
+- 文案 / 内容：排版不改变资料含义。模型提示允许按需加粗、列表和空行；原文仍显示原字面文本。复制保留 Markdown 与来源类别，引用只使用后端关联的 sources。模拟截图用于排版核验，不当作真实医学回答或来源证据。
+
+### 验证
+
+- `pnpm typecheck`、29 项前端回归、98 项后端回归通过；最终源码副本 `pnpm build --webpack` 通过。
+- Edge + 独立生产 Next.js 3121，1440 / 390 / 320 CSS px、deviceScaleFactor=1.25，共 6 组浏览器检查通过，见[结果与实际字体](design/answer-typography-qa/result.json)。包含加粗、列表、分段、编号、引用块、表格、复制、键盘引用与焦点返回、资料卡片去重、HTML 不执行，无 pageerror。
+- [桌面](design/answer-typography-qa/answer-1440.png)、[390px](design/answer-typography-qa/answer-390.png)、[320px](design/answer-typography-qa/answer-320.png)、[窄屏表格](design/answer-typography-qa/rich-320.png)已捕获；已目视复核最终完整 / 局部对照及窄屏正文 / 表格。
+- 当前 3000 页面另做一次模拟 API 冒烟，确认正文 16px / 28px、标题 22px、加粗与列表已实际加载，[截图](design/answer-typography-qa/active-1440.png)；前后端代理健康。后端已重启加载最新提示。没有额外调用真实模型；样式不会将旧纯文本答案自动改写为列表。
+
+### Follow-up Polish
+
+- P3：参考截图的实际内容列与裁剪范围无法精确还原，现有 800px 阅读列的部分换行与截图略有差别，段落仍为同样三行；保留本项目统一输入 / 回答列。
+- 未验证其他操作系统的字体回退和真实模型每次选择的排版结构；不宣称拿到了 DeepSeek 的专有字体配置。
+
+### Implementation Checklist
+
+- [x] 保存用户参考，更新 DESIGN 和集中样式变量。
+- [x] 保留复制、真实引用、来源类别与原文展示，新增安全 Markdown 渲染。
+- [x] 修正标题偏大后重新构建、捕获，并在同图中比较完整和局部证据。
+- [x] 桌面 / 手机、当前本机页面与前后端检查通过。
+
+final result: passed
+
+---
+
 日期：2026-10-28。
 
 ## 最新补充：界面字体统一
