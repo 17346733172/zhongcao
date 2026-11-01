@@ -26,7 +26,7 @@ HEADERS = {"X-CSRF-Protection": "1", "Origin": "http://127.0.0.1:3000"}
 class AuthTests(unittest.TestCase):
     def setUp(self):
         self.temp = TemporaryDirectory()
-        self.settings = Settings(database=Path(self.temp.name) / "test.db")
+        self.settings = Settings(rag_enabled=False, database=Path(self.temp.name) / "test.db")
         self.app = create_app(self.settings)
         self.db = self.app.state.database
         self.password = secrets.token_urlsafe(18)
@@ -110,7 +110,7 @@ class AuthTests(unittest.TestCase):
         self.assertEqual(self.client.get("/api/auth/me").status_code, 401)
 
     def test_secure_cookie_config(self):
-        app = create_app(Settings(database=Path(self.temp.name) / "secure.db", secure_cookie=True))
+        app = create_app(Settings(rag_enabled=False, database=Path(self.temp.name) / "secure.db", secure_cookie=True))
         with TestClient(app, headers=HEADERS, base_url="https://testserver") as client:
             with app.state.database.connect() as db:
                 db.execute("INSERT INTO users(username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?)",

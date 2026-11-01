@@ -5,8 +5,8 @@ import { useCallback, useEffect, useRef, useState, type FormEvent, type Keyboard
 import { initialConversations, initialDocuments, libraries } from "@/lib/demo-data";
 import { createAnswer } from "@/lib/knowledge-answer";
 import { generateAnswer, loadAIStatus, type AIStatus } from "@/lib/chat-api";
-import { answerModeInfo, runAnswerMode, toggleOriginalSearch } from "@/lib/answer-mode";
-import type { AnswerMode, Conversation, KnowledgeDocument, Source } from "@/lib/types";
+import { answerModeInfo, DEFAULT_ANSWER_MODE, runAnswerMode } from "@/lib/answer-mode";
+import type { Conversation, KnowledgeDocument, Source } from "@/lib/types";
 import { api, errorMessage } from "@/lib/api";
 import { useAuth } from "./authenticated";
 import { Sidebar } from "./sidebar";
@@ -34,7 +34,7 @@ export default function KnowledgeWorkspace() {
   const [mobile, setMobile] = useState(false);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
-  const [mode, setMode] = useState<AnswerMode>("ai");
+  const mode = DEFAULT_ANSWER_MODE;
   const [aiStatus, setAIStatus] = useState<AIStatus | null>(null);
   const [aiStatusError, setAIStatusError] = useState("");
   const [answerError, setAnswerError] = useState("");
@@ -67,8 +67,8 @@ export default function KnowledgeWorkspace() {
     finally { setDocumentsLoading(false); }
   }, []);
   useEffect(() => {
-    if ((mode === "both" || uploadsOpen) && !documentsLoaded && !documentsLoading && !documentError) void loadDocuments();
-  }, [mode, uploadsOpen, documentsLoaded, documentsLoading, documentError, loadDocuments]);
+    if (!documentsLoaded && !documentsLoading && !documentError) void loadDocuments();
+  }, [documentsLoaded, documentsLoading, documentError, loadDocuments]);
   useEffect(() => {
     let active = true;
     loadAIStatus().then((status) => {
@@ -159,7 +159,7 @@ export default function KnowledgeWorkspace() {
   }
   async function ask(question: string) {
     const text = question.trim();
-    if (!text || busy || answerRequest.current || (mode === "both" && (!documentsLoaded || documentsLoading || documentError))) return;
+    if (!text || busy || answerRequest.current || !documentsLoaded || documentsLoading || documentError) return;
     const controller = new AbortController();
     answerRequest.current = controller;
     setBusy(true);
@@ -169,11 +169,11 @@ export default function KnowledgeWorkspace() {
     const time = "今天 " + new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date());
     try {
       const result = await runAnswerMode(mode, text,
-        (question) => generateAnswer(question, controller.signal, currentConversation?.messages ?? [], mode === "both"),
+        (question) => generateAnswer(question, controller.signal, currentConversation?.messages ?? []),
         (question) => createAnswer(question, libraryDocuments, referenceDocument ?? undefined),
       );
       if (controller.signal.aborted || answerRequest.current !== controller) return;
-      const message = { id: crypto.randomUUID(), question: text, ...result, showSources: mode === "both", time };
+      const message = { id: crypto.randomUUID(), question: text, ...result, showSources: true, time };
       setConversations((current) => {
         const exists = current.find((item) => item.id === conversationId);
         if (exists) return current.map((item) => item.id === conversationId ? { ...item, messages: [...item.messages, message] } : item);
@@ -190,11 +190,6 @@ export default function KnowledgeWorkspace() {
         requestAnimationFrame(() => composerRef.current?.focus());
       }
     }
-  }
-  function toggleOriginal() {
-    if (busy) return;
-    setMode(toggleOriginalSearch);
-    setAnswerError("");
   }
   function submit(event: FormEvent) { event.preventDefault(); void ask(draft); }
   function composerKey(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -263,7 +258,7 @@ export default function KnowledgeWorkspace() {
           <div ref={scrollRef} className="conversation-scroll" aria-label="问答内容" aria-busy={busy}>
             <ConversationView mode={mode} messages={currentConversation?.messages ?? []} busy={busy} libraryName={currentLibrary.name} onSource={setSource} onToast={setToast} />
           </div>
-          <QuestionComposer draft={draft} mode={mode} busy={busy} disabled={mode === "both" && (!documentsLoaded || documentsLoading || !!documentError)} canWrite={canWrite} uploading={uploading} error={answerError} status={aiStatus} statusError={aiStatusError} inputRef={composerRef} onDraft={setDraft} onToggleOriginalSearch={toggleOriginal} onSubmit={submit} onKeyDown={composerKey} onAttach={attach} />
+          <QuestionComposer draft={draft} busy={busy} disabled={!documentsLoaded || documentsLoading || !!documentError} canWrite={canWrite} uploading={uploading} error={answerError} status={aiStatus} statusError={aiStatusError} inputRef={composerRef} onDraft={setDraft} onSubmit={submit} onKeyDown={composerKey} onAttach={attach} />
         </div>
       </main>
       <UploadPanel canWrite={canWrite} uploading={uploading || documentsLoading} onRefresh={() => void loadDocuments()} documents={libraryDocuments} open={uploadsOpen} inputRef={inputRef} onFiles={addFiles} onClose={() => setUploadsOpen(false)} onRemove={(id) => void removeDocument(id)} onPreview={previewDocument} />

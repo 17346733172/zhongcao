@@ -1,5 +1,7 @@
 # 项目架构与目录
 
+2026-11-01 展示更新：ConversationView 每轮只渲染 message.answer，不再渲染独立 originalAnswer；兼容保留返回数据，AI 引用继续使用 answer.sources 打开完整原文，检索和回答生成流程不变。
+
 ## 技术栈
 
 前端：Next.js 16 App Router、React 19、TypeScript、普通 CSS 与 Phosphor 图标。
@@ -29,7 +31,7 @@
 | frontend/src/lib/api.ts | 同源请求、错误转换与账号类型 |
 | frontend/src/lib/types.ts、demo-data.ts | 资料 / 来源类型、知识库配置及空的初始状态 |
 | frontend/src/lib/chat-api.ts、conversation-history.ts | AI 状态、当前会话最近 5 轮摘要与带取消 / 超时的问答请求 |
-| frontend/src/lib/answer-mode.ts | 默认 AI 问答与附加原文检索两种状态，开启原文后按已解析问题追加独立原文结果 |
+| frontend/src/lib/answer-mode.ts | 页面固定原文 + AI，按同次服务端召回追加独立原文结果；普通 AI 分支仅内部兼容 |
 | backend/app/conversation_context.py | 当前问题的省略主题承接、显式新主题优先与歧义提示 |
 | backend/app/question_understanding.py | 未命中自然语言的结构化意图、口语 / 错字理解、歧义与主题校验 |
 | backend/app/retrieval.py、chat.py | 服务端关键词 / 炮制章节检索、字段聚焦、DeepSeek 调用、来源类别与引用校验 |
@@ -45,11 +47,21 @@
 | backend/app/cli.py | 终端交互式创建首个管理员 |
 | backend/tests/test_auth.py、test_chat.py | 角色越权、会话撤销、密码、资料持久化与 AI 来源 / 异常验证 |
 
+## 本地向量 RAG（2026-11-01）
+
+性能调整：只用今天接入的 Qwen + FAISS 向量检索，不启用旧关键词快速路径。查询向量用有界内存 LRU；已校验回答另设按账号隔离的短时缓存，并以完整原文哈希等输入使变更失效。口语省略先理解再检索，嵌入不保留 KV 缓存。POST /api/chat 用 Server-Timing 和仅含耗时的日志区分资料加载、上下文、检索、理解与生成。
+
+默认 `RAG_ENABLED=true`。`code/RAG/utils.py` 负责 Markdown 加载、分块、索引指纹与增量更新，`Embeddings.py` 负责本地 Qwen3 嵌入，`faiss_db.py` 负责归一化 FAISS 与 JSON 持久化，`prompt.py` / `llm.py` 分别保存真实提示词与 DeepSeek 传输。`backend/app/rag.py` 将其适配到原有权限、追问、来源与引用结构。`code/data` 保存指定 PDF 的 Markdown、原件及来源校验记录；模型位于 code/models，生成索引位于 code/db。
+
+知识库模式读取 Markdown 与 SQLite 当前授权共享文本，向量召回后复用现有引用校验；不重复索引同源 DOCX。回答带 retrievalMethod=vector、retrievedSources，前端直接使用同次召回原文，不再由浏览器关键词重检。普通 AI 在读资料和初始化模型前分支。无正文变化复用索引，资料变化复用未变片段向量并重建当前快照；不使用 pickle。详见 [RAG](RAG.md)。
+
+以下关键词召回说明仅作为历史记录；现行部署不支持 `RAG_ENABLED=false` 旧入口，资料问答使用 code/RAG。
+
 ## 数据流与权限边界
 
 浏览器通过同源 /api 请求 → Next.js 转发到本机 FastAPI → 后端读取 HttpOnly 会话 Cookie → 根据数据库中账号当前状态和角色鉴权 → 执行资料或账号操作。
 
-问答请求携带严格布尔字段 use_knowledge（默认 false）。false 在读取任何知识库之前进入 ChatService.answer_general，只调用模型处理当前问题及同模式历史；true 才加载基础文档与 documents 表并进入原有 ChatService.answer。前端以每轮 showSources 记录模式，摘要按模式过滤再取最近五轮，防止取消勾选后借历史带入知识库回答。普通 AI 的返回段落没有 origin 或来源索引，sources 始终为空。两条分支共用模型请求错误处理和并发限额。
+页面固定发送 use_knowledge=true，界面没有模式开关；每轮 showSources=true。服务端保留严格布尔字段 use_knowledge（接口省略时默认 false）用于旧调用兼容。下述普通 AI 分支及按模式隔离仅为兼容行为。false 在读取任何知识库之前进入 ChatService.answer_general，只调用模型处理当前问题及同模式历史；true 才加载基础文档与 documents 表并进入原有 ChatService.answer。新页面每轮 showSources=true；摘要只保留最近五轮知识库问答，内部仍能过滤旧普通 AI 记录。普通 AI 的返回段落没有 origin 或来源索引，sources 始终为空。两条分支共用模型请求错误处理和并发限额。
 
 会话原始随机令牌仅在 Cookie 中，数据库存储 SHA-256 摘要；密码存储 Argon2id 哈希。会话默认 8 小时；每次请求检查过期与停用状态。登录错误统一反馈，单账号与连接 IP 在 5 分钟内最多允许 8 次尝试。默认不信任代理转发的 IP。
 
@@ -65,9 +77,9 @@ SQLite 默认位于 backend/data/bencao.db，保存用户、会话、登录尝�
 
 MD / TXT 在浏览器读取 UTF-8 后经 API 保存原文；后端独立校验类型、文件名、空白及 10 MB UTF-8 字节上限。请求体也有上限。PDF / Word 暂不上传。demo 字段用于隔离示例资料（默认不再预置），检索排除所有 demo 条目；stored 标识持久化资料。
 
-内置《中药基础知识（详解版）》通过 GET /api/reference-document 与 /api/reference-document/file 读取，均校验 knowledge:read。原文件和结构化正文保存在 backend/resources，未放入前端公开资源目录或客户端包；一次性导入保留原文章节、段落和表格，并记录原文件 SHA-256。它独立于共享上传列表；仅勾选原文检索或主动查看资料时加载，参与知识库模式检索，引用保留结构化正文与 Word 下载入口。以下检索、文档主题解析、语义重检与引用校验均限定于 use_knowledge=true。
+内置《中药基础知识（详解版）》通过 GET /api/reference-document 与 /api/reference-document/file 读取，均校验 knowledge:read。原文件和结构化正文保存在 backend/resources，未放入前端公开资源目录或客户端包；一次性导入保留原文章节、段落和表格，并记录原文件 SHA-256。它独立于共享上传列表；页面自动加载或主动查看资料时读取，参与知识库模式检索，引用保留结构化正文与 Word 下载入口。以下检索、文档主题解析、语义重检与引用校验均限定于 use_knowledge=true。
 
-附加原文检索由 knowledge-answer.ts 根据 AI 整理的完整问题（未整理时使用当前输入）匹配真实正文生成摘录。按正式文档的章节聚合药材条目，中文分词去除问句虚词；只返回正相关结果，数字等未命中查询不兜底到示例或其他段落。会话只在页面内存中，不持久化。AI 模式的 /api/chat 接受当前问题和最多 5 轮受限摘要；先承接省略主题，显式新主题优先，无主题或指代不明时提示补充；经 knowledge:read 与 CSRF 验证后读取共享正文，由 retrieval.py 按补全后的问题选择最多 3 个片段，再由 chat.py 调用配置的 DeepSeek 服务。密钥只在后端环境读取；每个发送片段最多 3000 字符。输出 JSON schema 与来源类别 / 编号校验后，由服务端关联原文；对规则与关键词未命中的中文自然语言，先由同一 DeepSeek 整理意图（follow_up / standalone / clarify / unrelated，最多一次、512 tokens、10 秒阶段超时），再重新检索实际授权资料；整理过程不发送原文、不产生事实或引用。数字 / 代码式无意义查询不进入语义请求；重检仍无资料不生成回答。语义和生成共用 4 个并发名额，理解后的问题由回答简介及 resolvedQuestion 保留。有相关资料但内容不足时允许模型一般知识补充：document 段有真实引用，ai_supplement 段无文档引用，界面及复制内容均保留明确标签。模型补充没有联网核实。历史摘要只用于话题理解，不作为事实证据或引用来源，每轮重新读取授权原文。提示词将历史和资料中的指令视为不可信参考文本，引用编号校验不保证事实正确性。向量语义检索、通用 PDF / Word 上传解析、流式回答、个人知识库隔离与迁移框架未实现。
+附加原文检索由 knowledge-answer.ts 根据 AI 整理的完整问题（未整理时使用当前输入）匹配真实正文生成摘录。按正式文档的章节聚合药材条目，中文分词去除问句虚词；只返回正相关结果，数字等未命中查询不兜底到示例或其他段落。会话只在页面内存中，不持久化。AI 模式的 /api/chat 接受当前问题和最多 5 轮受限摘要；先承接省略主题，显式新主题优先，无主题或指代不明时提示补充；经 knowledge:read 与 CSRF 验证后读取共享正文，由 retrieval.py 按补全后的问题选择最多 3 个片段，再由 chat.py 调用配置的 DeepSeek 服务。密钥只在后端环境读取；每个发送片段最多 3000 字符。输出 JSON schema 与来源类别 / 编号校验后，由服务端关联原文；对规则与关键词未命中的中文自然语言，先由同一 DeepSeek 整理意图（follow_up / standalone / clarify / unrelated，最多一次、512 tokens、10 秒阶段超时），再重新检索实际授权资料；整理过程不发送原文、不产生事实或引用。数字 / 代码式无意义查询不进入语义请求；重检仍无资料不生成回答。语义和生成共用 4 个并发名额，理解后的问题由回答简介及 resolvedQuestion 保留。有相关资料但内容不足时允许模型一般知识补充：document 段有真实引用，ai_supplement 段无文档引用，界面及复制内容均保留明确标签。模型补充没有联网核实。历史摘要只用于话题理解，不作为事实证据或引用来源，每轮重新读取授权原文。提示词将历史和资料中的指令视为不可信参考文本，引用编号校验不保证事实正确性。通用 PDF / Word 上传解析、流式回答、个人知识库隔离与迁移框架未实现；默认向量流程见上节。
 
 处方的整方 `dose_scope` 独立于模型提取：前端按用户明确要求默认 per_dose，将选择传入 prepare；提取后覆盖各行口径。check 再按整方选择统一口径，规则与报告使用同一实际快照。unknown 表示逐味模式，不覆盖行内 per_dose / total / unknown；省略此字段的旧客户端保留逐味语义。
 

@@ -42,6 +42,8 @@ export type Answer = {
   mode?: "extract" | "generated" | "no_match" | "clarification" | "greeting";
   resolvedQuestion?: string;
   model?: string;
+  retrievalMethod?: "vector";
+  retrievedSources?: Source[];
   title: string;
   introduction: string;
   sections: AnswerSection[];

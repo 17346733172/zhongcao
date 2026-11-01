@@ -73,7 +73,7 @@ class PrescriptionRuleTests(unittest.TestCase):
         self.assertIn("conflicting_metadata", codes)
 
     def test_extraction_must_match_real_drug_and_numeric_evidence(self):
-        settings = Settings(deepseek_api_key="unit-test")
+        settings = Settings(rag_enabled=False, deepseek_api_key="unit-test")
         for medicine in [
             {"name": "陈皮", "dose": "19", "unit": "g", "source": "陈皮 9 g"},
             {"name": "附子", "dose": "10", "unit": "g", "source": "附子 10 g"},
@@ -102,7 +102,7 @@ class PrescriptionRuleTests(unittest.TestCase):
     def test_negative_dose_from_original_can_be_confirmed_and_flagged(self):
         payload = prescription(medicines=[{"name": "陈皮", "dose": "-1", "unit": "g", "source": "陈皮 -1 g"}]).model_dump()
         with patch("app.prescriptions.extraction.request_json", return_value=json.dumps(payload)):
-            result = extract(Settings(deepseek_api_key="unit-test"), "陈皮 -1 g")
+            result = extract(Settings(rag_enabled=False, deepseek_api_key="unit-test"), "陈皮 -1 g")
         self.assertTrue(any(f["code"] == "invalid_dose" for f in check_prescription(result)))
 
 
@@ -143,7 +143,7 @@ class PrescriptionFileTests(unittest.TestCase):
 class PrescriptionApiTests(unittest.TestCase):
     def setUp(self):
         self.temp = TemporaryDirectory()
-        self.app = create_app(Settings(database=Path(self.temp.name) / "test.db", deepseek_api_key="unit-test"))
+        self.app = create_app(Settings(rag_enabled=False, database=Path(self.temp.name) / "test.db", deepseek_api_key="unit-test"))
         self.client = TestClient(self.app)
         self.client.__enter__()
         with self.app.state.database.connect() as db:
@@ -473,7 +473,7 @@ class PrescriptionApiTests(unittest.TestCase):
     def test_missing_ai_and_task_capacity_are_explicit(self):
         self.login()
         agent = self.app.state.prescription_agent
-        agent.settings = Settings(database=Path(self.temp.name) / "test.db")
+        agent.settings = Settings(rag_enabled=False, database=Path(self.temp.name) / "test.db")
         self.assertEqual(self.client.post("/api/prescriptions/prepare", data={"text": "陈皮9g 每剂"}).status_code, 503)
         agent.slots.acquire(); agent.slots.acquire()
         try:

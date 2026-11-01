@@ -31,7 +31,7 @@ class ChatTests(unittest.TestCase):
         self.temp = TemporaryDirectory()
         self.password = secrets.token_urlsafe(18)
         self.key = secrets.token_urlsafe(20)
-        self.settings = Settings(database=Path(self.temp.name) / "chat.db", deepseek_api_key=self.key)
+        self.settings = Settings(rag_enabled=False, database=Path(self.temp.name) / "chat.db", deepseek_api_key=self.key)
         self.app = create_app(self.settings)
         self.client = TestClient(self.app, headers=HEADERS)
         self.client.__enter__()
@@ -139,7 +139,7 @@ class ChatTests(unittest.TestCase):
             response = self.client.post("/api/chat", json={"question": "陈皮", "use_knowledge": False})
             self.assertEqual(response.status_code, 502)
             self.assertNotIn(self.key, response.text)
-        with TestClient(create_app(Settings(database=self.settings.database)), headers=HEADERS) as client:
+        with TestClient(create_app(Settings(rag_enabled=False, database=self.settings.database)), headers=HEADERS) as client:
             client.post("/api/auth/login", json={"username": "viewer", "password": self.password})
             with patch("app.chat.httpx.Client") as factory:
                 response = client.post("/api/chat", json={"question": "陈皮", "use_knowledge": False})
@@ -170,7 +170,7 @@ class ChatTests(unittest.TestCase):
             factory.assert_not_called()
 
     def test_missing_key_is_explicit_but_no_hit_still_returns_empty(self):
-        app = create_app(Settings(database=self.settings.database))
+        app = create_app(Settings(rag_enabled=False, database=self.settings.database))
         with TestClient(app, headers=HEADERS) as client:
             client.post("/api/auth/login", json={"username": "viewer", "password": self.password})
             self.assertFalse(client.get("/api/ai/status").json()["configured"])
@@ -297,7 +297,7 @@ class ChatTests(unittest.TestCase):
                 service.slots.release()
         for url in ("http://example.com", "https://user:password@example.com", "https://api.deepseek.com?key=fake"):
             with self.assertRaises(ValueError):
-                Settings(deepseek_base_url=url)
+                Settings(rag_enabled=False, deepseek_base_url=url)
 
 
     def test_specific_question_excludes_unasked_fields_from_model_context(self):

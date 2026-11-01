@@ -1,17 +1,16 @@
 "use client";
 
-import { ArrowUpIcon, BookOpenTextIcon, PaperclipIcon } from "@phosphor-icons/react";
+import { ArrowUpIcon, PaperclipIcon } from "@phosphor-icons/react";
 import type { FormEvent, KeyboardEvent, RefObject } from "react";
 import type { AIStatus } from "@/lib/chat-api";
-import { answerModeInfo } from "@/lib/answer-mode";
-import type { AnswerMode } from "@/lib/types";
+import { answerModeInfo, DEFAULT_ANSWER_MODE } from "@/lib/answer-mode";
 
 type Props = {
-  draft: string; mode: AnswerMode; busy: boolean; disabled: boolean;
+  draft: string; busy: boolean; disabled: boolean;
   canWrite: boolean; uploading: boolean; error: string;
   status: AIStatus | null; statusError: string;
   inputRef: RefObject<HTMLTextAreaElement | null>;
-  onDraft: (value: string) => void; onToggleOriginalSearch: () => void;
+  onDraft: (value: string) => void;
   onSubmit: (event: FormEvent) => void;
   onKeyDown: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
   onAttach: () => void;
@@ -23,11 +22,8 @@ export function QuestionComposer(props: Props) {
       {props.error && <p className="answer-error" role="alert">{props.error}</p>}
       <form className="composer" onSubmit={props.onSubmit}>
         <label className="visually-hidden" htmlFor="question">向中药资料提问</label>
-        <textarea id="question" ref={props.inputRef} rows={2} maxLength={2000} value={props.draft} onChange={(event) => props.onDraft(event.target.value)} onKeyDown={props.onKeyDown} placeholder="给本草知问发送消息" disabled={props.busy || props.disabled} />
+        <textarea id="question" aria-describedby="answer-mode-help" ref={props.inputRef} rows={2} maxLength={2000} value={props.draft} onChange={(event) => props.onDraft(event.target.value)} onKeyDown={props.onKeyDown} placeholder="给本草知问发送消息" disabled={props.busy || props.disabled} />
         <div className="composer-tools">
-          <div className="answer-mode-switch" role="group" aria-label="附加检索" aria-describedby="answer-mode-help">
-            <button type="button" aria-pressed={props.mode === "both"} disabled={props.busy} onClick={props.onToggleOriginalSearch}><BookOpenTextIcon size={17} aria-hidden="true" />原文检索</button>
-          </div>
           <div className="composer-actions">
             {props.canWrite && <button type="button" disabled={props.uploading || props.disabled} className="icon-button attach-button" aria-label="添加资料附件" onClick={props.onAttach}><PaperclipIcon size={23} /></button>}
             <button className="send-button primary-button" type="submit" aria-label={props.busy ? "正在生成回答" : "发送"} disabled={!props.draft.trim() || props.busy || props.disabled}><ArrowUpIcon size={25} weight="bold" aria-hidden="true" /></button>
@@ -35,7 +31,7 @@ export function QuestionComposer(props: Props) {
         </div>
       </form>
       <div className="composer-meta">
-        <p id="answer-mode-help" aria-live="polite">{answerModeInfo[props.mode].note}</p>
+        <p id="answer-mode-help" aria-live="polite">{answerModeInfo[DEFAULT_ANSWER_MODE].note}</p>
         <span className="ai-status-note">{props.statusError || (props.status ? props.status.configured ? "DeepSeek 已配置" : "AI 服务尚未配置，请配置后使用 AI 回答。" : "正在检查 AI 服务…")}</span>
       </div>
     </footer>

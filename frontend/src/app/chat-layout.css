@@ -139,11 +139,7 @@
 .composer:focus-within { border-color: #a8b6f5; box-shadow: 0 0 0 2px #f1f3ff, 0 12px 35px #293b6810; }
 .composer textarea { display: block; width: 100%; min-height: 67px; max-height: 150px; padding: 5px 3px 12px; font: 18px/1.65 var(--sans); color: #23262d; }
 .composer textarea::placeholder { color: #a9aeb9; }
-.composer-tools { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 8px; }
-.answer-mode-switch { display: flex; gap: 9px; border: 0; padding: 0; background: none; border-radius: 0; }
-.answer-mode-switch button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 9px 12px; min-height: 40px; color: #4b4f59; font-size: 14px; border: 1px solid #e3e5e9; border-radius: 22px; background: #fff; }
-.answer-mode-switch button[aria-pressed="true"] { background: #f0f3ff; border-color: #dce2ff; color: #435bd1; box-shadow: none; }
-.answer-mode-switch button:hover:not(:disabled) { background: #f3f4f8; }
+.composer-tools { display: flex; align-items: center; justify-content: flex-end; gap: 14px; margin-top: 8px; }
 .composer-actions { display: flex; align-items: center; gap: 17px; }
 .attach-button { color: #3f4550; width: 33px; height: 40px; }
 .send-button { display: inline-flex; align-items: center; justify-content: center; min-width: 42px; width: 42px; height: 42px; padding: 0; border-radius: 50%; }
@@ -199,8 +195,6 @@
   .composer { min-height: 145px; border-radius: 23px; padding: 12px; }
   .composer textarea { font-size: 16px; min-height: 60px; }
   .composer-tools { gap: 6px; }
-  .answer-mode-switch { gap: 6px; }
-  .answer-mode-switch button { padding: 8px 9px; font-size: 12px; }
   .composer-actions { gap: 7px; }
   .send-button { min-width: 40px; width: 40px; height: 40px; }
   .attach-button { width: 28px; }
@@ -216,7 +210,6 @@
   .thinking { padding-left: 0; }
 }
 @media (max-width: 360px) {
-  .answer-mode-switch button { padding: 8px; font-size: 11px; gap: 3px; }
   .composer-actions { gap: 3px; }
   .welcome h2 { font-size: 21px; }
 }

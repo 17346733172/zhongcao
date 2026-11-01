@@ -8,10 +8,10 @@ export function loadAIStatus() {
   return api<AIStatus>("/ai/status");
 }
 
-export function generateAnswer(question: string, signal: AbortSignal, messages: Message[] = [], useKnowledge = false) {
+export function generateAnswer(question: string, signal: AbortSignal, messages: Message[] = [], useKnowledge = true) {
   return api<Answer>("/chat", {
     method: "POST",
     body: JSON.stringify({ question, history: buildChatHistory(messages, useKnowledge), use_knowledge: useKnowledge }),
-    signal: AbortSignal.any([signal, AbortSignal.timeout(45000)]),
+    signal: AbortSignal.any([signal, AbortSignal.timeout(useKnowledge ? 180000 : 45000)]),
   });
 }

@@ -33,7 +33,8 @@ def depends_on_context(question):
 
 def topic_lookup(documents, reference):
     sources = [reference] if reference else []
-    sources += [{"name": doc["name"], "fullText": doc.get("content", "")} for doc in documents]
+    sources += [{"name": doc["name"], "fullText": doc.get("content", ""),
+                 **({"blocks": doc["blocks"]} if doc.get("blocks") else {})} for doc in documents]
     catalog = {item.topic for source in sources for item in passages_for(source) if item.topic}
 
     def topics_in(text):

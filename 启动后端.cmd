@@ -11,7 +11,7 @@ if not defined BENCAO_PYTHON goto python_missing
 if errorlevel 1 goto failed
 :ready
 set "BENCAO_PYTHON=%CD%\.venv\Scripts\python.exe"
-"%BENCAO_PYTHON%" -c "from importlib.metadata import version; import fastapi,uvicorn,argon2,dotenv; assert version('fastapi') == '0.159.1'; assert version('uvicorn') == '0.54.0'; assert version('argon2-cffi') == '25.1.0'; assert version('python-dotenv') == '1.2.1'" >nul 2>nul
+"%BENCAO_PYTHON%" -c "from importlib.metadata import version; import fastapi,uvicorn,argon2,dotenv; assert version('fastapi') == '0.159.1'; assert version('uvicorn') == '0.54.0'; assert version('argon2-cffi') == '25.1.0'; assert version('python-dotenv') == '1.2.1'; assert version('torch') == '2.15.0'; assert version('transformers') == '4.57.6'; assert version('faiss-cpu') == '1.15.1'" >nul 2>nul
 if not errorlevel 1 goto dependencies_ready
 "%BENCAO_PYTHON%" -m pip install -r requirements.txt
 if errorlevel 1 goto failed
@@ -22,6 +22,7 @@ if errorlevel 1 goto failed
 "%BENCAO_PYTHON%" -c "import json,urllib.request,sys; r=json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/health',timeout=3)); sys.exit(0 if r.get('service')=='bencao-api' else 1)" >nul 2>nul
 if not errorlevel 1 goto already_running
 echo Starting backend. Keep this terminal open.
+echo Local vector model warmup may take about a minute. Wait for Application startup complete.
 echo API docs: http://127.0.0.1:8000/docs
 "%BENCAO_PYTHON%" -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-proxy-headers
 if errorlevel 1 goto failed

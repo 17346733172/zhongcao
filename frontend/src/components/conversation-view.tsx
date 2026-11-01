@@ -70,16 +70,13 @@ function AnswerResult({ answer, id, label, showSources, showSourceCard = true, o
 }
 
 function AnswerMessage({ message, onSource, onToast }: AnswerActions & { message: Message }) {
-  const originalAnswer = message.showSources && message.originalAnswer?.mode !== "no_match" ? message.originalAnswer : undefined;
-  const showAnswer = message.answer.mode !== "no_match" || !originalAnswer;
   return (
     <article className="conversation-turn" aria-label="一轮问答">
       <div className="question-row">
         <div className="avatar user-avatar"><UserIcon size={23} weight="fill" aria-hidden="true" /></div>
         <div className="question-content"><p className="question-bubble">{message.question}</p><p className="message-time">{message.time}</p></div>
       </div>
-      {showAnswer && <AnswerResult answer={message.answer} id={message.id} label="回答结果" showSources={message.showSources} showSourceCard={false} onSource={onSource} onToast={onToast} />}
-      {originalAnswer && <AnswerResult answer={originalAnswer} id={message.id + "-original"} label="原文检索结果" showSources={message.showSources} onSource={onSource} onToast={onToast} />}
+      <AnswerResult answer={message.answer} id={message.id} label="回答结果" showSources={message.showSources} showSourceCard={false} onSource={onSource} onToast={onToast} />
     </article>
   );
 }

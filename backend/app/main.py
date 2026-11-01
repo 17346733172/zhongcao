@@ -1,4 +1,6 @@
 from contextlib import asynccontextmanager
+import asyncio
+import logging
 import secrets
 import sqlite3
 import time
@@ -10,6 +12,7 @@ from fastapi.openapi.utils import get_openapi
 from .config import Settings
 from .database import Database
 from .chat import ChatService
+from .rag import KnowledgeRetriever
 from .prescriptions.routes import register_prescription_routes
 from .reference_document import download_reference_document, load_reference_document
 from .schemas import ChatQuestion, ChangePassword, CreateDocument, CreateUser, Login, ResetPassword, UpdateUser
@@ -19,16 +22,26 @@ from .security import PERMISSIONS, hash_password, public_user, token_hash, verif
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.from_env()
     database = Database(settings.database)
-    chat_service = ChatService(settings)
+    rag = KnowledgeRetriever(settings) if settings.rag_enabled else None
+    chat_service = ChatService(settings, rag)
+
 
     @asynccontextmanager
     async def lifespan(app):
         database.initialize()
+        if rag is not None and settings.rag_warmup:
+            started = time.perf_counter()
+            logging.getLogger("uvicorn.error").info("Preparing local Qwen + FAISS before API readiness...")
+            with database.connect() as db:
+                documents = [document(row) for row in db.execute("SELECT * FROM documents ORDER BY created_at,id").fetchall()]
+            await asyncio.to_thread(rag.warmup, documents)
+            logging.getLogger("uvicorn.error").info("Local vector RAG ready in %.2fs", time.perf_counter() - started)
         yield
 
     app = FastAPI(title="本草知问 API", version="0.2.0", lifespan=lifespan)
     app.state.database = database
     app.state.settings = settings
+    app.state.rag = rag
 
     def openapi_schema():
         if app.openapi_schema is None:
@@ -215,14 +228,27 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return {"provider": "DeepSeek", "configured": bool(settings.deepseek_api_key), "model": settings.deepseek_model}
 
     @app.post("/api/chat")
-    def chat(payload: ChatQuestion, user=Depends(require("knowledge:read"))):
-        history = [turn.model_dump() for turn in payload.history]
-        if not payload.use_knowledge:
-            return chat_service.answer_general(payload.question, history)
-        reference = load_reference_document()
-        with database.connect() as db:
-            documents = [document(row) for row in db.execute("SELECT * FROM documents ORDER BY created_at, id").fetchall()]
-        return chat_service.answer(payload.question, documents, reference, history)
+    def chat(payload: ChatQuestion, response: Response, user=Depends(require("knowledge:read"))):
+        started = time.perf_counter()
+        timings = {}
+        try:
+            history = [turn.model_dump() for turn in payload.history]
+            if not payload.use_knowledge:
+                return chat_service.answer_general(payload.question, history, timings)
+            reading = time.perf_counter()
+            reference = load_reference_document()
+            with database.connect() as db:
+                documents = [document(row) for row in db.execute("SELECT * FROM documents ORDER BY created_at, id").fetchall()]
+            if rag is not None:
+                documents = rag.documents() + documents
+            timings["load"] = (time.perf_counter() - reading) * 1000
+            return chat_service.answer(payload.question, documents, reference, history, timings, cache_scope=user["id"])
+        finally:
+            timings["total"] = (time.perf_counter() - started) * 1000
+            summary = ", ".join(f"{name};dur={duration:.2f}" for name, duration in timings.items())
+            response.headers["Server-Timing"] = summary
+            # Timings only: never log questions, source text, users or credentials.
+            logging.getLogger("uvicorn.error").info("chat timings: %s", summary)
 
     @app.get("/api/reference-document")
     def reference_document(user=Depends(require("knowledge:read"))):

@@ -40,22 +40,34 @@ pnpm build
 
 demo-data.ts 仅保留知识库配置与空初始状态；检索逻辑在 knowledge-answer.ts，排除示例及未命中片段。AI 密钥只从后端环境读取，不将真实密钥加入源码或日志；会话和通用 PDF / Word 上传解析仍未接入。
 
+## 本地向量 RAG
+
+只使用今天的 Qwen + FAISS 向量检索，不使用关键词快速路径。可配置 RAG_QUERY_CACHE_SIZE、RAG_ANSWER_CACHE_SIZE 和 RAG_ANSWER_CACHE_SECONDS（见配置示例）。Server-Timing 与后端 chat timings 日志显示分阶段耗时，不含问题 / 原文 / 密钥。详见 [性能验收](RAG-PERFORMANCE-QA.md)。
+
+默认 `RAG_WARMUP=true`：启动阶段准备索引、加载并预热模型，日志显示 `Local vector RAG ready` 后才对外提供 API。不要在准备期间重复启动。CPU 默认 `EMBEDDING_CPU_STORAGE=bf16`，保留 Qwen 原始 BF16 权重，逐层转为 FP32 计算，降低常驻内存；`fp32` 用于对照。禁用预热会把首次初始化留给首条向量请求，初始化开销不会消失。模型加载日志只记录导入、分词器、权重和总时长。
+
+2026-11-01 最新页面行为：移除「原文检索」开关，前端默认且始终发送 use_knowledge=true；自动加载资料，默认显示检索原文和 AI 回答。下文 use_knowledge=false 仅说明服务端兼容 API，页面已无普通 AI 切换入口。
+
+默认按 [RAG 说明](RAG.md) 使用 code/data 中的 Markdown、Qwen3 本地模型和 FAISS；首次安装后须下载模型并构建索引。三方依赖由后端统一安装和锁定，启动脚本会检查。数据、模型缓存和索引的相对路径都以 code/ 为基准。实际模型与 API 验证见 [RAG 验收](RAG-QA.md)。
+
+下面关于“关键词、浏览器摘录”的说明为历史记录；现行部署不支持 RAG_ENABLED=false 旧入口。默认向量模式使用同一次服务端召回的原文返回给浏览器；DeepSeek 传输、追问、引用与权限边界保持一致。
+
 ## DeepSeek 配置与问答接口
 
 在 backend/.env 的 DEEPSEEK_API_KEY 后填入本机密钥，保存后重启后端。保持 .env 在 Git 忽略列表中；不要发送密钥到聊天、浏览器代码或提交记录。默认地址 https://api.deepseek.com，默认模型 deepseek-flash。地址支持带 /v1 的兼容路径；正式服务要求 HTTPS，HTTP 仅允许回环地址用于测试。系统环境变量优先于 .env。更换配置需重启后端，页面刷新后重新检查状态。
 
 - GET /api/ai/status：需要 knowledge:read，返回 provider、configured（仅表示已填写密钥）、model，不返回密钥。
 - POST /api/chat：需要 knowledge:read 和 X-CSRF-Protection: 1，接受 {"question":"问题","use_knowledge":false,"history":[{"question":"上一轮问题","answer":"上一轮摘要"}]}。use_knowledge 默认 false，仅接受 JSON 布尔值；question 长度 1–2000 字；history 可省略，最多 5 轮，每轮 question 1–500 字、answer 最多 1000 字。请求体上限 64 KB；客户端不能指定角色、资料、模型或密钥。
-- use_knowledge=false：接口在读取基础文档和 documents 表之前进入 answer_general，只发送当前问题与普通 AI 同模式历史，不执行关键词检索、文档主题解析或知识库语义理解。使用独立提示词和仅含 title / sections（title / content）的严格响应格式，返回 sources=[]，无 origin、文档编号或资料标签。不要求知识库命中；缺少密钥、异常格式和模型失败均报真实错误，不回退到知识库。前端默认不加载资料；仅勾选或主动查看资料时加载，资料错误不阻止普通 AI 发送。
+- use_knowledge=false：接口在读取基础文档和 documents 表之前进入 answer_general，只发送当前问题与普通 AI 同模式历史，不执行关键词检索、文档主题解析或知识库语义理解。使用独立提示词和仅含 title / sections（title / content）的严格响应格式，返回 sources=[]，无 origin、文档编号或资料标签。不要求知识库命中；缺少密钥、异常格式和模型失败均报真实错误，不回退到知识库。此分支仅用于内部兼容；当前页面始终自动加载资料并发送 true，没有普通 AI 切换入口。
 - use_knowledge=true：进入以下原有知识库流程；前端仅发送知识库模式最近 5 轮摘要，普通 AI 与知识库模式的历史互不混用。
 - conversation_context.py 根据当前问题和受限历史解析省略主题，再检索正式基础文档及 SQLite 中的共享文本；明确新药材优先，数字等无关输入不复用旧主题，缺主题或单数指代多个主题时返回 mode=clarification、空正文 / 来源。
 - 后端读取正式基础文档与 SQLite 中的共享文本，按药材章节或关键词选择最多 3 个正相关片段，每个最多发送 3000 字符。功效 / 用量等问题只提供相关字段及原文注意事项；饮片加工类问题补检炮制总论中的相关原文。常规未命中自然语言可先进入下述语义理解；重检无资料返回 mode=no_match、空正文和空引用，不调用回答生成。
 - question_understanding.py：规则及关键词没有命中的自然语言问题，向同一模型单独发送当前问题、受限历史及服务端最近主题（不发送原文），得到 follow_up / standalone / clarify / unrelated 的严格 JSON。最多一次、512 tokens，10 秒网络阶段超时；拒绝多余字段及缺失 query，追问主题须与最近主题一致；歧义返回 clarification，不能把语义解析当作证据。中文新话题可重新整理后重检，数字 / 代码式无意义输入不调用模型。页面说明「我理解你是在问：…」，保留用户原始问题。语义阶段和生成阶段共用并发名额。
 - 使用 httpx 调用 /chat/completions，JSON 输出、关闭 thinking、非流式，最多输出 2048 tokens。单进程最多同时处理 4 个模型请求；连接超时 10 秒、网络读写等阶段超时 30 秒。
 - 输出经严格 schema、origin 和引用编号校验。document 段要求至少一个有效引用；ai_supplement 段要求空 citations，前端显示「AI 补充，非文档原文」，不显示文档引用。只有实际被引用的文档才返回 sources；sourceIndex 在补充段中省略，sourceIndices=[]。实际原文、资料名和来源索引由服务端附加，补充只来自模型自身一般知识，并未联网核实。异常 / 截断输出返回错误，前端不把它保存成回答，也不自动降级为假回答。资料内容作为不可信参考文本处理。
-- 前端 AI 请求最长等待 45 秒；新建 / 切换会话会终止浏览器等待，避免旧回答写入新会话。已经发出的上游调用可能继续完成并产生费用。
+- 前端普通 AI 请求最长等待 45 秒，向量知识库模式最长等待 180 秒以容纳本地模型首次加载；新建 / 切换会话会终止浏览器等待，避免旧回答写入新会话。已经发出的上游调用可能继续完成并产生费用。
 
-知识库模式（use_knowledge=true）向配置的云服务发送问题及相关片段，优先依据资料，相关资料未覆盖的内容允许用模型一般知识单独补充；自然语言首次未命中可以先调用一次语义整理，再按整理后的完整问题重检；仍无相关片段时返回未找到，不调用回答生成。附加原文在浏览器直接摘录，不额外调用模型。两种模式分别结合当前会话的同模式最近 5 轮承接，前端通过 resolvedQuestion 保留连续省略的主题；历史只辅助理解，不作为事实或引用来源，每轮重检原文。附加原文按 AI 整理的完整问题（未整理时使用当前输入）检索。基础关键词检索的召回范围有限，向量检索、流式回答与会话持久化仍需后续实现。官方配置参考：[接入说明](https://api-docs.deepseek.com/quick_start/agent_integrations/)、[Chat Completion](https://api-docs.deepseek.com/api/create-chat-completion/)、[JSON 输出](https://api-docs.deepseek.com/guides/json_mode/)。
+知识库模式（use_knowledge=true）向配置的云服务发送问题及相关片段，优先依据资料，相关资料未覆盖的内容允许用模型一般知识单独补充；自然语言首次未命中可以先调用一次语义整理，再按整理后的完整问题重检；仍无相关片段时返回未找到，不调用回答生成。附加原文在浏览器直接摘录，不额外调用模型。两种模式分别结合当前会话的同模式最近 5 轮承接，前端通过 resolvedQuestion 保留连续省略的主题；历史只辅助理解，不作为事实或引用来源，每轮重检原文。附加原文按 AI 整理的完整问题（未整理时使用当前输入）检索。兼容模式关键词检索的召回范围有限；默认已接入本地向量检索，流式回答与会话持久化仍需后续实现。官方配置参考：[接入说明](https://api-docs.deepseek.com/quick_start/agent_integrations/)、[Chat Completion](https://api-docs.deepseek.com/api/create-chat-completion/)、[JSON 输出](https://api-docs.deepseek.com/guides/json_mode/)。
 
 ## 处方检查接口与本地识别
 

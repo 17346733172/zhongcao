@@ -1,0 +1,2 @@
+# 与 FastAPI 共用同一个虚拟环境，避免复制 DeepSeek 或认证依赖。
+-r ../backend/requirements.txt

@@ -1,0 +1,16 @@
+{
+  "source": "中药基础知识（详解版）.pdf",
+  "sha256": "b88cd9cd7ad4bc12a58c8776d8779084e1ff07b8dc27a7c8e7821d17463a2054",
+  "pages": 69,
+  "markdown": "中药基础知识（详解版）.md",
+  "markdownSha256": "6eba096f192401ccc5fbda018714cf21a7bbfda5a7d0d98fea6a1e565ecb344e",
+  "verifiedNonWhitespaceCharacters": 38084,
+  "tables": 7,
+  "removedRepeatedTableHeaders": [
+    "类别常用方法示例",
+    "七情含义举例临床意义",
+    "煎法适用药物说明",
+    "药物共同点不同点"
+  ],
+  "verification": "Exact text match; only whitespace, page footers and repeated table headers removed."
+}

@@ -8,7 +8,7 @@ import ts from "typescript";
 
 const source = await readFile(new URL("../src/lib/answer-mode.ts", import.meta.url), "utf8");
 const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 } });
-const { answerModeInfo, toggleOriginalSearch, runAnswerMode } = await import("data:text/javascript;base64," + Buffer.from(outputText).toString("base64"));
+const { answerModeInfo, DEFAULT_ANSWER_MODE, runAnswerMode } = await import("data:text/javascript;base64," + Buffer.from(outputText).toString("base64"));
 const aiAnswer = { mode: "generated", title: "AI 回答", introduction: "", sections: [{ title: "归纳", content: "已生成", sourceIndex: 0 }], sources: [{ id: "ai-source" }] };
 const originalAnswer = { mode: "extract", title: "原文摘录", introduction: "", sections: [{ title: "原文", content: "原文内容", sourceIndex: 0 }], sources: [{ id: "original-source" }] };
 
@@ -17,7 +17,7 @@ function loadAnswerComponents() {
   return componentModules ??= (async () => {
     const require = createRequire(import.meta.url);
     const [icons, markdown, gfm] = await Promise.all([import("@phosphor-icons/react"), import("react-markdown"), import("remark-gfm")]);
-    const dependencies = { "@/lib/answer-mode": { answerModeInfo }, "@phosphor-icons/react": icons, "react-markdown": markdown, "remark-gfm": gfm };
+    const dependencies = { "@/lib/answer-mode": { answerModeInfo, DEFAULT_ANSWER_MODE }, "@phosphor-icons/react": icons, "react-markdown": markdown, "remark-gfm": gfm };
     async function compile(file) {
       const code = await readFile(new URL(file, import.meta.url), "utf8");
       const { outputText } = ts.transpileModule(code, { compilerOptions: {
@@ -29,27 +29,65 @@ function loadAnswerComponents() {
     }
     const markdownComponent = await compile("../src/components/answer-markdown.tsx");
     dependencies["./answer-markdown"] = markdownComponent;
-    return { ...markdownComponent, ...await compile("../src/components/conversation-view.tsx") };
+    return { ...markdownComponent, ...await compile("../src/components/conversation-view.tsx"), ...await compile("../src/components/question-composer.tsx") };
   })();
 }
 
-test("原文开关反复切换后，发送始终调用 AI 一次，原文只按需附加", async () => {
-  let mode = "ai";
+test("默认固定使用原文加 AI，发送一次生成并附加原文", async () => {
+  assert.equal(DEFAULT_ANSWER_MODE, "both");
   let generated = 0, extracted = 0;
-  for (let turn = 0; turn < 5; turn++) {
-    const result = await runAnswerMode(mode, "陈皮", async () => { generated++; return aiAnswer; }, () => { extracted++; return originalAnswer; });
-    assert.equal(generated, turn + 1);
-    assert.equal(result.answer, aiAnswer);
-    assert.equal(result.originalAnswer, mode === "both" ? originalAnswer : undefined);
-    mode = toggleOriginalSearch(mode);
-    assert.equal(mode, turn % 2 === 0 ? "both" : "ai");
-  }
-  assert.equal(extracted, 2);
+  const result = await runAnswerMode(DEFAULT_ANSWER_MODE, "陈皮", async () => { generated++; return aiAnswer; }, () => { extracted++; return originalAnswer; });
+  assert.equal(generated, 1);
+  assert.equal(extracted, 1);
+  assert.deepEqual(result, { answer: aiAnswer, originalAnswer });
 });
 
-test("默认发送 AI 回答，不附加原文检索结果", async () => {
+test("输入框没有原文开关，默认请求启用知识库及其历史", async () => {
+  const { QuestionComposer } = await loadAnswerComponents();
+  const html = renderToStaticMarkup(createElement(QuestionComposer, {
+    draft: "陈皮", busy: false, disabled: false, canWrite: false, uploading: false,
+    error: "", status: null, statusError: "", inputRef: { current: null },
+    onDraft() {}, onSubmit() {}, onKeyDown() {}, onAttach() {},
+  }));
+  assert.doesNotMatch(html, /answer-mode-switch|aria-pressed|原文检索<\/button>/);
+  assert.match(html, /基于知识库原文生成回答/);
+  assert.match(html, /aria-label="发送"/);
+  const code = await readFile(new URL("../src/lib/chat-api.ts", import.meta.url), "utf8");
+  const { outputText } = ts.transpileModule(code, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } });
+  const exports = {};
+  const messages = [{ id: "previous-turn" }];
+  const history = [{ question: "陈皮", answer: "上轮回答" }];
+  let request;
+  new Function("require", "exports", outputText)(name => {
+    if (name === "./api") return { api: (url, options) => { request = { url, ...options }; return Promise.resolve(aiAnswer); } };
+    if (name === "./conversation-history") return { buildChatHistory: (actual, useKnowledge) => {
+      assert.equal(actual, messages); assert.equal(useKnowledge, true); return history;
+    } };
+    assert.fail("Unexpected dependency " + name);
+  }, exports);
+  await exports.generateAnswer("作用？", new AbortController().signal, messages);
+  assert.equal(request.url, "/chat");
+  assert.deepEqual(JSON.parse(request.body), { question: "作用？", history, use_knowledge: true });
+});
+
+test("内部兼容普通 AI 调用时不附加原文", async () => {
   const unexpected = () => assert.fail("不应调用未选中的功能");
   assert.deepEqual(await runAnswerMode("ai", "陈皮", async () => aiAnswer, unexpected), { answer: aiAnswer });
+});
+
+test("向量模式原文直接使用服务端召回片段，保留引用并跳过浏览器关键词重检", async () => {
+  const sources = [{ id: "md-chunk", name: "中药.md", excerpt: "陈皮：理气健脾。", fullText: "# 陈皮\n理气健脾。", demo: false }];
+  const vector = { ...aiAnswer, retrievalMethod: "vector", retrievedSources: sources };
+  const result = await runAnswerMode("both", "胸口痞闷", async () => vector, () => assert.fail("不能再次进行关键词检索"));
+  assert.equal(result.originalAnswer.mode, "extract");
+  assert.equal(result.originalAnswer.sources, sources);
+  assert.equal(result.originalAnswer.sections[0].content, sources[0].excerpt);
+  assert.equal(result.originalAnswer.sections[0].sourceIndex, 0);
+  const declined = await runAnswerMode("both", "胸口痞闷", async () => ({ ...vector, mode: "no_match", sections: [], sources: [] }), () => assert.fail("不能重检"));
+  assert.equal(declined.originalAnswer.sources, sources);
+  const empty = { ...vector, mode: "no_match", sections: [], sources: [], retrievedSources: [] };
+  assert.deepEqual(await runAnswerMode("both", "111", async () => empty, () => assert.fail("不能重检")), { answer: empty });
+  assert.deepEqual(await runAnswerMode("ai", "陈皮", async () => vector, () => assert.fail("不能读取原文")), { answer: vector });
 });
 
 test("同时选中时只调用一次生成，按已解析追问检索并分别保留引用编号", async () => {
@@ -99,15 +137,15 @@ test("双选都未命中时仅保存一次空结果，其余情况保留两路�
   assert.deepEqual(await runAnswerMode("both", "陈皮", async () => aiAnswer, () => noMatch), { answer: aiAnswer, originalAnswer: noMatch });
 });
 
-test("实际回答组件只显示有内容的结果，全空时仅显示一条提示", async () => {
+test("每轮只显示 AI 回答或状态提示，旧会话的独立原文摘录也不显示", async () => {
   const viewExports = await loadAnswerComponents();
   const noMatch = { mode: "no_match", title: "资料不足以回答这个问题", introduction: "没有匹配资料", sections: [], sources: [] };
   for (const [answer, original, showSources, count, hasAI, hasOriginal, hasEmpty] of [
-    [noMatch, originalAnswer, true, 1, false, true, false],
+    [noMatch, originalAnswer, true, 1, false, false, true],
     [aiAnswer, noMatch, true, 1, true, false, false],
     [noMatch, noMatch, true, 1, false, false, true],
     [noMatch, undefined, true, 1, false, false, true],
-    [aiAnswer, originalAnswer, true, 2, true, true, false],
+    [aiAnswer, originalAnswer, true, 1, true, false, false],
     [aiAnswer, originalAnswer, false, 1, true, false, false],
     [noMatch, originalAnswer, false, 1, false, false, true],
   ]) {
@@ -121,7 +159,10 @@ test("实际回答组件只显示有内容的结果，全空时仅显示一条�
     assert.equal(html.includes("已生成"), hasAI);
     assert.equal(html.includes("原文内容"), hasOriginal);
     assert.equal(html.includes(noMatch.title), hasEmpty);
-    assert.equal((html.match(/class="source-card"/g) ?? []).length, hasOriginal ? 1 : 0);
+    assert.equal((html.match(/class="source-card"/g) ?? []).length, 0);
+    assert.doesNotMatch(html, /aria-label="引用资料"/);
+    assert.doesNotMatch(html, /aria-label="原文检索结果"/);
+    assert.equal((html.match(/class="citation"/g) ?? []).length, hasAI && showSources ? 1 : 0);
   }
 });
 
