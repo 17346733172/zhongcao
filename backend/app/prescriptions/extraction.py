@@ -51,9 +51,10 @@ def normalized(text):
 
 
 def extract(settings, text):
+    redacted = redact_identifiers(text)
     try:
         prescription = Prescription.model_validate_json(request_json(settings, EXTRACT_PROMPT,
-            {"text": redact_identifiers(text)}, max_tokens=4096, timeout=40))
+            {"text": redacted}, max_tokens=4096, timeout=40))
     except (ValueError, ValidationError):
         raise HTTPException(502, "结构化提取不完整，请重试或使用手动录入，不会补造处方数据。") from None
     whole = normalized(text)
@@ -73,4 +74,12 @@ def extract(settings, text):
                 raise HTTPException(502, "提取剂量与原文不一致，请重试或手动核对，不能据此检查。") from None
         if medicine.unit and normalized(medicine.unit) not in evidence:
             raise HTTPException(502, "提取单位与原文不一致，请重试或手动核对。")
+    if prescription.sex == "unknown":
+        sexes = set(re.findall(
+            r"(?:^|[ \t|,，;；])性[ \t]*别[ \t]*(?:[:：|][ \t]*)?([男女])"
+            r"(?=$|[ \t|,，;；])(?!(?:[ \t]*[/／、,，|或][ \t]*|[ \t]+)[男女])",
+            redacted, re.M,
+        ))
+        if len(sexes) == 1:
+            prescription.sex = "male" if "男" in sexes else "female"
     return prescription

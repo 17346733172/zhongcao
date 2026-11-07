@@ -1,8 +1,8 @@
 "use client";
 import { FileIcon, ImageIcon, UploadSimpleIcon, XIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
-import { api, errorMessage } from "@/lib/api";
-import { blankPrescription, withDoseScope, preparePrescription, checkPrescription, type Prescription, type PrescriptionStatus, type Preparation, type PrescriptionReport as Report } from "@/lib/prescription-api";
+import { api, ApiError, errorMessage } from "@/lib/api";
+import { blankPrescription, withDoseScope, preparePrescription, checkPrescription, uploadToSimulation, type Prescription, type PrescriptionStatus, type Preparation, type PrescriptionReport as Report } from "@/lib/prescription-api";
 import { PrescriptionDoseScope, PrescriptionFields } from "./prescription-fields";
 import { PrescriptionReport } from "./prescription-report";
 
@@ -20,6 +20,9 @@ export function PrescriptionDialog({ onClose }: { onClose: () => void }) {
   const [confirmed, setConfirmed] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploaded, setUploaded] = useState(false);
+  const [simulationField, setSimulationField] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const dialog = useRef<HTMLElement>(null);
@@ -99,15 +102,39 @@ export function PrescriptionDialog({ onClose }: { onClose: () => void }) {
       const result = await checkPrescription(value, controller.signal);
       if (controller.signal.aborted) return;
       if (!result.conclusion || result.sections?.length !== 5 || !Array.isArray(result.missing_information) || !Array.isArray(result.conclusion.decision_reasons)) throw new Error("未能生成完整审核报告，请稍后重试。");
-      setPrescription(result.prescription); setReport(result); setStage("report");
+      setPrescription(result.prescription); setReport(result); setUploaded(false); setStage("report");
     } catch (cause) { if (!controller.signal.aborted) setError(errorMessage(cause)); }
     finally { if (!controller.signal.aborted) { setBusy(false); request.current = null; } }
   }
   function review() {
     if (confirmed) void runCheck(prescription);
   }
-  function edit(field?: string) {
-    if (content.current) content.current.dataset.focusField = field ?? "";
+  async function uploadReport() {
+    if (!report?.simulation_upload_id || busy || uploaded || request.current) return;
+    const controller = new AbortController(); request.current = controller;
+    setUploading(true); setError(""); setFeedback(""); setSimulationField(null);
+    try {
+      const result = await uploadToSimulation(report, controller.signal);
+      if (controller.signal.aborted) return;
+      setUploaded(true);
+      setFeedback(result.already_uploaded
+        ? `处方 ${result.external_no} 已在仿真平台录入。`
+        : `处方 ${result.external_no} 已上传到仿真平台，等待人工审核。`);
+    } catch (cause) {
+      if (controller.signal.aborted) return;
+      setError(errorMessage(cause));
+      if (cause instanceof ApiError && cause.status === 422) {
+        const row = /^第\s*(\d+)\s*味药/.exec(cause.message);
+        const index = Number(row?.[1] ?? 1) - 1;
+        const field = cause.message.includes("药名") ? "name" : cause.message.includes("煎法") ? "method" : "dose";
+        const medicineField = index >= 0 && index < report.prescription.medicines.length ? `medicines.${index}.${field}` : "medicines.0.name";
+        setSimulationField(cause.message.includes("总剂数") ? "doses" : medicineField);
+      }
+    }
+    finally { if (!controller.signal.aborted) { setUploading(false); request.current = null; } }
+  }
+  function edit(focusField = report?.missing_information?.[0]?.field ?? "") {
+    if (content.current) content.current.dataset.focusField = focusField;
     setStage("confirm"); setConfirmed(false); setFeedback(""); setError("");
   }
   function manual() { setPreparation(null); setPrescription(withDoseScope(blankPrescription(), prescription.dose_scope ?? "per_dose")); setConfirmed(false); setError(""); setFeedback(""); setStage("confirm"); }
@@ -117,8 +144,10 @@ export function PrescriptionDialog({ onClose }: { onClose: () => void }) {
     <section className="rx-dialog" role="dialog" aria-modal="true" aria-labelledby="rx-title" tabIndex={-1} ref={dialog}>
       <header className="rx-header"><div><h2 id="rx-title">处方检查</h2><p>中药饮片 · 上传识别、核对数据、检查疑点</p></div><button className="icon-button" onClick={onClose} aria-label="关闭处方检查"><XIcon size={22} /></button></header>
       <ol className="rx-steps" aria-label="处方检查步骤">{(["upload", "confirm", "report"] as const).map((step, i) => <li key={step} aria-current={stage === step ? "step" : undefined}><span>{i + 1}</span>{["上传识别", "核对数据", "检查结果"][i]}</li>)}</ol>
-      <div className="rx-body" ref={content} aria-busy={busy}>
-        {error && <p className="form-error" role="alert">{error}</p>}
+      <div className="rx-body" ref={content} aria-busy={busy || uploading}>
+        {error && <div className="form-error rx-error" role="alert"><span>{error}</span>
+          {stage === "report" && simulationField && <button type="button" className="auth-secondary" disabled={busy || uploading} onClick={() => edit(simulationField)}>确认药材</button>}
+        </div>}
         {feedback && <p className="form-success" role="status">{feedback}</p>}
         {stage === "upload" && <>
           <p className="rx-help">每次一份处方、单文件最多 10 MB；PDF 最多 8 页。请使用清晰图片，手写内容必须逐项人工核对。</p>
@@ -140,16 +169,16 @@ export function PrescriptionDialog({ onClose }: { onClose: () => void }) {
         {stage === "confirm" && <>
           {imagePreview && <details open><summary>对照原始图片核对</summary><a href={imagePreview} target="_blank" rel="noreferrer">在新窗口放大图片</a><img className="rx-image-preview" src={imagePreview} alt="原始处方图片，请对照下方识别数据" /></details>}
           {preparation && <><p className="rx-notice">已识别为处方检查：{preparation.intent.explanation} · {preparation.prescription?.medicines.length} 味药</p>{preparation.source.notes.map(note => <p key={note} className="rx-notice">{note}</p>)}<details><summary>查看识别原文</summary><pre className="rx-original">{preparation.source.text}</pre></details></>}
-          <PrescriptionFields value={prescription} disabled={busy} onChange={value => { setPrescription(value); setConfirmed(false); setError(""); }} />
+          <PrescriptionFields value={prescription} disabled={busy} missingInformation={report?.missing_information} onChange={value => { setPrescription(value); setConfirmed(false); setError(""); }} />
           <label className="rx-confirm"><input type="checkbox" checked={confirmed} disabled={busy} onChange={event => setConfirmed(event.target.checked)} /><span>我已对照原文逐项核对药名、剂量、单位和每剂量口径。</span></label>
         </>}
-        {stage === "report" && report && <PrescriptionReport report={report} busy={busy} onSupplement={() => edit(report.missing_information?.[0]?.field)} onFeedback={setFeedback} />}
+        {stage === "report" && report && <PrescriptionReport report={report} busy={busy || uploading} uploading={uploading} uploaded={uploaded} onUpload={() => void uploadReport()} onSupplement={() => edit()} onFeedback={setFeedback} />}
         {busy && <p className="rx-busy" role="status">{stage === "upload" ? "正在读取文件、识别意图并提取处方，首次图片识别可能需要更长时间…" : "正在检查已确认的处方数据…"}</p>}
       </div>
       <footer className="rx-footer">
         {stage === "upload" ? <><button className="auth-secondary" disabled={busy} onClick={manual}>手动录入</button><button className="auth-primary" disabled={busy || !status?.ai_configured || (!file && !text.trim())} onClick={() => void prepare()}>{busy ? "正在识别…" : "识别并提取处方"}</button></>
-          : stage === "confirm" ? <><button className="auth-secondary" disabled={busy} onClick={() => { setStage("upload"); setError(""); }}>返回上传</button><button className="auth-primary" disabled={busy || !confirmed || !prescription.medicines.length} onClick={() => void review()}>{busy ? "正在检查…" : "确认数据并检查"}</button></>
-            : <><button className="auth-secondary" disabled={busy} onClick={startNew}>检查另一份处方</button><button className="auth-primary" disabled={busy} onClick={() => edit()}>修改数据后复查</button></>}
+          : stage === "confirm" ? <><button className="auth-secondary" disabled={busy} onClick={() => { setStage("upload"); setReport(null); setError(""); }}>返回上传</button><button className="auth-primary" disabled={busy || !confirmed || !prescription.medicines.length} onClick={() => void review()}>{busy ? "正在检查…" : "确认数据并检查"}</button></>
+            : <><button className="auth-secondary" disabled={busy || uploading} onClick={startNew}>检查另一份处方</button><button className="auth-primary" disabled={busy || uploading} onClick={() => edit()}>修改数据后复查</button></>}
       </footer>
     </section>
   </div>;

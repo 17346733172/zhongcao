@@ -82,6 +82,20 @@ demo-data.ts 仅保留知识库配置与空初始状态；检索逻辑在 knowle
 
 规则、来源及验收见 [处方 Agent](PRESCRIPTION-AGENT.md)。共享知识库 PDF / Word 解析仍未接入，不能把处方解析等同于共享资料上传成功。
 
+### 仿真平台上传
+
+模块边界、字段示例、两种认证和错误处理集中见 [两个项目的后端对接](DECOCTION-INTEGRATION.md)。
+
+本草后端通过 `DECOCTION_BASE_URL` 连接仿真平台。默认使用本机 `http://127.0.0.1:8080`，若仿真平台直接以 FastAPI 启动，请使用其实际端口，避免与本草的 8000 端口冲突。启用接口鉴权时，在本草 `backend/.env` 设置 `DECOCTION_API_KEY`，并重启本草后端。密钥仅用于后端 `X-API-Key` 请求头。
+
+使用服务器部署的平台时，`DECOCTION_BASE_URL` 应指向该服务器的实际接口入口。处方保存在接收实例的数据库中，本机实例与服务器实例各自保存数据。若入口返回 `WWW-Authenticate: Basic`，在本草 `backend/.env` 同时设置 `DECOCTION_HTTP_USERNAME` 和 `DECOCTION_HTTP_PASSWORD`，使用 HTTPS 入口并重启本草后端。网关凭据与 API Key 分开配置，均仅在后端读取。
+
+`POST /api/prescriptions/check` 额外返回当前报告的 `simulation_upload_id`。检查结果页点击上传才调用 `POST /api/prescriptions/simulation`，请求包含 `upload_id`、`doses` 和逐味 `medicines`，沿用登录、`knowledge:read` 和 CSRF 校验。后端向仿真平台的 `POST /api/v1/prescriptions` 发送生成的外部编号和匿名编号、总剂数及药材名称、每剂克数、煎法枚举。患者字段、原始材料及报告正文留在本草流程内。
+
+平台接收后处方进入待人工审核。工艺时间及包装参数使用平台默认值；支持的煎法仅映射至对应工序，处方中附带的具体时长不作为仿真参数。失败时保留报告，同一报告重试沿用编号，平台按外部编号防止重复录入。
+
+连接和响应中断最多尝试 3 次，单次连接等待 10 秒、读取等待 15 秒，写入和连接池等待各 5 秒；前端为整个上传流程保留 120 秒。校验或认证拒绝直接返回反馈。连接失败日志仅记录尝试次数和异常类型，便于识别 HTTPS 握手超时。首次请求已写入但响应丢失时，后续相同编号的重复响应按已录入处理。
+
 ## 自动验证
 
 前端 typecheck 检查类型，test 使用 Node 测试运行器检查来源隔离、追问摘要、默认 AI 问答及附加原文开关的请求边界，build 执行生产构建。默认 AI 问答及历次回答方式的桌面 / 手机浏览器结果见 [回答方式验收](ANSWER-OPTIONS-QA.md)。

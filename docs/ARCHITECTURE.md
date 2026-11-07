@@ -5,7 +5,7 @@
 ## 技术栈
 
 前端：Next.js 16 App Router、React 19、TypeScript、普通 CSS 与 Phosphor 图标。
-后端：Python 3.11+、FastAPI、Uvicorn、Argon2id、SQLite、httpx（调用 DeepSeek）。运行和测试依赖分别见 backend/requirements.txt、requirements-dev.txt，完整约束见 requirements-lock.txt。
+后端：Python 3.11+、FastAPI、Uvicorn、Argon2id、SQLite、httpx（调用 DeepSeek 与煎药平台）。运行和测试依赖分别见 backend/requirements.txt、requirements-dev.txt，完整约束见 requirements-lock.txt。
 
 ## 模块
 
@@ -43,6 +43,7 @@
 | backend/app/prescriptions/agent.py | LangGraph 状态图、意图条件分支、确认与检查两阶段，不配置持久检查点或远程追踪 |
 | backend/app/prescriptions/files.py、extraction.py | 有限文件解析、本地 OCR、DeepSeek 意图与提取、原文证据和数值校验 |
 | backend/app/prescriptions/models.py、rules.py、routes.py | 处方输入边界、可追溯有限规则、登录 / CSRF 保护 API |
+| backend/app/integrations/decoction.py | 煎药平台字段转换、认证、同编号重试和回执确认 |
 | frontend/src/components/prescription-*.tsx、src/lib/prescription-api.ts | 上传、原图核对、编辑确认、报告与 multipart 请求 |
 | backend/app/cli.py | 终端交互式创建首个管理员 |
 | backend/tests/test_auth.py、test_chat.py | 角色越权、会话撤销、密码、资料持久化与 AI 来源 / 异常验证 |
@@ -70,6 +71,8 @@
 所有登录用户读取同一个中药基础资料库；编辑员和管理员可添加、删除文本，只有管理员可管理账号。不存在公开注册、客户端指定登录角色或客户端保存令牌的流程。
 
 ## 持久化与演示边界
+
+用户手动上传处方时，由独立适配模块调用煎药平台 HTTP API。平台保存匿名处方并进入待审核状态，后续审核与批次事务由平台后端执行。两项目的接口、字段与配置见 [后端对接说明](DECOCTION-INTEGRATION.md)。
 
 处方检查是私有的请求级流程，不读取 / 写入共享 documents，也不写入 SQLite。`prepare` 经 LangGraph 返回识别原文与待确认字段，`check` 只接收用户确认的数据，再运行规则并报告。所有登录角色可通过 knowledge:read 使用，写请求沿用 CSRF 和 Origin 校验。上传总请求限制 12 MB，文件限制 10 MB，原文 2 万字符，PDF 8 页；并发处方任务最多 2 个。OCR 与 PDFium 有全局互斥，防止非线程安全模型 / PDF 操作重入。关闭前端不会保证终止已经开始的后端模型调用。
 

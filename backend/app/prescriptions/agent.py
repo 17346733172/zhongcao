@@ -1,4 +1,7 @@
+from contextlib import contextmanager
+import logging
 from threading import BoundedSemaphore
+from time import perf_counter
 from typing import TypedDict
 from fastapi import HTTPException
 from langgraph.graph import StateGraph, START, END
@@ -10,6 +13,15 @@ from .rules import check_prescription, RULES_VERSION
 from .review import build_conclusion
 from .narrative import build_sections
 from .missing_information import build_missing_information
+
+
+@contextmanager
+def timed_stage(name):
+    started = perf_counter()
+    try:
+        yield
+    finally:
+        logging.getLogger("uvicorn.error").info("Prescription prepare %s took %.0fms", name, (perf_counter() - started) * 1000)
 
 
 class State(TypedDict, total=False):
@@ -58,17 +70,20 @@ class PrescriptionAgent:
             self.slots.release()
 
     def read(self, state):
-        source = read_upload(state["content"], state["filename"]) if state.get("content") is not None else validate_text(state.get("text", ""))
+        with timed_stage("read_upload"):
+            source = read_upload(state["content"], state["filename"]) if state.get("content") is not None else validate_text(state.get("text", ""))
         return {"source": source, "steps": ["read_upload"]}
 
     def intent(self, state):
         if not self.settings.deepseek_api_key:
             raise HTTPException(503, "意图识别需要配置 DeepSeek；仍可使用手动录入进行数据检查。")
-        intent = classify(self.settings, state["source"]["text"], state.get("instruction", ""))
+        with timed_stage("recognize_intent"):
+            intent = classify(self.settings, state["source"]["text"], state.get("instruction", ""))
         return {"intent": intent.model_dump(), "steps": state["steps"] + ["recognize_intent"]}
 
     def extract(self, state):
-        prescription = extract(self.settings, state["source"]["text"])
+        with timed_stage("extract_prescription"):
+            prescription = extract(self.settings, state["source"]["text"])
         prescription = prescription.with_confirmed_scope(state.get("dose_scope", "unknown"))
         return {"prescription": prescription.model_dump(), "steps": state["steps"] + ["extract_prescription"]}
 

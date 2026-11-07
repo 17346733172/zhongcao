@@ -1,5 +1,5 @@
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, UUID4
 
 DoseScope = Literal["per_dose", "total", "unknown"]
 
@@ -47,6 +47,17 @@ class Intent(Model):
 class ReviewRequest(Model):
     prescription: Prescription
     confirmed: Literal[True]
+
+
+class SimulationUploadRequest(Model):
+    upload_id: UUID4 = Field(description="当前检查报告的编号，同一报告的上传和重试复用此值")
+    doses: int | None = Field(description="总剂数，上传时要求 1–30 剂")
+    medicines: list[Medicine] = Field(min_length=1, max_length=100)
+
+
+class SimulationUploadResult(Model):
+    external_no: str = Field(description="仿真平台使用的处方外部编号")
+    already_uploaded: bool = Field(description="平台已存在该编号时为 true")
 
 
 class Finding(Model):

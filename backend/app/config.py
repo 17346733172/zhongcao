@@ -22,6 +22,10 @@ class Settings:
     deepseek_api_key: str = field(default="", repr=False)
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-flash"
+    decoction_base_url: str = "http://127.0.0.1:8080"
+    decoction_api_key: str = field(default="", repr=False)
+    decoction_http_username: str = field(default="", repr=False)
+    decoction_http_password: str = field(default="", repr=False)
     rag_enabled: bool = True
     rag_data_path: Path = CODE_ROOT / "data"
     rag_persist_dir: Path = CODE_ROOT / "db"
@@ -45,6 +49,16 @@ class Settings:
         local_http = url.scheme == "http" and url.hostname in {"127.0.0.1", "localhost", "::1"}
         if (url.scheme != "https" and not local_http) or not url.hostname or url.username or url.password or url.query or url.fragment:
             raise ValueError("DEEPSEEK_BASE_URL 必须是有效 HTTPS 接口地址，本地测试可使用回环 HTTP")
+        decoction = urlsplit(self.decoction_base_url)
+        if (decoction.scheme not in {"http", "https"} or not decoction.hostname
+                or decoction.username is not None or decoction.password is not None
+                or decoction.query or decoction.fragment):
+            raise ValueError("DECOCTION_BASE_URL 必须是有效的 HTTP 或 HTTPS 服务地址")
+        if bool(self.decoction_http_username) != bool(self.decoction_http_password):
+            raise ValueError("仿真平台 HTTP Basic 用户名和密码须同时配置")
+        if (self.decoction_http_username and decoction.scheme != "https"
+                and decoction.hostname not in {"127.0.0.1", "localhost", "::1"}):
+            raise ValueError("仿真平台 HTTP Basic 认证须使用 HTTPS，本地测试可使用回环 HTTP")
 
     @classmethod
     def from_env(cls):
@@ -63,6 +77,10 @@ class Settings:
             deepseek_api_key=os.environ.get("DEEPSEEK_API_KEY", "").strip(),
             deepseek_base_url=os.environ.get("DEEPSEEK_BASE_URL", cls.deepseek_base_url).strip().rstrip("/"),
             deepseek_model=os.environ.get("DEEPSEEK_MODEL", cls.deepseek_model).strip() or cls.deepseek_model,
+            decoction_base_url=os.environ.get("DECOCTION_BASE_URL", cls.decoction_base_url).strip().rstrip("/"),
+            decoction_api_key=os.environ.get("DECOCTION_API_KEY", "").strip(),
+            decoction_http_username=os.environ.get("DECOCTION_HTTP_USERNAME", "").strip(),
+            decoction_http_password=os.environ.get("DECOCTION_HTTP_PASSWORD", ""),
             rag_enabled=os.environ.get("RAG_ENABLED", "true").lower() == "true",
             rag_data_path=code_path("RAG_DATA_PATH", cls.rag_data_path),
             rag_persist_dir=code_path("FAISS_PERSIST_DIR", cls.rag_persist_dir),

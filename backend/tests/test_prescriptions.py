@@ -5,14 +5,17 @@ import json
 import time
 import unittest
 from unittest.mock import patch
+from uuid import UUID, uuid4
+import httpx
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from app.config import Settings
 from app.main import create_app
 from app.security import hash_password
-from app.prescriptions.models import Intent, Prescription, Medicine
+from app.prescriptions.models import Intent, Prescription, Medicine, SimulationUploadRequest
+from app.integrations.decoction import upload_to_simulation
 from app.prescriptions.rules import check_prescription, canonical
-from app.prescriptions.files import read_upload, MAX_BYTES, validate_text
+from app.prescriptions.files import ocr_image, read_upload, MAX_BYTES, validate_text
 from app.prescriptions.extraction import extract, redact_identifiers
 
 
@@ -105,8 +108,44 @@ class PrescriptionRuleTests(unittest.TestCase):
             result = extract(Settings(rag_enabled=False, deepseek_api_key="unit-test"), "陈皮 -1 g")
         self.assertTrue(any(f["code"] == "invalid_dose" for f in check_prescription(result)))
 
+    def test_explicit_sex_field_is_retained_when_model_omits_it(self):
+        settings = Settings(rag_enabled=False, deepseek_api_key="unit-test")
+        payload = prescription(sex="unknown").model_dump_json()
+        for patient, sex in [
+            ("性别  男  年龄  35 岁", "male"),
+            ("| 性 别 | 女 | 年龄 | 42 岁 |", "female"),
+            ("姓名：张男", "unknown"),
+            ("性别：男 / 女", "unknown"),
+            ("性别：男\n性别：女", "unknown"),
+        ]:
+            with self.subTest(patient=patient), patch("app.prescriptions.extraction.request_json", return_value=payload):
+                self.assertEqual(extract(settings, patient + "\n陈皮 9 g").sex, sex)
+
 
 class PrescriptionFileTests(unittest.TestCase):
+    def test_ocr_recovers_only_a_nearby_sex_value_below_the_general_cutoff(self):
+        from PIL import Image
+
+        def word(left, top, width, text, score):
+            box = [[left, top], [left + width, top], [left + width, top + 12], [left, top + 12]]
+            return [box, text, score]
+
+        image = Image.new("RGB", (180, 100), "white")
+        label = word(20, 10, 24, "性别", .7)
+        age = word(100, 10, 24, "年龄", .7)
+        sex = word(52, 10, 12, "男", .483)
+        dose = word(52, 40, 12, "9", .48)
+        other_row = word(70, 60, 12, "女", .48)
+        for words, expected in [
+            ([label, age, dose, other_row, sex], "性别  男  年龄"),
+            ([label, age, dose, other_row], "性别  年龄"),
+            ([label, age, sex, word(66, 10, 12, "女", .49)], "性别  年龄"),
+            ([label, age, word(80, 10, 12, "女", .49)], "性别  年龄"),
+            ([label, age, sex, word(44, 10, 7, "未知", .8)], "性别  未知  年龄"),
+        ]:
+            with self.subTest(expected=expected), patch("app.prescriptions.files.ocr_engine", return_value=lambda _: (words, None)):
+                self.assertEqual(ocr_image(image)[0], expected)
+
     def test_text_encoding_size_empty_and_type_boundaries(self):
         self.assertIn("陈皮", read_upload("陈皮 9 g 每剂".encode(), "处方.txt")["text"])
         for content, name in [(b"", "a.txt"), (b"\xff\xfe", "a.txt"), (b"x" * (MAX_BYTES + 1), "a.txt"), (b"not an image", "a.png"), (b"fake", "a.exe"), (b"fake", "a.docx")]:
@@ -160,7 +199,9 @@ class PrescriptionApiTests(unittest.TestCase):
     def test_auth_csrf_confirmation_and_private_viewer_access(self):
         self.assertEqual(self.client.get("/api/prescriptions/status").status_code, 401)
         self.login()
-        self.assertEqual(self.client.get("/api/prescriptions/status").status_code, 200)
+        with patch("app.prescriptions.routes.warm_ocr") as warm:
+            self.assertEqual(self.client.get("/api/prescriptions/status").status_code, 200)
+            warm.assert_called_once()
         payload = {"prescription": prescription().model_dump(), "confirmed": False}
         self.assertEqual(self.client.post("/api/prescriptions/check", json=payload).status_code, 422)
         payload["confirmed"] = True
@@ -168,10 +209,95 @@ class PrescriptionApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["framework"], "LangGraph")
         self.assertEqual(response.json()["steps"], ["check_data", "build_report"])
+        self.assertEqual(UUID(response.json()["simulation_upload_id"]).version, 4)
         self.assertIn("limitations", response.json())
         self.assertEqual(self.client.get("/api/documents").json(), [])
         self.client.headers.pop("X-CSRF-Protection")
         self.assertEqual(self.client.post("/api/prescriptions/check", json=payload).status_code, 403)
+
+    def test_simulation_upload_converts_doses_and_reuses_anonymous_number_after_timeout(self):
+        upload_id = uuid4()
+        external_no = f"BENCAO-{upload_id.hex.upper()}"
+        route = "/api/prescriptions/simulation"
+        payload = {"upload_id": str(upload_id), "doses": 3, "medicines": [
+            {"name": "演示甲", "dose": "9000", "unit": "mg", "dose_scope": "total", "method": "先煎 30 分钟", "source": "仅用于验证不转发原文"},
+            {"name": "演示乙", "dose": "0.5", "unit": "克", "dose_scope": "per_dose", "method": "后下"},
+        ]}
+        self.assertEqual(self.client.post(route, json=payload).status_code, 403)
+        self.assertEqual(self.client.post(route, json=payload, headers={"X-CSRF-Protection": "1"}).status_code, 401)
+        self.login()
+        with patch("app.integrations.decoction.httpx.post", side_effect=[
+            httpx.ReadTimeout("test timeout"),
+            httpx.Response(409, json={"error": {"code": "duplicate_prescription"}}),
+        ]) as send:
+            result = self.client.post(route, json=payload)
+            self.assertEqual(result.status_code, 200)
+            self.assertEqual(result.json(), {"external_no": external_no, "already_uploaded": True})
+        self.assertEqual(send.call_count, 2)
+        self.assertEqual(send.call_args_list[0], send.call_args_list[1])
+        self.assertEqual(send.call_args.args, ("http://127.0.0.1:8080/api/v1/prescriptions",))
+        self.assertEqual(send.call_args.kwargs["json"], {
+            "external_no": external_no, "patient_code": f"SIM-{upload_id.hex.upper()}", "doses": 3,
+            "herbs": [{"name": "演示甲", "grams_per_dose": 3.0, "method": "pre_decoct"},
+                      {"name": "演示乙", "grams_per_dose": 0.5, "method": "late_add"}],
+        })
+
+    def test_simulation_upload_bounds_connection_retries_and_keeps_the_report_retryable(self):
+        self.login()
+        payload = {"upload_id": str(uuid4()), "doses": 3, "medicines": prescription().model_dump()["medicines"]}
+        with patch("app.integrations.decoction.httpx.post", side_effect=httpx.ConnectTimeout("private upstream detail")) as send:
+            response = self.client.post("/api/prescriptions/simulation", json=payload)
+        self.assertEqual(response.status_code, 502)
+        self.assertIn("自动重试", response.json()["detail"])
+        self.assertNotIn("private upstream detail", response.text)
+        self.assertEqual(send.call_count, 3)
+        self.assertTrue(all(call == send.call_args_list[0] for call in send.call_args_list))
+        external_no = send.call_args.kwargs["json"]["external_no"]
+        with patch("app.integrations.decoction.httpx.post", return_value=httpx.Response(201, json={
+            "external_no": external_no, "status": "pending_review",
+        })) as retry:
+            result = self.client.post("/api/prescriptions/simulation", json=payload)
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(result.json()["external_no"], external_no)
+        self.assertEqual(retry.call_count, 1)
+
+    def test_simulation_upload_rejects_unmappable_data_before_contacting_platform(self):
+        self.login()
+        medicine = {"name": "演示甲", "dose": "5", "unit": "g", "dose_scope": "per_dose"}
+        with patch("app.integrations.decoction.httpx.post") as send:
+            for doses, medicines in [(None, [medicine]), (31, [medicine]), (3, [medicine, medicine]),
+                                     (3, [{**medicine, "unit": "片"}]), (3, [{**medicine, "dose_scope": "unknown"}]),
+                                     (3, [{**medicine, "method": "烊化"}])]:
+                with self.subTest(doses=doses, medicines=medicines):
+                    response = self.client.post("/api/prescriptions/simulation", json={
+                        "upload_id": str(uuid4()), "doses": doses, "medicines": medicines,
+                    })
+                    self.assertEqual(response.status_code, 422)
+            send.assert_not_called()
+
+    def test_simulation_gateway_auth_uses_server_credentials_and_hides_them(self):
+        settings = Settings(rag_enabled=False, decoction_base_url="https://simulation.example",
+                            decoction_http_username="gateway-test", decoction_http_password="test-password",
+                            decoction_api_key="test-api-key")
+        request = SimulationUploadRequest(upload_id=uuid4(), doses=3, medicines=prescription().medicines)
+        external_no = f"BENCAO-{request.upload_id.hex.upper()}"
+        with patch("app.integrations.decoction.httpx.post", return_value=httpx.Response(201, json={
+            "external_no": external_no, "status": "pending_review",
+        })) as send:
+            result = upload_to_simulation(settings, request)
+        self.assertFalse(result["already_uploaded"])
+        self.assertEqual(send.call_args.args, ("https://simulation.example/api/v1/prescriptions",))
+        self.assertEqual(send.call_args.kwargs["headers"], {"X-API-Key": "test-api-key"})
+        authenticated = next(send.call_args.kwargs["auth"].sync_auth_flow(httpx.Request("POST", "https://simulation.example")))
+        self.assertEqual(authenticated.headers["Authorization"], "Basic Z2F0ZXdheS10ZXN0OnRlc3QtcGFzc3dvcmQ=")
+        for secret in ["gateway-test", "test-password", "test-api-key"]:
+            self.assertNotIn(secret, repr(settings))
+        for configuration in [
+            {"decoction_http_username": "gateway-test"},
+            {"decoction_base_url": "http://simulation.example", "decoction_http_username": "gateway-test", "decoction_http_password": "test-password"},
+        ]:
+            with self.subTest(configuration=configuration), self.assertRaises(ValueError):
+                Settings(rag_enabled=False, **configuration)
 
     def test_real_graph_prepare_branch_and_clarification_stop(self):
         self.login()

@@ -15,7 +15,7 @@ export type AuditConclusion = { status: "passed" | "not_passed" | "needs_informa
 export type ReportItem = { text: string; lead: string; children: string[]; sources: { label: string; url: string }[] };
 export type ReportSection = { number: "3.1" | "3.2" | "3.3" | "3.4" | "3.5"; title: string; paragraphs: ReportItem[]; items: ReportItem[]; ordered: boolean };
 export type MissingInformation = { field: string; label: string; prompt: string };
-export type PrescriptionReport = { status: string; title: string; conclusion?: AuditConclusion; sections?: ReportSection[]; missing_information?: MissingInformation[]; prescription: Prescription; findings: Finding[]; counts: Record<Finding["level"], number>; steps: string[]; framework: string; rules_version: string; scope: string[]; limitations: string[] };
+export type PrescriptionReport = { status: string; title: string; conclusion?: AuditConclusion; sections?: ReportSection[]; missing_information?: MissingInformation[]; simulation_upload_id?: string; prescription: Prescription; findings: Finding[]; counts: Record<Finding["level"], number>; steps: string[]; framework: string; rules_version: string; scope: string[]; limitations: string[] };
 export const findingLabels: Record<Finding["level"], string> = { error: "数据异常", risk: "配伍 / 用药疑点", missing: "信息缺失", review: "待人工复核" };
 export const doseScopeLabels = { per_dose: "每剂量", total: "总量", unknown: "口径未知" };
 export const blankMedicine = (scope: DoseScope = "per_dose"): Medicine => ({ name: "", dose: "", unit: "", method: "", dose_scope: scope, source: "" });
@@ -33,6 +33,18 @@ export function preparePrescription(file: File | null, text: string, instruction
 export function checkPrescription(prescription: Prescription, signal: AbortSignal) {
   const normalized = withDoseScope(prescription, prescription.dose_scope ?? "per_dose");
   return api<PrescriptionReport>("/prescriptions/check", { method: "POST", body: JSON.stringify({ prescription: normalized, confirmed: true }), signal: AbortSignal.any([signal, AbortSignal.timeout(30000)]) });
+}
+export function uploadToSimulation(report: PrescriptionReport, signal: AbortSignal) {
+  const { doses, medicines } = report.prescription;
+  return api<{ external_no: string; already_uploaded: boolean }>("/prescriptions/simulation", {
+    method: "POST",
+    signal: AbortSignal.any([signal, AbortSignal.timeout(120000)]),
+    body: JSON.stringify({
+      upload_id: report.simulation_upload_id,
+      doses,
+      medicines: medicines.map(({ name, dose, unit, method, dose_scope }) => ({ name, dose, unit, method, dose_scope })),
+    }),
+  });
 }
 export function prescriptionReportText(report: PrescriptionReport) {
   const inline = (value: string) => value.replace(/\s+/g, " ").replace(/[\\`*_[\]<>#]/g, "\\$&");

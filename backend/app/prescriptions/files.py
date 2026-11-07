@@ -1,5 +1,6 @@
 from functools import lru_cache
 from io import BytesIO
+import logging
 from pathlib import Path
 from threading import Lock
 import warnings
@@ -9,6 +10,8 @@ from fastapi import HTTPException
 MAX_BYTES = 10 * 1024 * 1024
 MAX_TEXT = 20000
 FORMATS = [".txt", ".md", ".docx", ".pdf", ".png", ".jpg", ".jpeg", ".webp"]
+OCR_TEXT_SCORE = 0.5
+OCR_SEX_SCORE = 0.45
 _ocr_lock = Lock()
 _pdf_lock = Lock()  # PDFium disallows concurrent calls, including different documents.
 
@@ -16,15 +19,48 @@ _pdf_lock = Lock()  # PDFium disallows concurrent calls, including different doc
 @lru_cache(maxsize=1)
 def ocr_engine():
     from rapidocr_onnxruntime import RapidOCR
-    return RapidOCR()
+    return RapidOCR(text_score=OCR_SEX_SCORE)
+
+
+def warm_ocr():
+    # Let an in-flight OCR request initialize the engine if it acquired the lock first.
+    if not _ocr_lock.acquire(blocking=False):
+        return
+    try:
+        ocr_engine()
+    except Exception:
+        logging.getLogger("uvicorn.error").warning("Prescription OCR preloading failed")
+    finally:
+        _ocr_lock.release()
+
+
+def _follows_sex_label(box, recognized):
+    left = min(point[0] for point in box)
+    center_y = sum(point[1] for point in box) / 4
+    row = [(other, "".join(text.split())) for other, text, _ in recognized
+           if min(point[1] for point in other) <= center_y <= max(point[1] for point in other)]
+    if any(text in {"男", "女"} for _, text in row):
+        return False
+    preceding = [(max(point[0] for point in other), min(point[0] for point in other), text)
+                 for other, text in row if max(point[0] for point in other) <= left]
+    if not preceding:
+        return False
+    label_right, label_left, label = max(preceding)
+    return label.rstrip(":：") == "性别" and left - label_right <= label_right - label_left
 
 
 def ocr_image(image):
     import numpy as np
     with _ocr_lock:
-        result, _ = ocr_engine()(np.asarray(image.convert("RGB")))
+        candidates, _ = ocr_engine()(np.asarray(image.convert("RGB")))
+    result = [entry for entry in candidates or [] if float(entry[2]) >= OCR_TEXT_SCORE]
     if not result:
         raise HTTPException(422, "没有识别到文字。请上传清晰的印刷处方，或粘贴文字手动核对；手写处方可能无法准确识别。")
+    # A single character in a table cell can score just below the general cutoff.
+    sex_candidates = [entry for entry in candidates if OCR_SEX_SCORE <= float(entry[2]) < OCR_TEXT_SCORE
+                      and entry[1].strip() in {"男", "女"} and _follows_sex_label(entry[0], result)]
+    if len(sex_candidates) == 1:
+        result.append(sex_candidates[0])
     # Preserve table rows instead of separating every OCR cell into a new line.
     rows = []
     for box, text, score in sorted(result, key=lambda row: min(p[1] for p in row[0])):

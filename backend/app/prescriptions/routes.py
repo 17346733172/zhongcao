@@ -1,9 +1,11 @@
 from pathlib import PurePosixPath
-from fastapi import Depends, File, Form, HTTPException, UploadFile
+from uuid import uuid4
+from fastapi import BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from starlette.concurrency import run_in_threadpool
 from .agent import PrescriptionAgent
-from .files import MAX_BYTES, MAX_TEXT, FORMATS
-from .models import DoseScope, ReviewRequest
+from .files import MAX_BYTES, MAX_TEXT, FORMATS, warm_ocr
+from ..integrations.decoction import upload_to_simulation
+from .models import DoseScope, ReviewRequest, SimulationUploadRequest, SimulationUploadResult
 
 
 def register_prescription_routes(app, require, settings):
@@ -12,7 +14,9 @@ def register_prescription_routes(app, require, settings):
     authorized = require("knowledge:read")
 
     @app.get("/api/prescriptions/status")
-    def status(user=Depends(authorized)):
+    def status(background_tasks: BackgroundTasks, user=Depends(authorized)):
+        if settings.deepseek_api_key:
+            background_tasks.add_task(warm_ocr)
         return {"framework": "LangGraph", "ai_configured": bool(settings.deepseek_api_key),
                 "formats": FORMATS, "max_bytes": MAX_BYTES, "max_text": MAX_TEXT, "max_pdf_pages": 8,
                 "ocr": "RapidOCR（本地 CPU）", "persistence": "none"}
@@ -42,4 +46,10 @@ def register_prescription_routes(app, require, settings):
     def check(payload: ReviewRequest, user=Depends(authorized)):
         if not payload.prescription.medicines:
             raise HTTPException(422, "请至少录入一味药，并核对后确认。")
-        return agent.run({"phase": "check", "prescription": payload.prescription.model_dump()})
+        report = agent.run({"phase": "check", "prescription": payload.prescription.model_dump()})
+        return {**report, "simulation_upload_id": str(uuid4())}
+
+    @app.post("/api/prescriptions/simulation", response_model=SimulationUploadResult,
+              tags=["处方仿真对接"], summary="上传已核对处方到煎药仿真平台")
+    def upload(payload: SimulationUploadRequest, user=Depends(authorized)):
+        return upload_to_simulation(settings, payload)

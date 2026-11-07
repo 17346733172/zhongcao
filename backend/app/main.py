@@ -67,7 +67,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 return JSONResponse({"detail": "请求来源校验失败，请刷新页面后重试"}, status_code=403)
             # Bound request bytes even for chunked requests before JSON parsing.
             maximum = (12 * 1024 * 1024 if request.url.path in {"/api/documents", "/api/prescriptions/prepare"}
-                       else 128 * 1024 if request.url.path == "/api/prescriptions/check"
+                       else 128 * 1024 if request.url.path in {"/api/prescriptions/check", "/api/prescriptions/simulation"}
                        else 64 * 1024 if request.url.path == "/api/chat" else 16 * 1024)
             size = 0
             chunks = []
@@ -86,6 +86,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def validation_error(request, error):
         # Never echo submitted passwords or document content in errors.
         fields = ", ".join(str(item["loc"][-1]) for item in error.errors())
+        if request.url.path == "/api/prescriptions/simulation":
+            return JSONResponse({"detail": "上传数据无效，请返回核对页检查药材和剂数后重新生成报告。"}, status_code=422)
         if request.url.path.startswith("/api/prescriptions/"):
             return JSONResponse({"detail": "请检查处方字段、文件、字数和数值范围，并确认已核对原文后再检查。"}, status_code=422)
         if request.url.path == "/api/chat":
