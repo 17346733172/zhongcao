@@ -1,0 +1,30 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "unit": "piece",
+      "quantity_per_dose": 3,
+      "total_pieces": 15,
+      "measured_grams_per_dose": 4.5,
+      "herb_mass_g": 67.5
+    },
+    {
+      "width": 390,
+      "unit": "piece",
+      "quantity_per_dose": 3,
+      "total_pieces": 15,
+      "measured_grams_per_dose": 4.5,
+      "herb_mass_g": 67.5
+    },
+    {
+      "width": 320,
+      "unit": "piece",
+      "quantity_per_dose": 3,
+      "total_pieces": 15,
+      "measured_grams_per_dose": 4.5,
+      "herb_mass_g": 67.5
+    }
+  ],
+  "pageErrors": [],
+  "environment": "独立本地数据库，真实两端 API，虚构处方；未调用 OCR 或云端模型"
+}

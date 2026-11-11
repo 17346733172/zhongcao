@@ -33,13 +33,18 @@ def build_simulation_payload(request: SimulationUploadRequest) -> dict:
         if not item.name or item.name in names:
             raise HTTPException(422, f"{row}的药名为空或重复，请返回核对页检查。")
         names.add(item.name)
-        unit = UNIT_TO_GRAMS.get(item.unit.lower())
-        if unit is None or not re.fullmatch(r"\d{1,6}(?:\.\d{1,6})?", item.dose) or item.dose_scope == "unknown":
-            raise HTTPException(422, f"{row}需确认剂量、克或毫克单位及剂量口径，才能上传仿真。")
-        grams = Decimal(item.dose) * unit
+        unit = item.unit.lower()
+        if unit not in {*UNIT_TO_GRAMS, "片"}:
+            raise HTTPException(422, f"{row}的单位「{item.unit or '未填写'}」暂不支持仿真上传，请核对克、毫克或片单位。")
+        if not re.fullmatch(r"\d{1,6}(?:\.\d{1,6})?", item.dose) or item.dose_scope == "unknown":
+            raise HTTPException(422, f"{row}需确认剂量数字及每剂量或总量口径，才能上传仿真。")
+        quantity = Decimal(item.dose)
         if item.dose_scope == "total":
-            grams /= doses
-        if not 0 < grams <= 1000:
+            quantity /= doses
+        if quantity <= 0:
+            raise HTTPException(422, f"{row}的每剂数量必须大于 0，才能上传仿真。")
+        grams = quantity * UNIT_TO_GRAMS[unit] if unit != "片" else None
+        if grams is not None and grams > 1000:
             raise HTTPException(422, f"{row}的每剂克数需大于 0 且不超过 1000 g，才能上传仿真。")
 
         method = re.sub(r"\s+", "", item.method)
@@ -47,7 +52,12 @@ def build_simulation_payload(request: SimulationUploadRequest) -> dict:
         method_code = METHODS.get(timed[1] if timed else method)
         if method_code is None:
             raise HTTPException(422, f"{row}的煎法无法映射到仿真平台。仿真平台支持常规、先煎、后下和包煎。")
-        herbs.append({"name": item.name, "grams_per_dose": float(grams), "method": method_code})
+        herb = {"name": item.name, "method": method_code}
+        if unit == "片":
+            herb.update(unit="piece", quantity_per_dose=float(quantity))
+        else:
+            herb["grams_per_dose"] = float(grams)
+        herbs.append(herb)
 
     return {
         "external_no": f"BENCAO-{request.upload_id.hex.upper()}",
@@ -76,7 +86,8 @@ def upload_to_simulation(settings: Settings, request: SimulationUploadRequest) -
     if response.status_code in {401, 403}:
         raise HTTPException(502, "仿真平台拒绝了连接，请检查本草后端配置的 API Key 和 HTTPS 网关认证。")
     if response.status_code == 422:
-        raise HTTPException(422, "仿真平台未接受处方字段，请核对药材、剂量、剂数和煎法。")
+        count_note = "处方包含片数，请确认接收端已更新至支持计数单位的版本。" if any(h.get("unit") == "piece" for h in payload["herbs"]) else ""
+        raise HTTPException(502 if count_note else 422, "仿真平台未接受处方字段，请核对药材、剂量、剂数和煎法。" + count_note)
     try:
         result = response.json()
     except ValueError:

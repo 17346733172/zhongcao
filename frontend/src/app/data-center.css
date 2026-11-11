@@ -1,0 +1,97 @@
+.data-center-dialog { --dc-subtle: #626b79; --dc-success: #25704d; --dc-danger: #b43434; margin: auto; padding: 0; border: 0; width: min(1180px, calc(100% - 56px)); height: min(88dvh, 960px); max-height: 92dvh; color: var(--text); font-family: var(--sans); font-size: 14px; box-shadow: 0 16px 64px #18243f24; }
+.data-center-dialog:not([open]) { display: none; }
+.data-center-dialog::backdrop { background: #18243f45; }
+.data-center-dialog > header { padding: 22px 28px 16px; border-bottom: 0; }
+.data-center-dialog h2 { font-size: 20px; font-weight: 600; }
+.dc-source { color: var(--dc-subtle); font-size: 12px; padding-left: 12px; border-left: 1px solid var(--line); }
+.dc-toolbar { display: flex; flex: 0 0 auto; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 1px solid var(--line); padding: 0 28px; }
+.dc-toolbar [role="tablist"] { display: flex; gap: 28px; }
+.dc-toolbar [role="tab"] { padding: 14px 0; border: 0; border-bottom: 2px solid transparent; color: var(--dc-subtle); background: transparent; white-space: nowrap; }
+.dc-toolbar [aria-selected="true"] { color: var(--blue); border-bottom-color: var(--blue); }
+.dc-refresh { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; font-size: 12px; white-space: nowrap; }
+.dc-refresh:hover:not(:disabled), .dc-pagination button:hover:not(:disabled) { background: var(--paper); }
+.data-center-dialog button:disabled { opacity: .5; }
+.dc-content { flex: 1; min-height: 0; overflow: auto; padding: 20px 28px 28px; scrollbar-gutter: stable; }
+.dc-notice { color: var(--dc-subtle); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 20px; font-size: 12px; line-height: 1.8; margin-bottom: 24px; }
+.dc-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 24px 0 14px; }
+.dc-section-heading h3 { font-size: 15px; font-weight: 600; }
+.dc-section-heading > span, .dc-section-heading small { color: var(--dc-subtle); font-size: 12px; font-weight: 400; }
+.dc-section-heading small { margin-left: 8px; }
+.dc-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 24px 0; margin: 0 0 32px; padding: 8px 0 26px; border-bottom: 1px solid var(--line); }
+.dc-metrics > div { padding: 0 20px; border-left: 1px solid var(--line); }
+.dc-metrics > div:nth-child(5n + 1) { border-left: 0; padding-left: 0; }
+.dc-metrics dt { color: var(--dc-subtle); font-size: 13px; }
+.dc-metrics dd { margin: 8px 0 0; font-size: 28px; font-weight: 500; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.dc-device-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.dc-device-summary > div { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 20px 16px; }
+.dc-device-summary strong { font-size: 22px; font-weight: 500; }
+.dc-device-summary small { color: var(--dc-subtle); font-size: 12px; font-weight: 400; }
+.dc-status { display: inline-flex; align-items: center; gap: 7px; color: var(--dc-subtle); white-space: nowrap; font-size: 13px; }
+.dc-status i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.dc-status-busy, .dc-status-running { color: var(--blue); }
+.dc-status-fault, .dc-status-active, .dc-status-rejected, .dc-danger { color: var(--dc-danger); }
+.dc-status-approved, .dc-status-completed, .dc-status-resolved { color: var(--dc-success); }
+.dc-status-paused, .dc-status-pending_review, .dc-status-queued { color: #946016; }
+.dc-filters { display: flex; gap: 14px; flex-wrap: wrap; }
+.dc-filters label, .dc-inline-filter { display: inline-flex; align-items: center; gap: 8px; color: var(--dc-subtle); font-size: 12px; }
+.data-center-dialog select { max-width: 170px; min-height: 34px; padding: 5px 28px 5px 10px; color: var(--text); background: #fff; border: 1px solid var(--line); border-radius: 6px; font: inherit; }
+.dc-table-scroll { max-width: 100%; overflow: auto; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.dc-table-scroll table { min-width: 640px; }
+.dc-table-scroll th:first-child { min-width: 110px; }
+.dc-table-scroll .dc-prescriptions { min-width: 800px; }
+.dc-prescription-detail table { min-width: 540px; }
+.data-center-dialog table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; line-height: 1.6; }
+.data-center-dialog th { padding: 11px 12px; background: var(--paper); font-weight: 400; color: var(--dc-subtle); white-space: nowrap; }
+.data-center-dialog td { padding: 13px 12px; border-top: 1px solid var(--line); vertical-align: top; }
+.dc-subtext { display: block; color: var(--dc-subtle); font-size: 12px; margin-top: 3px; }
+.dc-code { font-family: var(--sans); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.data-center-dialog td strong { font-weight: 500; }
+.dc-text-button { padding: 0; border: 0; background: transparent; color: var(--blue); text-align: left; line-height: inherit; }
+.dc-text-button:hover { text-decoration: underline; }
+.dc-prescriptions { min-width: 800px; }
+.dc-prescriptions td:first-child { max-width: 290px; }
+.dc-herb-preview { min-width: 170px; max-width: 240px; }
+.dc-empty { padding: 36px 16px; text-align: center; color: var(--dc-subtle); font-size: 13px; }
+.dc-error { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 12px 14px; background: #fff6f5; border-radius: 6px; color: var(--dc-danger); line-height: 1.7; }
+.dc-error button { padding: 0 4px; border: 0; background: transparent; color: inherit; text-decoration: underline; }
+.dc-loading { color: var(--dc-subtle); padding: 10px 0; font-size: 13px; }
+.dc-pagination { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 18px 0 0; color: var(--dc-subtle); font-size: 12px; }
+.dc-pagination > div { display: flex; align-items: center; gap: 12px; }
+.dc-pagination button { padding: 6px 10px; border: 1px solid var(--line); border-radius: 5px; background: #fff; }
+.dc-prescription-detail { padding: 8px 8px 18px; min-width: 0; }
+.dc-prescription-detail h4 { margin: 8px 0 14px; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.dc-detail-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; margin: 0 0 18px; }
+.dc-detail-meta dt, .dc-recipe dt { color: var(--dc-subtle); font-size: 12px; }
+.dc-detail-meta dd, .dc-recipe dd { margin: 4px 0 0; overflow-wrap: anywhere; }
+.dc-detail-line { line-height: 1.9; margin-bottom: 18px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.dc-recipe { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 0 0 20px; }
+.data-center-dialog > footer { font-size: 11px; color: var(--dc-subtle); padding: 12px 28px; line-height: 1.7; }
+@media (max-width: 720px) {
+  .data-center-dialog { width: calc(100% - 20px); height: 94dvh; max-height: 94dvh; border-radius: 10px; }
+  .data-center-dialog > header { padding: 16px 16px 8px; }
+  .data-center-dialog h2 { font-size: 18px; }
+  .dc-source { display: none; }
+  .dc-toolbar { padding: 0 16px; gap: 8px; }
+  .dc-toolbar [role="tablist"] { gap: 16px; font-size: 13px; }
+  .dc-toolbar [role="tab"] { padding: 14px 0; }
+  .dc-refresh { padding: 7px; }
+  .dc-refresh svg { display: none; }
+  .dc-content { padding: 16px; }
+  .dc-notice { margin-bottom: 20px; }
+  .dc-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px 0; }
+  .dc-metrics > div { padding: 0 12px; }
+  .dc-metrics > div:nth-child(5n + 1) { border-left: 1px solid var(--line); padding-left: 12px; }
+  .dc-metrics > div:nth-child(3n + 1) { border-left: 0; padding-left: 0; }
+  .dc-metrics dt { font-size: 11px; }
+  .dc-metrics dd { font-size: 25px; }
+  .dc-device-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dc-device-summary > div { padding: 14px 8px; }
+  .dc-section-heading { align-items: flex-start; }
+  .dc-section-heading > span { line-height: 1.8; }
+  .dc-filters { gap: 10px; }
+  .dc-filters label { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+  .data-center-dialog > footer { padding: 10px 16px; }
+  .dc-prescription-detail { width: calc(100vw - 90px); padding: 4px 0 16px; }
+  .dc-detail-meta { grid-template-columns: 1fr; gap: 12px; }
+  .dc-recipe { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

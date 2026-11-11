@@ -1,0 +1,13 @@
+{
+  "browser": "Google Chrome",
+  "api": "isolated FastAPI/SQLite; no cloud model calls",
+  "results": [
+    "desktop: one entry, real document/download and manual check, drafts/reading/report preserved across tabs",
+    "keyboard: arrows/Home/End, focus trap, Escape, return to entry, chat draft preserved",
+    "closing clears prescription; reopening defaults to reference",
+    "390px: single entry, both panels usable, no overflow, draft retained and focus returns to mobile navigation",
+    "320px: single entry, both panels usable, no overflow, draft retained and focus returns to mobile navigation",
+    "no unhandled browser errors"
+  ],
+  "errors": []
+}

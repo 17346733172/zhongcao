@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-11",
+  "results": [
+    "1440 real overview metrics and responsive bounds",
+    "1440 real prescription pagination and full details",
+    "automatic 15-second snapshot refresh and keyboard navigation",
+    "local fixture: fault filters, resolved alarms, stale data error and retry",
+    "390 real overview metrics and responsive bounds",
+    "390 real prescription pagination and full details",
+    "320 real overview metrics and responsive bounds",
+    "320 real prescription pagination and full details",
+    "320 local fixture: piece units, total quantity, pending weight and empty status"
+  ],
+  "browserErrors": [],
+  "source": "Real read-only simulator API via isolated local backend; fault and piece cases use browser-local fixtures; no platform writes."
+}

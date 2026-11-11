@@ -266,7 +266,7 @@ class PrescriptionApiTests(unittest.TestCase):
         medicine = {"name": "演示甲", "dose": "5", "unit": "g", "dose_scope": "per_dose"}
         with patch("app.integrations.decoction.httpx.post") as send:
             for doses, medicines in [(None, [medicine]), (31, [medicine]), (3, [medicine, medicine]),
-                                     (3, [{**medicine, "unit": "片"}]), (3, [{**medicine, "dose_scope": "unknown"}]),
+                                     (3, [{**medicine, "unit": "钱"}]), (3, [{**medicine, "dose_scope": "unknown"}]),
                                      (3, [{**medicine, "method": "烊化"}])]:
                 with self.subTest(doses=doses, medicines=medicines):
                     response = self.client.post("/api/prescriptions/simulation", json={
@@ -274,6 +274,52 @@ class PrescriptionApiTests(unittest.TestCase):
                     })
                     self.assertEqual(response.status_code, 422)
             send.assert_not_called()
+
+    def test_simulation_upload_preserves_pieces_and_divides_only_total_quantity(self):
+        self.login()
+        upload_id = uuid4()
+        external_no = f"BENCAO-{upload_id.hex.upper()}"
+        payload = {"upload_id": str(upload_id), "doses": 5, "medicines": [
+            {"name": "生姜", "dose": "3", "unit": "片", "dose_scope": "per_dose"},
+            {"name": "演示计数饮片", "dose": "2.5", "unit": "片", "dose_scope": "total"},
+            {"name": "陈皮", "dose": "9000", "unit": "mg", "dose_scope": "per_dose"},
+        ]}
+        with patch("app.integrations.decoction.httpx.post", return_value=httpx.Response(201, json={
+            "external_no": external_no, "status": "pending_review",
+        })) as send:
+            response = self.client.post("/api/prescriptions/simulation", json=payload)
+        self.assertEqual(response.status_code, 200, response.text)
+        herbs = send.call_args.kwargs["json"]["herbs"]
+        self.assertEqual(herbs, [
+            {"name": "生姜", "unit": "piece", "quantity_per_dose": 3.0, "method": "normal"},
+            {"name": "演示计数饮片", "unit": "piece", "quantity_per_dose": 0.5, "method": "normal"},
+            {"name": "陈皮", "grams_per_dose": 9.0, "method": "normal"},
+        ])
+        self.assertNotIn("grams_per_dose", herbs[0])
+
+    def test_simulation_piece_upload_rejects_invalid_quantity_without_network(self):
+        self.login()
+        with patch("app.integrations.decoction.httpx.post") as send:
+            for dose in ["0", "-1", "NaN", "Infinity", "", "1e3"]:
+                with self.subTest(dose=dose):
+                    response = self.client.post("/api/prescriptions/simulation", json={
+                        "upload_id": str(uuid4()), "doses": 3, "medicines": [
+                            {"name": "生姜", "dose": dose, "unit": "片", "dose_scope": "per_dose"},
+                        ],
+                    })
+                    self.assertEqual(response.status_code, 422)
+            send.assert_not_called()
+
+    def test_older_simulation_platform_rejection_is_not_reported_as_upload_success(self):
+        self.login()
+        with patch("app.integrations.decoction.httpx.post", return_value=httpx.Response(422, json={"detail": "old contract"})):
+            response = self.client.post("/api/prescriptions/simulation", json={
+                "upload_id": str(uuid4()), "doses": 3, "medicines": [
+                    {"name": "生姜", "dose": "3", "unit": "片", "dose_scope": "per_dose"},
+                ],
+            })
+        self.assertEqual(response.status_code, 502)
+        self.assertIn("接收端已更新", response.json()["detail"])
 
     def test_simulation_gateway_auth_uses_server_credentials_and_hides_them(self):
         settings = Settings(rag_enabled=False, decoction_base_url="https://simulation.example",

@@ -14,8 +14,8 @@ import { ConversationView } from "./conversation-view";
 import { QuestionComposer } from "./question-composer";
 import { UploadPanel } from "./upload-panel";
 import { SourceDialog } from "./source-dialog";
-import { ReferenceDocumentDialog } from "./reference-document-dialog";
-import { PrescriptionDialog } from "./prescription-dialog";
+import { LibraryToolsDialog } from "./library-tools-dialog";
+import { DataCenterDialog } from "./data-center-dialog";
 
 export default function KnowledgeWorkspace() {
   const { user } = useAuth();
@@ -39,8 +39,8 @@ export default function KnowledgeWorkspace() {
   const [aiStatusError, setAIStatusError] = useState("");
   const [answerError, setAnswerError] = useState("");
   const [source, setSource] = useState<Source | null>(null);
-  const [referenceOpen, setReferenceOpen] = useState(false);
-  const [prescriptionOpen, setPrescriptionOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [dataCenterOpen, setDataCenterOpen] = useState(false);
   const [referenceDocument, setReferenceDocument] = useState<Source | null>(null);
   const [toast, setToast] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -51,7 +51,8 @@ export default function KnowledgeWorkspace() {
   const currentConversation = conversations.find((item) => item.id === activeId);
   const libraryDocuments = documents.filter((item) => item.libraryId === libraryId);
   const closeSource = useCallback(() => setSource(null), []);
-  const closeReference = useCallback(() => setReferenceOpen(false), []);
+  const closeTools = useCallback(() => setToolsOpen(false), []);
+  const closeDataCenter = useCallback(() => setDataCenterOpen(false), []);
   const loadDocuments = useCallback(async () => {
     setDocumentsLoading(true);
     setDocumentError("");
@@ -102,13 +103,13 @@ export default function KnowledgeWorkspace() {
 
   useEffect(() => {
     function escape(event: globalThis.KeyboardEvent) {
-      if (event.key !== "Escape" || source || referenceOpen || prescriptionOpen) return;
+      if (event.key !== "Escape" || source || toolsOpen || dataCenterOpen) return;
       setNavigationOpen(false);
       setUploadsOpen(false);
     }
     document.addEventListener("keydown", escape);
     return () => document.removeEventListener("keydown", escape);
-  }, [source, referenceOpen, prescriptionOpen]);
+  }, [source, toolsOpen, dataCenterOpen]);
 
   useEffect(() => {
     const selector = navigationOpen && mobile ? ".sidebar" : uploadsOpen ? ".upload-panel" : null;
@@ -118,7 +119,7 @@ export default function KnowledgeWorkspace() {
     const visibleControls = () => Array.from(panel?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]):not([tabindex="-1"]), select:not([disabled]), [tabindex="0"]') ?? []).filter((element) => element.getClientRects().length);
     visibleControls()[0]?.focus();
     function containFocus(event: globalThis.KeyboardEvent) {
-      if (event.key !== "Tab" || document.querySelector('.source-dialog[role="dialog"][aria-modal="true"]')) return;
+      if (event.key !== "Tab" || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
       const controls = visibleControls();
       const first = controls[0], last = controls[controls.length - 1];
       if (!first) return;
@@ -144,18 +145,20 @@ export default function KnowledgeWorkspace() {
   }
   function selectLibrary(id: string) {
     setLibraryId(id);
-    setReferenceOpen(true);
-  }
-  function openPrescription() {
     setUploadsOpen(false);
     setNavigationOpen(false);
-    setPrescriptionOpen(true);
+    setToolsOpen(true);
   }
   function selectConversation(id: string) {
     cancelPending();
     setActiveId(id);
     setDraft("");
     setNavigationOpen(false);
+  }
+  function openDataCenter() {
+    setUploadsOpen(false);
+    setNavigationOpen(false);
+    setDataCenterOpen(true);
   }
   async function ask(question: string) {
     const text = question.trim();
@@ -243,8 +246,8 @@ export default function KnowledgeWorkspace() {
     <div className={"workspace" + (!uploadsOpen ? " uploads-hidden" : "") + (sidebarCollapsed ? " nav-collapsed" : "")}>
       {navigationOpen && <button className="drawer-backdrop navigation-backdrop" aria-label="关闭导航遮罩" onClick={() => setNavigationOpen(false)} />}
       {uploadsOpen && <button className="drawer-backdrop upload-backdrop" aria-label="关闭上传遮罩" onClick={() => setUploadsOpen(false)} />}
-      <Sidebar libraryId={libraryId} activeId={activeId} conversations={conversations} open={navigationOpen} onLibrary={selectLibrary} onConversation={selectConversation} onNew={newConversation} onClose={() => setNavigationOpen(false)} onCollapse={() => setSidebarCollapsed(true)} onPrescription={openPrescription} />
-      <main className="main-panel" id="main-content" inert={!!source || referenceOpen || prescriptionOpen || (navigationOpen && mobile) || uploadsOpen}>
+      <Sidebar libraryId={libraryId} activeId={activeId} conversations={conversations} open={navigationOpen} dataCenterOpen={dataCenterOpen} onLibrary={selectLibrary} onDataCenter={openDataCenter} onConversation={selectConversation} onNew={newConversation} onClose={() => setNavigationOpen(false)} onCollapse={() => setSidebarCollapsed(true)} />
+      <main className="main-panel" id="main-content" inert={!!source || toolsOpen || dataCenterOpen || (navigationOpen && mobile) || uploadsOpen}>
         <header className="main-header">
           <button className={"icon-button mobile-menu" + (sidebarCollapsed ? " desktop-visible" : "")} aria-label={mobile ? "打开导航" : "展开侧栏"} aria-expanded={mobile ? navigationOpen : !sidebarCollapsed} onClick={() => mobile ? setNavigationOpen(true) : setSidebarCollapsed(false)}><ListIcon size={25} /></button>
           <div className="header-context">
@@ -263,8 +266,8 @@ export default function KnowledgeWorkspace() {
       </main>
       <UploadPanel canWrite={canWrite} uploading={uploading || documentsLoading} onRefresh={() => void loadDocuments()} documents={libraryDocuments} open={uploadsOpen} inputRef={inputRef} onFiles={addFiles} onClose={() => setUploadsOpen(false)} onRemove={(id) => void removeDocument(id)} onPreview={previewDocument} />
       {source && <SourceDialog source={source} onClose={closeSource} />}
-      {referenceOpen && <ReferenceDocumentDialog onClose={closeReference} />}
-      {prescriptionOpen && <PrescriptionDialog onClose={() => setPrescriptionOpen(false)} />}
+      {toolsOpen && <LibraryToolsDialog onClose={closeTools} />}
+      {dataCenterOpen && <DataCenterDialog onClose={closeDataCenter} />}
       {toast && <div className="toast" role="status">{toast}</div>}
     </div>
   );

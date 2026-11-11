@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpenTextIcon, BooksIcon, ChatTextIcon, CheckCircleIcon, ClockCounterClockwiseIcon, PlusCircleIcon, SidebarSimpleIcon, XIcon } from "@phosphor-icons/react";
+import { BookOpenTextIcon, BooksIcon, ChatTextIcon, ClockCounterClockwiseIcon, DatabaseIcon, PlusCircleIcon, SidebarSimpleIcon, XIcon } from "@phosphor-icons/react";
 import { AccountNavigation } from "./authenticated";
 import { libraries } from "@/lib/demo-data";
 import type { Conversation } from "@/lib/types";
@@ -10,12 +10,13 @@ type Props = {
   activeId: string | null;
   conversations: Conversation[];
   open: boolean;
+  dataCenterOpen: boolean;
   onLibrary: (id: string) => void;
+  onDataCenter: () => void;
   onConversation: (id: string) => void;
   onNew: () => void;
   onClose: () => void;
   onCollapse: () => void;
-  onPrescription: () => void;
 };
 
 export function Sidebar(props: Props) {
@@ -36,12 +37,14 @@ export function Sidebar(props: Props) {
           <h2 className="nav-label" id="library-label"><BooksIcon size={21} aria-hidden="true" />知识库</h2>
           <div className="nav-list">
             {libraries.map((library) => (
-              <button key={library.id} className={"nav-item" + (props.libraryId === library.id ? " active" : "")} aria-pressed={props.libraryId === library.id} aria-haspopup="dialog" onClick={() => props.onLibrary(library.id)}>
-                <BookOpenTextIcon size={22} aria-hidden="true" /><span>{library.name}</span>
+              <button key={library.id} className={"nav-item" + (props.libraryId === library.id && !props.dataCenterOpen ? " active" : "")} aria-pressed={props.libraryId === library.id && !props.dataCenterOpen} aria-haspopup="dialog" onClick={() => props.onLibrary(library.id)}>
+                <BookOpenTextIcon size={22} aria-hidden="true" /><span>中药资料与处方</span>
               </button>
             ))}
+            <button className={"nav-item" + (props.dataCenterOpen ? " active" : "")} aria-haspopup="dialog" aria-expanded={props.dataCenterOpen} onClick={props.onDataCenter}>
+              <DatabaseIcon size={22} aria-hidden="true" /><span>数据中心</span>
+            </button>
           </div>
-          <button className="nav-item" onClick={props.onPrescription} aria-haspopup="dialog"><CheckCircleIcon size={22} aria-hidden="true" /><span>处方检查</span></button>
         </section>
         <section className="history-section" aria-labelledby="history-label">
           <h2 className="nav-label" id="history-label"><ClockCounterClockwiseIcon size={23} aria-hidden="true" />历史对话</h2>

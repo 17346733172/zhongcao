@@ -11,15 +11,17 @@ type Props = {
   loading?: boolean;
   error?: string;
   onRetry?: () => void;
+  embedded?: boolean;
 };
 
-export function SourceDialog({ source, onClose, loading = false, error, onRetry }: Props) {
+export function SourceDialog({ source, onClose, loading = false, error, onRetry, embedded = false }: Props) {
   const dialog = useRef<HTMLDivElement>(null);
   const close = useRef<HTMLButtonElement>(null);
   const content = useRef<HTMLDivElement>(null);
   const hasContent = !loading && !error && source.fullText.trim().length > 0;
   const chapters = source.blocks?.flatMap((block, index) => block.type === "heading" && block.level === 1 ? [{ index, text: block.text }] : []) ?? [];
   useEffect(() => {
+    if (embedded) return;
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     close.current?.focus();
     function onKey(event: KeyboardEvent) {
@@ -34,12 +36,9 @@ export function SourceDialog({ source, onClose, loading = false, error, onRetry 
     }
     document.addEventListener("keydown", onKey);
     return () => { document.removeEventListener("keydown", onKey); previous?.focus(); };
-  }, [onClose]);
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby="source-dialog-title" className="source-dialog" onClick={(event) => event.stopPropagation()}>
-        <header><div><FileTextIcon size={24} /><h2 id="source-dialog-title">{source.name}</h2></div><button ref={close} className="icon-button" aria-label="关闭原文" onClick={onClose}><XIcon size={22} /></button></header>
-        <div className="source-dialog-meta"><span>{loading ? "正在读取文档" : error ? "文档读取失败" : !hasContent ? "待接入文档" : source.demo ? "演示原文" : "资料原文"}</span>{source.page && <span>引用位置：第 {source.page} 页（示例）</span>}</div>
+  }, [onClose, embedded]);
+  const body = <>
+        <div className="source-dialog-meta">{embedded && <span>{source.name}</span>}<span>{loading ? "正在读取文档" : error ? "文档读取失败" : !hasContent ? "待接入文档" : source.demo ? "演示原文" : "资料原文"}</span>{source.page && <span>引用位置：第 {source.page} 页（示例）</span>}</div>
         {hasContent && (chapters.length > 0 || source.downloadUrl) && <div className="source-dialog-tools">
           {chapters.length > 0 && <label className="source-chapter-picker">定位章节<select defaultValue="" onChange={(event) => content.current?.querySelector(`#document-section-${event.target.value}`)?.scrollIntoView({ block: "start" })}>
             <option value="" disabled>选择章节</option>
@@ -55,6 +54,13 @@ export function SourceDialog({ source, onClose, loading = false, error, onRetry 
           </div>
         )}
         <footer>{loading ? "正在加载文档正文。" : error ? "可重新读取文档，或关闭窗口稍后再试。" : hasContent ? "引用内容用于资料核对，请以真实文献为准。" : "正式文档接入后，可在此阅读完整内容。"}</footer>
+  </>;
+  if (embedded) return <div className="source-dialog source-panel">{body}</div>;
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby="source-dialog-title" className="source-dialog" onClick={(event) => event.stopPropagation()}>
+        <header><div><FileTextIcon size={24} /><h2 id="source-dialog-title">{source.name}</h2></div><button ref={close} className="icon-button" aria-label="关闭原文" onClick={onClose}><XIcon size={22} /></button></header>
+        {body}
       </div>
     </div>
   );

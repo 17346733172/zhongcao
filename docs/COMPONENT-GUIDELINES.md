@@ -50,6 +50,10 @@
 
 ## 6. 无障碍
 
+`data-center-dialog.tsx` 使用原生模态 dialog 管理数据中心，负责标签、请求取消、刷新、处方分页和展开状态；`data-center-panels.tsx` 展示概览、设备 / 报警与处方明细，类型、状态翻译及请求集中在 `data-center-api.ts`，样式与状态颜色集中于 `data-center.css`。关闭与 Escape 恢复原入口焦点，手机返回导航按钮；左右 / Home / End 切换标签。浏览器仅调用本草的登录保护只读接口，不持有平台凭据；片数不自动换算克数，运行时间和真实日期分别显示。
+
+`library-tools-dialog.tsx` 统一管理资料 / 处方弹窗、标签切换和键盘焦点；两个原有组件通过嵌入模式复用，不叠加模态或焦点约束。处方标签首次访问才加载，切换后保持挂载以保留数据；关闭统一弹窗才取消请求和释放图片。标签支持左右方向键、Home / End，样式集中在 `library-tools.css`。
+
 处方流程使用 prescription-dialog / prescription-fields / prescription-report 分离编排、编辑和结果展示，类型与请求集中在 prescription-api.ts，样式集中在 prescription.css。multipart 上传由浏览器生成 Content-Type boundary，不能手动设置 JSON Content-Type。编辑任意已确认字段须清除确认勾选；更换处方清空旧数据，关闭弹窗释放 Object URL 并恢复焦点。报告复制保留类别、依据和复核边界。
 
 - 用语义化按钮、链接和表单表达操作。

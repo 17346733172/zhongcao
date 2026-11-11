@@ -42,6 +42,7 @@ export function PrescriptionFields({ value, disabled, missingInformation, onChan
   return <fieldset className="rx-fields" disabled={disabled}>
     <legend>核对处方数据</legend>
     <p className="rx-help">缺失信息请保持空白或未知；不要根据常识补成「无过敏」或默认克数。可修改识别错误。</p>
+    <p className="rx-help">单位可填写克、毫克或片等。片数按原文保留，不自动换算为克。</p>
     {reportedFields.size > 0 && <p className="rx-help" id={hintId}>红框标出报告中仍需补充的项目，请对照原文填写。</p>}
     <div className="rx-meta-grid">
       <label>年龄（岁）<input type="number" min={0} max={130} step="any" {...field("age", value.age === null)} value={value.age ?? ""} onChange={event => onChange({ ...value, age: event.target.value === "" ? null : Number(event.target.value) })} /></label>
@@ -58,7 +59,7 @@ export function PrescriptionFields({ value, disabled, missingInformation, onChan
         {value.medicines.map((item, index) => <tr key={index}>
           <td><input {...medicineField(index, "name", !item.name.trim())} aria-label={`第${index + 1}味药名`} maxLength={60} value={item.name} onChange={event => medicine(index, { name: event.target.value })} /></td>
           <td><input {...medicineField(index, "dose", !item.dose.trim())} aria-label={`第${index + 1}味剂量`} inputMode="decimal" maxLength={32} value={item.dose} onChange={event => medicine(index, { dose: event.target.value })} /></td>
-          <td><input {...medicineField(index, "unit", !item.unit.trim())} aria-label={`第${index + 1}味单位`} maxLength={12} value={item.unit} onChange={event => medicine(index, { unit: event.target.value })} /></td>
+          <td><input {...medicineField(index, "unit", !item.unit.trim())} aria-label={`第${index + 1}味单位`} list={`${hintId}-units`} maxLength={12} value={item.unit} onChange={event => medicine(index, { unit: event.target.value })} /></td>
           <td><select {...medicineField(index, "dose_scope", item.dose_scope === "unknown")} aria-label={`第${index + 1}味剂量口径`} value={item.dose_scope} onChange={event => medicine(index, { dose_scope: event.target.value as Medicine["dose_scope"] })}>{Object.entries(doseScopeLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></td>
           <td><input data-field={`medicines.${index}.method`} aria-label={`第${index + 1}味煎法`} maxLength={150} value={item.method} onChange={event => medicine(index, { method: event.target.value })} /></td>
           <td>{item.source ? <details><summary>核对</summary><p>{item.source}</p></details> : <span>手动录入</span>}</td>
@@ -66,6 +67,7 @@ export function PrescriptionFields({ value, disabled, missingInformation, onChan
         </tr>)}
       </tbody></table>
     </div>
+    <datalist id={`${hintId}-units`}>{["g", "克", "mg", "毫克", "片", "枚", "个", "条"].map(unit => <option key={unit} value={unit} />)}</datalist>
     <button type="button" className="quiet-button" disabled={value.medicines.length >= 100} onClick={() => onChange({ ...value, medicines: [...value.medicines, blankMedicine(value.dose_scope ?? "per_dose")] })}><PlusCircleIcon size={19} />添加一味药</button>
   </fieldset>;
 }

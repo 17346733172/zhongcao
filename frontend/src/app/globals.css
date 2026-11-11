@@ -2,6 +2,8 @@
 @import "./auth.css";
 @import "./chat-layout.css";
 @import "./prescription.css";
+@import "./library-tools.css";
+@import "./data-center.css";
 
 :root {
   --blue: #0862e8;

@@ -11,7 +11,7 @@ type State =
   | { status: "ready"; document: Source }
   | { status: "error"; message: string };
 
-export function ReferenceDocumentDialog({ onClose }: { onClose: () => void }) {
+export function ReferenceDocumentDialog({ onClose, embedded = false }: { onClose: () => void; embedded?: boolean }) {
   const [state, setState] = useState<State>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
@@ -27,5 +27,5 @@ export function ReferenceDocumentDialog({ onClose }: { onClose: () => void }) {
     setState({ status: "loading" });
     setAttempt((current) => current + 1);
   }
-  return <SourceDialog source={state.status === "ready" ? state.document : herbalReferenceDocument} loading={state.status === "loading"} error={state.status === "error" ? state.message : undefined} onRetry={retry} onClose={onClose} />;
+  return <SourceDialog source={state.status === "ready" ? state.document : herbalReferenceDocument} loading={state.status === "loading"} error={state.status === "error" ? state.message : undefined} onRetry={retry} onClose={onClose} embedded={embedded} />;
 }

@@ -29,7 +29,7 @@ export function PrescriptionReport({ report, busy, uploading, uploaded, onUpload
       </button>
     </div>
     <p className="rx-help" id="rx-simulation-help">{report.simulation_upload_id
-      ? "仅发送剂数和药材明细，使用匿名编号与平台默认仿真工艺。总量按剂数均分，录入后由平台人工审核。"
+      ? "仅发送剂数和药材明细，使用匿名编号与平台默认仿真工艺。总量按剂数均分，录入后由平台人工审核。" + (report.prescription.medicines.some(item => item.unit === "片") ? "片数原样传递，由平台审核时补充每剂实测重量。" : "")
       : "请更新本草后端并重新检查处方，以启用仿真上传。"}</p>
     {sections?.length === 5 ? sections.map(section => {
       const List = section.ordered ? "ol" : "ul";

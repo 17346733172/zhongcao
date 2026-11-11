@@ -14,6 +14,7 @@ from .database import Database
 from .chat import ChatService
 from .rag import KnowledgeRetriever
 from .prescriptions.routes import register_prescription_routes
+from .data_center import register_data_center_routes
 from .reference_document import download_reference_document, load_reference_document
 from .schemas import ChatQuestion, ChangePassword, CreateDocument, CreateUser, Login, ResetPassword, UpdateUser
 from .security import PERMISSIONS, hash_password, public_user, token_hash, verify_password
@@ -92,6 +93,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return JSONResponse({"detail": "请检查处方字段、文件、字数和数值范围，并确认已核对原文后再检查。"}, status_code=422)
         if request.url.path == "/api/chat":
             return JSONResponse({"detail": "问题需为 1–2000 字；history 最多 5 轮，每轮 question 1–500 字、answer 最多 1000 字，且不接受其他字段。"}, status_code=422)
+        if request.url.path.startswith("/api/data-center/"):
+            return JSONResponse({"detail": "请检查筛选状态和分页范围（每页 1–200 条，偏移量不可为负数）。"}, status_code=422)
         return JSONResponse({"detail": f"请检查输入（{fields}）：账号 3–32 位字母、数字或下划线，密码 10–128 位，资料仅支持非空 MD / TXT（10 MB 内）"}, status_code=422)
 
     def current_user(request: Request):
@@ -279,6 +282,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 raise HTTPException(404, "资料不存在或已移除")
 
     register_prescription_routes(app, require, settings)
+    register_data_center_routes(app, require, settings)
     return app
 
 

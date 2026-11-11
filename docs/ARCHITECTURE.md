@@ -44,6 +44,8 @@
 | backend/app/prescriptions/files.py、extraction.py | 有限文件解析、本地 OCR、DeepSeek 意图与提取、原文证据和数值校验 |
 | backend/app/prescriptions/models.py、rules.py、routes.py | 处方输入边界、可追溯有限规则、登录 / CSRF 保护 API |
 | backend/app/integrations/decoction.py | 煎药平台字段转换、认证、同编号重试和回执确认 |
+| backend/app/data_center.py | 登录保护的仿真快照和处方分页读取、响应校验与脱敏错误 |
+| frontend/src/components/data-center-dialog.tsx、data-center-panels.tsx、src/lib/data-center-api.ts | 简约数据中心、设备与报警筛选、处方分页 / 详情和只读请求 |
 | frontend/src/components/prescription-*.tsx、src/lib/prescription-api.ts | 上传、原图核对、编辑确认、报告与 multipart 请求 |
 | backend/app/cli.py | 终端交互式创建首个管理员 |
 | backend/tests/test_auth.py、test_chat.py | 角色越权、会话撤销、密码、资料持久化与 AI 来源 / 异常验证 |

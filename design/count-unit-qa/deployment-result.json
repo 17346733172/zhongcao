@@ -1,0 +1,29 @@
+{
+  "deployed_at": "2026-11-10T14:07:04.829574+08:00",
+  "server": {
+    "run": "count-unit-20261110-487b6c47",
+    "release": "/home/LJY/decoction-releases/count-unit-20261110-487b6c47",
+    "backup": "/home/LJY/decoction-backups/count-unit-20261110-487b6c47",
+    "healthy": true,
+    "prescriptions_before": 23,
+    "prescriptions_after": 23,
+    "batches_before": 23,
+    "batches_after": 23,
+    "clock_running": false
+  },
+  "gateway": {
+    "gateway_healthy": true,
+    "count_unit_schema": true,
+    "count_unit_frontend": true,
+    "piece_and_half_piece_accepted_by_schema": true,
+    "validation_request_persisted": false,
+    "note": "Duplicate-name validation intentionally stops before persistence; no production prescription created."
+  },
+  "local": {
+    "backend_healthy": true,
+    "frontend_healthy": true,
+    "database_backup_exists": true
+  },
+  "frontend_count_help_verified": true,
+  "note": "Local frontend kept its existing development hot-reload mode. Server and local application authentication settings were preserved. No production validation prescription was persisted."
+}
