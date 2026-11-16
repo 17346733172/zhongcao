@@ -7,6 +7,14 @@ const { outputText } = ts.transpileModule(source, { compilerOptions: { module: t
 const { buildChatHistory } = await import("data:text/javascript;base64," + Buffer.from(outputText).toString("base64"));
 const message = (question, extra = {}) => ({ id: question, question, time: "今天", answer: { title: "回答", introduction: "", sections: [], sources: [], ...extra } });
 test("新对话不携带其他对话的历史", () => { assert.deepEqual(buildChatHistory([]), []); });
+test("运行数据追问只传主题和渠道，不把设备统计作为模型资料", () => {
+  const op = { ...message("空闲的呢", { mode: "data_center", resolvedQuestion: "数据中心：当前空闲的煎药锅有多少台", sections: [{ title: "统计", content: "OPERATIONAL_CANARY 999 台" }] }), showSources: true };
+  const history = buildChatHistory([op], true);
+  assert.equal(history[0].channel, "data_center");
+  assert.equal(history[0].answer, "");
+  assert.match(history[0].question, /空闲.*煎药锅/);
+  assert.ok(!JSON.stringify(history).includes("OPERATIONAL_CANARY"));
+});
 test("只发送最近五轮并保持顺序", () => { assert.deepEqual(buildChatHistory(Array.from({ length: 8 }, (_, i) => message(String(i)))).map(x => x.question), ["3", "4", "5", "6", "7"]); });
 test("连续省略主题的追问保留已解析的主题", () => { assert.equal(buildChatHistory([message("作用？", { resolvedQuestion: "陈皮：作用？" })])[0].question, "陈皮：作用？"); });
 test("上下文有限长且不发送旧原文和引用对象", () => {

@@ -1,0 +1,65 @@
+{
+  "backend": "onnxruntime detection/direction + OpenVINO FP32 recognition",
+  "results": [
+    {
+      "image": 0,
+      "onnx_seconds": 15.353,
+      "hybrid_seconds": 6.057,
+      "stages": [
+        3.931710958480835,
+        0.10715651512145996,
+        1.651381492614746
+      ],
+      "formatted_rows_identical": true,
+      "text_sha256": "60ebf35566ffe5b0cf20b51152c8a5a2c98b002debfc55f44f2cff43e85fc817"
+    },
+    {
+      "image": 1,
+      "onnx_seconds": 13.418,
+      "hybrid_seconds": 9.17,
+      "stages": [
+        4.477365493774414,
+        0.1812748908996582,
+        3.9334094524383545
+      ],
+      "formatted_rows_identical": true,
+      "text_sha256": "ff97e257425a61e0943e7932996465d4dc1f38c8b4894676141ab72c9d060769"
+    },
+    {
+      "image": 2,
+      "onnx_seconds": 12.978,
+      "hybrid_seconds": 8.675,
+      "stages": [
+        3.8797881603240967,
+        0.19109058380126953,
+        4.068881988525391
+      ],
+      "formatted_rows_identical": true,
+      "text_sha256": "60283ed1eb50bdcfaaadeae820ed034904cae8c304e051ccc737d522ed8ca9e4"
+    },
+    {
+      "image": 3,
+      "onnx_seconds": 2.816,
+      "hybrid_seconds": 1.409,
+      "stages": [
+        0.9625866413116455,
+        0.03580522537231445,
+        0.3274405002593994
+      ],
+      "formatted_rows_identical": true,
+      "text_sha256": "2f63df67e53ff3ef5e81cdf70bf6467e4c5f1444a9ed4f94df738b94d5f879bc"
+    }
+  ],
+  "read_upload_seconds": 6.969,
+  "cloud_model_called": false,
+  "applied_service": {
+    "pid": 32456,
+    "recognition_backend": "openvino",
+    "precision": "fp32",
+    "threads": 4,
+    "warmup_ms": 16952,
+    "backend_regressions": 140,
+    "dependency_check": "passed",
+    "service_health": "passed"
+  }
+}

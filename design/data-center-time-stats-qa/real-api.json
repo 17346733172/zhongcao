@@ -1,0 +1,360 @@
+[
+  {
+    "data": {
+      "days": 1,
+      "timezone": "Asia/Shanghai",
+      "started_at": "2026-11-13T00:00:00+08:00",
+      "ended_at": "2026-11-13T11:09:16.461119Z",
+      "earliest_record_at": "2026-11-05T13:40:02.801576Z",
+      "partial": false,
+      "totals": {
+        "prescriptions": 11,
+        "batches": 11,
+        "completed": 6,
+        "dispatched_bags": 44,
+        "alarms": 0
+      },
+      "daily": [
+        {
+          "date": "2026-11-13",
+          "coverage": "complete",
+          "totals": {
+            "prescriptions": 11,
+            "batches": 11,
+            "completed": 6,
+            "dispatched_bags": 44,
+            "alarms": 0
+          }
+        }
+      ]
+    },
+    "synced_at": "2026-11-13T11:09:16.461119Z",
+    "stale": false,
+    "error": null
+  },
+  {
+    "data": {
+      "days": 7,
+      "timezone": "Asia/Shanghai",
+      "started_at": "2026-11-07T00:00:00+08:00",
+      "ended_at": "2026-11-13T11:09:16.461119Z",
+      "earliest_record_at": "2026-11-05T13:40:02.801576Z",
+      "partial": false,
+      "totals": {
+        "prescriptions": 25,
+        "batches": 25,
+        "completed": 20,
+        "dispatched_bags": 140,
+        "alarms": 0
+      },
+      "daily": [
+        {
+          "date": "2026-11-07",
+          "coverage": "complete",
+          "totals": {
+            "prescriptions": 3,
+            "batches": 3,
+            "completed": 3,
+            "dispatched_bags": 26,
+            "alarms": 0
+          }
+        },
+        {
+          "date": "2026-11-08",
+          "coverage": "complete",
+          "totals": {
+            "prescriptions": 5,
+            "batches": 5,
+            "completed": 5,
+            "dispatched_bags": 30,
+            "alarms": 0
+          }
+        },
+        {
+          "date": "2026-11-09",
+          "coverage": "complete",
+          "totals": {
+            "prescriptions": 5,
+            "batches": 5,
+            "completed": 5,
+            "dispatched_bags": 30,
+            "alarms": 0
+          }
+        },
+        {
+          "date": "2026-11-10",
+          "coverage": "complete",
+          "totals": {
+            "prescriptions": 1,
+            "batches": 1,
+            "completed": 1,
+            "dispatched_bags": 10,
+            "alarms": 0
+          }
+        },
+        {
+          "date": "2026-11-11",
+          "coverage": "complete",
+          "totals": {
+            "prescriptions": 0,
+            "batches": 0,
+            "completed": 0,
+            "dispatched_bags": 0,
+            "alarms": 0
+          }
+        },
+        {
+          "date": "2026-11-12",
+          "coverage": "complete",
+          "totals": {
+            "prescriptions": 0,
+            "batches": 0,
+            "completed": 0,
+            "dispatched_bags": 0,
+            "alarms": 0
+          }
+        },
+        {
+          "date": "2026-11-13",
+          "coverage": "complete",
+          "totals": {
+            "prescriptions": 11,
+            "batches": 11,
+            "completed": 6,
+            "dispatched_bags": 44,
+            "alarms": 0
+          }
+        }
+      ]
+    },
+    "synced_at": "2026-11-13T11:09:16.461119Z",
+    "stale": false,
+    "error": null
+  },
+  {
+    "data": {
+      "days": 30,
+      "timezone": "Asia/Shanghai",
+      "started_at": "2026-10-15T00:00:00+08:00",
+      "ended_at": "2026-11-13T11:09:16.461119Z",
+      "earliest_record_at": "2026-11-05T13:40:02.801576Z",
+      "partial": true,
+      "totals": {
+        "prescriptions": 35,
+        "batches": 35,
+        "completed": 30,
+        "dispatched_bags": 200,
+        "alarms": 0
+      },
+      "daily": [
+        {
+          "date": "2026-10-15",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-10-16",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-10-17",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-10-18",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-10-19",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-10-20",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-10-21",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-10-22",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-10-23",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-10-24",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-10-25",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-10-26",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-10-27",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-10-28",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-10-29",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-10-30",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-10-31",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-11-01",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-11-02",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-11-03",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-11-04",
+          "coverage": "missing",
+          "totals": null
+        },
+        {
+          "date": "2026-11-05",
+          "coverage": "partial",
+          "totals": {
+            "prescriptions": 10,
+            "batches": 10,
+            "completed": 9,
+            "dispatched_bags": 60,
+            "alarms": 0
+          }
+        },
+        {
+          "date": "2026-11-06",
+          "coverage": "complete",
+          "totals": {
+            "prescriptions": 0,
+            "batches": 0,
+            "completed": 1,
+            "dispatched_bags": 0,
+            "alarms": 0
+          }
+        },
+        {
+          "date": "2026-11-07",
+          "coverage": "complete",
+          "totals": {
+            "prescriptions": 3,
+            "batches": 3,
+            "completed": 3,
+            "dispatched_bags": 26,
+            "alarms": 0
+          }
+        },
+        {
+          "date": "2026-11-08",
+          "coverage": "complete",
+          "totals": {
+            "prescriptions": 5,
+            "batches": 5,
+            "completed": 5,
+            "dispatched_bags": 30,
+            "alarms": 0
+          }
+        },
+        {
+          "date": "2026-11-09",
+          "coverage": "complete",
+          "totals": {
+            "prescriptions": 5,
+            "batches": 5,
+            "completed": 5,
+            "dispatched_bags": 30,
+            "alarms": 0
+          }
+        },
+        {
+          "date": "2026-11-10",
+          "coverage": "complete",
+          "totals": {
+            "prescriptions": 1,
+            "batches": 1,
+            "completed": 1,
+            "dispatched_bags": 10,
+            "alarms": 0
+          }
+        },
+        {
+          "date": "2026-11-11",
+          "coverage": "complete",
+          "totals": {
+            "prescriptions": 0,
+            "batches": 0,
+            "completed": 0,
+            "dispatched_bags": 0,
+            "alarms": 0
+          }
+        },
+        {
+          "date": "2026-11-12",
+          "coverage": "complete",
+          "totals": {
+            "prescriptions": 0,
+            "batches": 0,
+            "completed": 0,
+            "dispatched_bags": 0,
+            "alarms": 0
+          }
+        },
+        {
+          "date": "2026-11-13",
+          "coverage": "complete",
+          "totals": {
+            "prescriptions": 11,
+            "batches": 11,
+            "completed": 6,
+            "dispatched_bags": 44,
+            "alarms": 0
+          }
+        }
+      ]
+    },
+    "synced_at": "2026-11-13T11:09:16.461119Z",
+    "stale": false,
+    "error": null
+  }
+]

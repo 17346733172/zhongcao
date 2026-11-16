@@ -1,0 +1,33 @@
+{
+  "synthetic": true,
+  "model": "deepseek-flash",
+  "destination": "https://api.deepseek.com",
+  "results": [
+    {
+      "input": "image",
+      "seconds": 6.748,
+      "medicine_count": 12,
+      "all_names_doses_units_match": true,
+      "cloud_model_requests": 1,
+      "method": "image_vision",
+      "steps": [
+        "read_upload",
+        "parse_multimodal",
+        "confirm_data"
+      ]
+    },
+    {
+      "input": "scan_pdf",
+      "seconds": 6.532,
+      "medicine_count": 12,
+      "all_names_doses_units_match": true,
+      "cloud_model_requests": 1,
+      "method": "pdf_vision",
+      "steps": [
+        "read_upload",
+        "parse_multimodal",
+        "confirm_data"
+      ]
+    }
+  ]
+}

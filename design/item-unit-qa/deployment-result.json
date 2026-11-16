@@ -1,0 +1,36 @@
+{
+  "run": "item-unit-20261112-7ab0f70f",
+  "server_release": "/home/LJY/decoction-releases/item-unit-20261112-7ab0f70f",
+  "server_backup": "/home/LJY/decoction-backups/item-unit-20261112-7ab0f70f",
+  "verification": "SSH deployment output was interrupted after healthy cutover. Actual HTTPS schema, versioned assets, safe validation rejection, record counts and resumed clock were independently verified.",
+  "gateway": {
+    "gateway_healthy": true,
+    "unit_enum": [
+      "g",
+      "piece",
+      "item"
+    ],
+    "frontend_release_asset_names_and_sizes_match": true,
+    "item_and_piece_schema_accepted": true,
+    "validation_request_persisted": false,
+    "prescriptions_before": 24,
+    "prescriptions_after": 24,
+    "dashboard": {
+      "prescriptions": 24,
+      "batch_counts": {
+        "queued": 0,
+        "running": 0,
+        "paused": 0,
+        "completed": 24,
+        "cancelled": 0
+      },
+      "running": true
+    }
+  },
+  "local": {
+    "backend": true,
+    "login": true,
+    "proxy": true
+  },
+  "production_test_prescription_created": false
+}

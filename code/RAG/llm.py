@@ -5,12 +5,17 @@ from fastapi import HTTPException
 from pydantic import ValidationError
 
 
-def request_json(settings, system_prompt, context, max_tokens=2048, timeout=30):
+def request_json(settings, system_prompt, context, max_tokens=2048, timeout=30, image_urls=None):
+    user_content = json.dumps(context, ensure_ascii=False)
+    if image_urls:
+        user_content = [{"type": "text", "text": user_content}] + [
+            {"type": "image_url", "image_url": {"url": url, "detail": "original"}} for url in image_urls
+        ]
     payload = {
         "model": settings.deepseek_model,
         "messages": [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": json.dumps(context, ensure_ascii=False)},
+            {"role": "user", "content": user_content},
         ],
         "response_format": {"type": "json_object"},
         "thinking": {"type": "disabled"},
@@ -27,11 +32,13 @@ def request_json(settings, system_prompt, context, max_tokens=2048, timeout=30):
             raise HTTPException(503, "DeepSeek 账户额度不足，请联系管理员。")
         if response.status_code == 429:
             raise HTTPException(429, "AI 服务请求繁忙，请稍后重试或切换原文检索。")
+        if image_urls and response.status_code in {400, 415, 422}:
+            raise HTTPException(502, "当前模型接口未接受图片，请确认后端模型和接口支持视觉解析。")
         if not 200 <= response.status_code < 300:
             raise HTTPException(502, "DeepSeek 服务暂时不可用，请重试或切换原文检索。")
         choice = response.json()["choices"][0]
         content = choice["message"]["content"]
-        if choice.get("finish_reason") != "stop" or not isinstance(content, str) or not content.strip() or len(content) > 30000:
+        if choice.get("finish_reason") != "stop" or not isinstance(content, str) or not content.strip() or len(content) > (60000 if image_urls else 30000):
             raise ValueError("Incomplete model response")
         return content
     except httpx.TimeoutException:

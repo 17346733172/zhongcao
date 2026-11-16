@@ -1,0 +1,45 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "todayTitle": "暂无法准确统计今天的煎药锅利用率",
+      "reference": "所选煎药锅：50 台\n累计利用率（所选设备算术平均）：0.57%\n读取时占用率：10.00%（使用中 5 / 50 台）\n累计利用率按有效工作时长 ÷ 设备加入后的仿真累计时长计算；占用率按读取时使用中台数 ÷ 所选设备总数计算。",
+      "cumulativeTitle": "煎药锅累计利用率（平均）为 0.57%",
+      "occupancyTitle": "煎药锅占用率为 10.00%",
+      "followupTitle": "暂无法准确统计今天的煎药锅利用率",
+      "explicitDeviceId": "pot-49",
+      "noDailyRateInvented": true,
+      "realUpstream": true,
+      "noModelKey": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "todayTitle": "暂无法准确统计今天的煎药锅利用率",
+      "reference": "所选煎药锅：50 台\n累计利用率（所选设备算术平均）：0.57%\n读取时占用率：10.00%（使用中 5 / 50 台）\n累计利用率按有效工作时长 ÷ 设备加入后的仿真累计时长计算；占用率按读取时使用中台数 ÷ 所选设备总数计算。",
+      "cumulativeTitle": "煎药锅累计利用率（平均）为 0.57%",
+      "occupancyTitle": "煎药锅占用率为 10.00%",
+      "followupTitle": "暂无法准确统计今天的煎药锅利用率",
+      "explicitDeviceId": "pot-49",
+      "noDailyRateInvented": true,
+      "realUpstream": true,
+      "noModelKey": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "todayTitle": "暂无法准确统计今天的煎药锅利用率",
+      "reference": "所选煎药锅：50 台\n累计利用率（所选设备算术平均）：0.57%\n读取时占用率：10.00%（使用中 5 / 50 台）\n累计利用率按有效工作时长 ÷ 设备加入后的仿真累计时长计算；占用率按读取时使用中台数 ÷ 所选设备总数计算。",
+      "cumulativeTitle": "煎药锅累计利用率（平均）为 0.57%",
+      "occupancyTitle": "煎药锅占用率为 10.00%",
+      "followupTitle": "暂无法准确统计今天的煎药锅利用率",
+      "explicitDeviceId": "pot-49",
+      "noDailyRateInvented": true,
+      "realUpstream": true,
+      "noModelKey": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "notes": "Actual platform cumulative utilization and device states, no business fixtures or model key. Today utilization is explicitly unavailable; cumulative and current occupancy are references only."
+}

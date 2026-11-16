@@ -1,0 +1,75 @@
+.operations-overview-dialog { width: min(1600px, calc(100% - 48px)); height: min(92dvh, 1100px); max-height: 94dvh; }
+.ops-content { --ops-muted: #667183; --ops-success: #25704d; --ops-danger: #b43434; flex: 1; min-height: 0; overflow-y: auto; padding: 24px 28px; scrollbar-gutter: stable; font-size: 14px; }
+.ops-platform-head, .ops-section-head, .ops-sync, .ops-clock, .ops-device-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px 20px; }
+.ops-platform-head { padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.ops-platform-head h3 { font-size: 22px; font-weight: 650; }
+.ops-platform-head p, .ops-sync p, .ops-section-head p, .ops-clock p, .ops-device-duration, .ops-device-head > span, .ops-device-detail > p, .ops-footnote { color: var(--ops-muted); line-height: 1.7; font-size: 13px; }
+.ops-platform-head p { margin-top: 5px; }
+.ops-status-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; }
+.ops-status-row time, .ops-elapsed strong, .ops-metrics dd { font-variant-numeric: tabular-nums; }
+.ops-status-row time { margin-left: 6px; font-size: 13px; }
+.ops-tag { display: inline-flex; align-items: center; padding: 4px 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--paper); color: var(--ui-text); }
+.ops-tag-warning { color: #8a5a12; background: #fff7e8; }
+.ops-sync { margin: 18px 0; }
+.ops-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 12px; border: 1px solid var(--line); background: #fff; border-radius: 6px; min-height: 40px; }
+.ops-button:hover:not(:disabled) { background: var(--paper); }
+.ops-button:disabled { opacity: .6; }
+.ops-feedback { margin: 14px 0; padding: 12px 14px; border: 1px solid #e7d5b0; border-radius: 6px; background: #fffaf0; color: #77551e; line-height: 1.7; }
+.ops-feedback-error { color: var(--ops-danger); background: #fff7f7; border-color: #ecd0d0; }
+.ops-empty { padding: 40px 16px; text-align: center; color: var(--ops-muted); line-height: 1.8; }
+.ops-clock { border: 1px solid var(--line); border-top: 2px solid var(--text); border-radius: 6px; padding: 22px; }
+.ops-clock h3 { font-size: 18px; margin-bottom: 8px; }
+.ops-elapsed { display: flex; align-items: center; gap: 14px; color: var(--ops-muted); }
+.ops-elapsed strong { font-size: 20px; color: var(--text); font-weight: 500; }
+.ops-clock .ops-clock-note { width: 100%; padding-top: 14px; border-top: 1px solid var(--line); }
+.ops-section-head { margin: 28px 0 12px; }
+.ops-section-head h3 { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.ops-section-head h3 small { color: var(--ops-muted); font-weight: 400; font-size: 12px; }
+.ops-metrics { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 6px; margin: 0; overflow: hidden; }
+.ops-metrics > div { padding: 16px 14px; border-left: 1px solid var(--line); }
+.ops-metrics > div:first-child { border-left: 0; }
+.ops-metrics dt { font-size: 12px; color: var(--ops-muted); }
+.ops-metrics dd { font-size: 23px; margin: 10px 0 0; }
+.ops-success { color: var(--ops-success); }
+.ops-danger { color: var(--ops-danger); }
+.ops-counts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
+.ops-counts > div { display: flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 5px; padding: 7px 10px; }
+.ops-counts dt { color: var(--ops-muted); font-size: 12px; }
+.ops-counts dd { margin: 0; font-variant-numeric: tabular-nums; }
+.ops-device-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.ops-device-card { min-width: 0; display: flex; flex-direction: column; border: 1px solid var(--line); border-top: 3px solid #d8dee8; border-radius: 6px; padding: 18px; }
+.ops-device-head { gap: 10px; flex-wrap: nowrap; margin-bottom: 16px; }
+.ops-device-head > svg { color: var(--ops-muted); }
+.ops-device-head h4 { margin: 0; flex: 1; font-size: 16px; font-weight: 600; }
+.ops-device-head > span { white-space: nowrap; }
+.ops-device-card > p { line-height: 1.8; margin-bottom: 12px; }
+.ops-device-card dl { display: flex; flex-wrap: wrap; gap: 6px 12px; border-top: 1px dashed var(--line); padding-top: 14px; margin: auto 0 12px; }
+.ops-device-card dl > div { display: flex; gap: 4px; font-size: 12px; }
+.ops-device-card dt { color: var(--ops-muted); }
+.ops-device-card dd { margin: 0; }
+.ops-text-button { display: inline-flex; align-items: center; justify-content: flex-start; gap: 5px; background: none; border: 0; padding: 7px 0; min-height: 36px; color: var(--blue); font-size: 13px; text-align: left; }
+.ops-text-button:hover { text-decoration: underline; text-underline-offset: 3px; }
+.ops-table-scroll { max-width: 100%; overflow-x: auto; margin-top: 14px; }
+.ops-table-scroll table { border-collapse: collapse; width: 100%; white-space: nowrap; font-size: 13px; }
+.ops-table-scroll th, .ops-table-scroll td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.ops-table-scroll th { background: var(--paper); font-weight: 500; }
+.ops-footnote { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 16px; }
+@media (max-width: 1200px) {
+  .ops-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ops-metrics > div:nth-child(3n + 1) { border-left: 0; }
+  .ops-metrics > div:nth-child(n + 4) { border-top: 1px solid var(--line); }
+  .ops-device-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .operations-overview-dialog { width: calc(100% - 20px); height: 94dvh; max-height: 96dvh; }
+  .operations-overview-dialog > header { padding: 14px 16px; }
+  .ops-content { padding: 16px; scrollbar-gutter: auto; }
+  .ops-platform-head h3 { font-size: 19px; }
+  .ops-status-row time { margin-left: 0; }
+  .ops-clock { padding: 16px; }
+  .ops-device-grid { grid-template-columns: minmax(0, 1fr); }
+  .ops-metrics > div { padding: 14px 10px; }
+  .ops-metrics dd { font-size: 21px; }
+  .ops-device-detail .ops-section-head { align-items: flex-start; }
+  .ops-device-detail h3 { line-height: 1.7; }
+}

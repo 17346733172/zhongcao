@@ -74,6 +74,7 @@ class CreateDocument(Input):
 class ChatTurn(Input):
     question: str = Field(min_length=1, max_length=500)
     answer: str = Field(max_length=1000)
+    channel: Literal["knowledge", "data_center"] = "knowledge"
 
     @field_validator("question", mode="before")
     @classmethod

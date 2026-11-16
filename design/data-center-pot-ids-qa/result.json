@@ -1,0 +1,48 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "bareTitle": "当前的煎药锅有 50 台",
+      "followupStatus": "busy",
+      "directTitle": "当前设备 pot-49：空闲",
+      "deviceId": "pot-49",
+      "missingTitle": "当前记录中未找到设备 pot-999",
+      "realUpstream": true,
+      "noModelKey": true,
+      "exactFilter": true,
+      "caseInsensitive": true,
+      "clearRestoresList": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "bareTitle": "当前的煎药锅有 50 台",
+      "followupStatus": "busy",
+      "directTitle": "当前设备 pot-49：空闲",
+      "deviceId": "pot-49",
+      "missingTitle": "当前记录中未找到设备 pot-999",
+      "realUpstream": true,
+      "noModelKey": true,
+      "exactFilter": true,
+      "caseInsensitive": true,
+      "clearRestoresList": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "bareTitle": "当前的煎药锅有 50 台",
+      "followupStatus": "busy",
+      "directTitle": "当前设备 pot-49：空闲",
+      "deviceId": "pot-49",
+      "missingTitle": "当前记录中未找到设备 pot-999",
+      "realUpstream": true,
+      "noModelKey": true,
+      "exactFilter": true,
+      "caseInsensitive": true,
+      "clearRestoresList": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "notes": "Actual configured platform through isolated authenticated backend with no DeepSeek key; no business fixtures, no platform writes or real-account changes."
+}

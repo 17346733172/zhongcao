@@ -1,0 +1,9 @@
+{
+  "local_fault_fixture": true,
+  "external_platform_contacted": false,
+  "httpx_version": "0.28.1",
+  "httpcore_version": "1.0.9",
+  "persistent_client_max_connections": 2,
+  "outcomes": ["ConnectError", "ConnectError", "PoolTimeout", "PoolTimeout", "PoolTimeout"],
+  "sticky_pool_exhaustion_reproduced": true
+}

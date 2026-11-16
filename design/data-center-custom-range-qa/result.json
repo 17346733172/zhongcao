@@ -1,0 +1,72 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "customRange": [
+        "2026-11-06",
+        "2026-11-10"
+      ],
+      "totals": {
+        "prescriptions": 14,
+        "batches": 14,
+        "completed": 15,
+        "dispatched_bags": 96,
+        "alarms": 0
+      },
+      "days": 5,
+      "invalidRangesBlocked": true,
+      "zeroAndMissingDistinct": true,
+      "refreshKeepsRange": true,
+      "keyboardSubmit": true,
+      "presetsRetained": true,
+      "noOverflow": true,
+      "realUpstream": true
+    },
+    {
+      "width": 390,
+      "customRange": [
+        "2026-11-06",
+        "2026-11-10"
+      ],
+      "totals": {
+        "prescriptions": 14,
+        "batches": 14,
+        "completed": 15,
+        "dispatched_bags": 96,
+        "alarms": 0
+      },
+      "days": 5,
+      "invalidRangesBlocked": true,
+      "zeroAndMissingDistinct": true,
+      "refreshKeepsRange": true,
+      "keyboardSubmit": true,
+      "presetsRetained": true,
+      "noOverflow": true,
+      "realUpstream": true
+    },
+    {
+      "width": 320,
+      "customRange": [
+        "2026-11-06",
+        "2026-11-10"
+      ],
+      "totals": {
+        "prescriptions": 14,
+        "batches": 14,
+        "completed": 15,
+        "dispatched_bags": 96,
+        "alarms": 0
+      },
+      "days": 5,
+      "invalidRangesBlocked": true,
+      "zeroAndMissingDistinct": true,
+      "refreshKeepsRange": true,
+      "keyboardSubmit": true,
+      "presetsRetained": true,
+      "noOverflow": true,
+      "realUpstream": true
+    }
+  ],
+  "errors": [],
+  "notes": "Actual source events through an isolated authenticated backend. Only the desktop API-failure fixture is mocked. No platform data or real accounts were changed."
+}

@@ -1,6 +1,5 @@
-from functools import lru_cache
+import base64
 from io import BytesIO
-import logging
 from pathlib import Path
 from threading import Lock
 import warnings
@@ -10,69 +9,7 @@ from fastapi import HTTPException
 MAX_BYTES = 10 * 1024 * 1024
 MAX_TEXT = 20000
 FORMATS = [".txt", ".md", ".docx", ".pdf", ".png", ".jpg", ".jpeg", ".webp"]
-OCR_TEXT_SCORE = 0.5
-OCR_SEX_SCORE = 0.45
-_ocr_lock = Lock()
 _pdf_lock = Lock()  # PDFium disallows concurrent calls, including different documents.
-
-
-@lru_cache(maxsize=1)
-def ocr_engine():
-    from rapidocr_onnxruntime import RapidOCR
-    return RapidOCR(text_score=OCR_SEX_SCORE)
-
-
-def warm_ocr():
-    # Let an in-flight OCR request initialize the engine if it acquired the lock first.
-    if not _ocr_lock.acquire(blocking=False):
-        return
-    try:
-        ocr_engine()
-    except Exception:
-        logging.getLogger("uvicorn.error").warning("Prescription OCR preloading failed")
-    finally:
-        _ocr_lock.release()
-
-
-def _follows_sex_label(box, recognized):
-    left = min(point[0] for point in box)
-    center_y = sum(point[1] for point in box) / 4
-    row = [(other, "".join(text.split())) for other, text, _ in recognized
-           if min(point[1] for point in other) <= center_y <= max(point[1] for point in other)]
-    if any(text in {"男", "女"} for _, text in row):
-        return False
-    preceding = [(max(point[0] for point in other), min(point[0] for point in other), text)
-                 for other, text in row if max(point[0] for point in other) <= left]
-    if not preceding:
-        return False
-    label_right, label_left, label = max(preceding)
-    return label.rstrip(":：") == "性别" and left - label_right <= label_right - label_left
-
-
-def ocr_image(image):
-    import numpy as np
-    with _ocr_lock:
-        candidates, _ = ocr_engine()(np.asarray(image.convert("RGB")))
-    result = [entry for entry in candidates or [] if float(entry[2]) >= OCR_TEXT_SCORE]
-    if not result:
-        raise HTTPException(422, "没有识别到文字。请上传清晰的印刷处方，或粘贴文字手动核对；手写处方可能无法准确识别。")
-    # A single character in a table cell can score just below the general cutoff.
-    sex_candidates = [entry for entry in candidates if OCR_SEX_SCORE <= float(entry[2]) < OCR_TEXT_SCORE
-                      and entry[1].strip() in {"男", "女"} and _follows_sex_label(entry[0], result)]
-    if len(sex_candidates) == 1:
-        result.append(sex_candidates[0])
-    # Preserve table rows instead of separating every OCR cell into a new line.
-    rows = []
-    for box, text, score in sorted(result, key=lambda row: min(p[1] for p in row[0])):
-        y = sum(p[1] for p in box) / 4
-        height = max(p[1] for p in box) - min(p[1] for p in box)
-        if rows and abs(y - rows[-1][0]) <= max(8, height * .6):
-            rows[-1][1].append((min(p[0] for p in box), text))
-        else:
-            rows.append((y, [(min(p[0] for p in box), text)]))
-    text = "\n".join("  ".join(item[1] for item in sorted(row[1])) for row in rows)
-    confidence = min(float(item[2]) for item in result)
-    return text, confidence
 
 
 def load_image(content):
@@ -80,14 +17,33 @@ def load_image(content):
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("error", Image.DecompressionBombWarning)
-            image = Image.open(BytesIO(content))
-            if image.format not in {"PNG", "JPEG", "WEBP"}:
-                raise HTTPException(422, "图片实际格式不支持，请使用 PNG、JPG 或 WEBP。")
-            if image.width * image.height > 16000000 or getattr(image, "n_frames", 1) > 1:
-                raise HTTPException(422, "请上传不超过 1600 万像素的单帧图片。")
-            return ImageOps.exif_transpose(image).convert("RGB")
+            with Image.open(BytesIO(content)) as image:
+                if image.format not in {"PNG", "JPEG", "WEBP"}:
+                    raise HTTPException(422, "图片实际格式不支持，请使用 PNG、JPG 或 WEBP。")
+                if image.width * image.height > 16000000 or getattr(image, "n_frames", 1) > 1:
+                    raise HTTPException(422, "请上传不超过 1600 万像素的单帧图片。")
+                return ImageOps.exif_transpose(image).convert("RGB")
     except (UnidentifiedImageError, OSError, Image.DecompressionBombWarning, Image.DecompressionBombError):
         raise HTTPException(422, "图片损坏或像素过大，请重新导出后上传。") from None
+
+
+def vision_image(image, page):
+    # Strip file metadata and normalize orientation before sending pixel data.
+    image = image.convert("RGB")
+    image.thumbnail((8192, 8192))
+    stream = BytesIO()
+    image.save(stream, "JPEG", quality=95, subsampling=0)
+    return {"page": page, "url": "data:image/jpeg;base64," + base64.b64encode(stream.getvalue()).decode("ascii")}
+
+
+def vision_source(images, method, pages, text="", notes=None):
+    if len(text) > MAX_TEXT:
+        raise HTTPException(422, "文字超过 2 万字符，请只提供一份处方；不会截断后检查。")
+    if sum(len(image["url"]) for image in images) > 40 * 1024 * 1024:
+        raise HTTPException(413, "转换后的图片数据过大，请提供更精简的清晰处方文件。")
+    return {"text": text, "method": method, "pages": pages, "confidence": None, "images": images,
+            "notes": list(notes or []) + ["图片或扫描 PDF 页面将发送至配置的 DeepSeek 云端模型解析。",
+                "以下文字由模型转录，未作本地 OCR 独立核验；请以原图为准核对药名、数字、小数点、单位和煎法。"]}
 
 
 def read_upload(content: bytes, filename: str):
@@ -96,7 +52,7 @@ def read_upload(content: bytes, filename: str):
         raise HTTPException(422, "格式不支持，请选择 TXT、MD、DOCX、PDF、PNG、JPG 或 WEBP。")
     if not content or len(content) > MAX_BYTES:
         raise HTTPException(413 if content else 422, "文件为空或超过 10 MB 限制。")
-    notes, confidence, pages = [], None, 1
+    notes, pages = [], 1
     if suffix in {".txt", ".md"}:
         try:
             text = content.decode("utf-8-sig")
@@ -112,7 +68,7 @@ def read_upload(content: bytes, filename: str):
                 if len(archive.infolist()) > 1000 or sum(item.file_size for item in archive.infolist()) > 40 * 1024 * 1024:
                     raise HTTPException(422, "Word 解压内容过大，请简化文件后上传。")
                 if any(name.startswith("word/media/") for name in archive.namelist()):
-                    notes.append("Word 内嵌图片未参与识别；若处方在图片中，请单独上传该图片或扫描 PDF。")
+                    notes.append("Word 内嵌图片未参与解析；若处方在图片中，请单独上传该图片或扫描 PDF。")
             doc = Document(BytesIO(content))
             parts = []
             for block in doc.iter_inner_content():
@@ -131,7 +87,7 @@ def read_upload(content: bytes, filename: str):
                 pages = len(document)
                 if not 1 <= pages <= 8:
                     raise HTTPException(422, "PDF 每次支持 1–8 页，请仅上传同一份处方。")
-                texts, scores = [], []
+                texts, images = [], []
                 for index in range(pages):
                     page = document[index]
                     try:
@@ -142,27 +98,28 @@ def read_upload(content: bytes, filename: str):
                             textpage.close()
                         if len(value) < 80:
                             width, height = page.get_size()
+                            if min(width, height) <= 0:
+                                raise HTTPException(422, "PDF 页面尺寸异常，请重新导出。")
                             scale = min(2, 2400 / max(width, height))
-                            if min(width, height) <= 0 or width * height * scale * scale > 16000000:
+                            if width * height * scale * scale > 16000000:
                                 raise HTTPException(422, "PDF 页面尺寸异常，请重新导出。")
                             bitmap = page.render(scale=scale)
                             try:
-                                value, score = ocr_image(bitmap.to_pil())
-                                scores.append(score)
+                                images.append(vision_image(bitmap.to_pil(), index + 1))
                             finally:
                                 bitmap.close()
                         texts.append(f"[第 {index + 1} 页]\n{value}")
                     finally:
                         page.close()
                 text = "\n\n".join(texts)
-                confidence = min(scores) if scores else None
-                method = "pdf_ocr" if scores else "pdf_text"
+                if images:
+                    return vision_source(images, "pdf_vision", pages, text)
+                method = "pdf_text"
         except pdfium.PdfiumError:
             raise HTTPException(422, "PDF 无法读取或有密码保护，请提供未加密的有效 PDF。") from None
     else:
-        text, confidence = ocr_image(load_image(content))
-        method = "image_ocr"
-    return validate_text(text, method, notes, confidence, pages)
+        return vision_source([vision_image(load_image(content), 1)], "image_vision", 1)
+    return validate_text(text, method, notes, pages=pages)
 
 
 def validate_text(text, method="text", notes=None, confidence=None, pages=1):
@@ -171,9 +128,4 @@ def validate_text(text, method="text", notes=None, confidence=None, pages=1):
         raise HTTPException(422, "可读取文字不足，请上传清晰处方或粘贴完整文字。")
     if len(text) > MAX_TEXT:
         raise HTTPException(422, "文字超过 2 万字符，请只提供一份处方；不会截断后检查。")
-    notes = list(notes or [])
-    if confidence is not None:
-        notes.append("图片 / 扫描识别可能有误，请逐项核对药名、数字、小数点、单位和煎法。")
-        if confidence < .85:
-            notes.append("部分文字识别置信度较低，请对照原文件修改；无法辨认的内容应交由人工核实。")
-    return {"text": text, "method": method, "notes": notes, "confidence": confidence, "pages": pages}
+    return {"text": text, "method": method, "notes": list(notes or []), "confidence": confidence, "pages": pages}

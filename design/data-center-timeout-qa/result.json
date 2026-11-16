@@ -1,0 +1,39 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "realSnapshot": true,
+      "realPrescriptions": true,
+      "prescriptions": 25,
+      "devices": 129,
+      "recoveryMilliseconds": 35733,
+      "localTimeoutState": true,
+      "staleDataRetained": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "realSnapshot": true,
+      "realPrescriptions": true,
+      "prescriptions": 25,
+      "devices": 129,
+      "recoveryMilliseconds": 31033,
+      "localTimeoutState": true,
+      "staleDataRetained": null,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "realSnapshot": true,
+      "realPrescriptions": true,
+      "prescriptions": 25,
+      "devices": 129,
+      "recoveryMilliseconds": 66354,
+      "localTimeoutState": true,
+      "staleDataRetained": null,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "notes": "Timeout failures and the initial 19-second delay are local browser fixtures. Successful data comes from the real configured simulator through an isolated authenticated backend."
+}

@@ -39,7 +39,8 @@ export type AnswerSection = {
 };
 
 export type Answer = {
-  mode?: "extract" | "generated" | "no_match" | "clarification" | "greeting";
+  mode?: "extract" | "generated" | "no_match" | "clarification" | "greeting" | "data_center";
+  dataCenter?: DataCenterTarget;
   resolvedQuestion?: string;
   model?: string;
   retrievalMethod?: "vector";
@@ -48,6 +49,15 @@ export type Answer = {
   introduction: string;
   sections: AnswerSection[];
   sources: Source[];
+};
+
+export type DataCenterTarget = {
+  tab: "overview" | "devices" | "prescriptions";
+  kind?: string;
+  status?: string;
+  deviceId?: string;
+  alarmStatus?: string;
+  section?: "alarms";
 };
 
 export type Message = {

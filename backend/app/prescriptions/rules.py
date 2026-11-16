@@ -76,7 +76,7 @@ def check_prescription(prescription: Prescription):
         if not medicine.name:
             add("missing_name", "error", "药名缺失", f"第 {index + 1} 行药名为空。")
         if not medicine.dose or not medicine.unit:
-            add("missing_dose", "missing", "剂量或单位缺失", "不能猜测剂量、默认克数或把片数换算为克。", [name])
+            add("missing_dose", "missing", "剂量或单位缺失", "不能猜测剂量、默认克数或把枚、片等计数数量换算为克。", [name])
         value = None
         if medicine.dose:
             try:

@@ -6,7 +6,7 @@ export type Prescription = { dose_scope?: DoseScope; age: number | null; sex: "m
 export type PrescriptionStatus = { framework: string; ai_configured: boolean; formats: string[]; max_bytes: number; max_text: number; max_pdf_pages: number; ocr: string; persistence: string };
 export type Preparation = {
   status: "needs_confirmation" | "needs_clarification";
-  source: { text: string; method: string; notes: string[]; confidence: number | null; pages: number };
+  source: { text: string; method: string; notes: string[]; confidence: number | null; pages: number; verification?: "model_transcription" };
   intent: { kind: string; explanation: string; multiple_prescriptions: boolean };
   prescription: Prescription | null; steps: string[]; framework: string; model: string;
 };

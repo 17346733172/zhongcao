@@ -1,0 +1,146 @@
+{
+  "observations": [
+    {
+      "fetched_at": "2026-11-13T09:41:31.202676+00:00",
+      "age_seconds": 0.02,
+      "clock_now": 670984.4454334049,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T09:41:51.468738+00:00",
+      "age_seconds": 0.81,
+      "clock_now": 671004.089443907,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T09:42:11.164811+00:00",
+      "age_seconds": 0.15,
+      "clock_now": 671023.7608367848,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T09:42:30.143580+00:00",
+      "age_seconds": 0.22,
+      "clock_now": 671043.1079433638,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T09:42:50.277093+00:00",
+      "age_seconds": 0.13,
+      "clock_now": 671062.52466413,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T09:43:09.902757+00:00",
+      "age_seconds": 0.57,
+      "clock_now": 671082.44418796,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T09:43:28.758150+00:00",
+      "age_seconds": 0.77,
+      "clock_now": 671101.7486669339,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T09:43:47.356184+00:00",
+      "age_seconds": 0.21,
+      "clock_now": 671121.0517440148,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T09:44:08.405972+00:00",
+      "age_seconds": 0.21,
+      "clock_now": 671139.5689191428,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T09:44:27.022342+00:00",
+      "age_seconds": 0.64,
+      "clock_now": 671160.5004812438,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T09:44:46.420058+00:00",
+      "age_seconds": 0.29,
+      "clock_now": 671179.1891678738,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T09:45:04.550192+00:00",
+      "age_seconds": 0.2,
+      "clock_now": 671198.2593454669,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T09:45:23.625895+00:00",
+      "age_seconds": 0.19,
+      "clock_now": 671216.9589340199,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T09:45:44.782486+00:00",
+      "age_seconds": 0.1,
+      "clock_now": 671237.7037291949,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T09:46:03.824007+00:00",
+      "age_seconds": 0.1,
+      "clock_now": 671257.623386166,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T09:46:26.036804+00:00",
+      "age_seconds": 0.96,
+      "clock_now": 671279.029702623,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T09:46:43.769008+00:00",
+      "age_seconds": 0.27,
+      "clock_now": 671296.115286515,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    }
+  ],
+  "observation_seconds": 312.87,
+  "actual_backend_cache": true,
+  "success_log_count": 17,
+  "failed_refreshes": 0,
+  "pool_timeouts": 0,
+  "max_refresh_milliseconds": 7212
+}

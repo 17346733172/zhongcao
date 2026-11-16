@@ -1,0 +1,110 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "posts": [
+        {
+          "action": "scenarios",
+          "body": {
+            "count": 3
+          }
+        },
+        {
+          "action": "start",
+          "body": null
+        },
+        {
+          "action": "pause",
+          "body": null
+        },
+        {
+          "action": "scenarios",
+          "body": {
+            "count": 3
+          }
+        },
+        {
+          "action": "scenarios",
+          "body": {
+            "count": 3
+          }
+        }
+      ],
+      "noDuplicateSubmission": true,
+      "failureRecovery": true,
+      "noOverflow": true,
+      "preservedState": true
+    },
+    {
+      "width": 836,
+      "posts": [
+        {
+          "action": "scenarios",
+          "body": {
+            "count": 3
+          }
+        },
+        {
+          "action": "start",
+          "body": null
+        },
+        {
+          "action": "pause",
+          "body": null
+        },
+        {
+          "action": "scenarios",
+          "body": {
+            "count": 3
+          }
+        },
+        {
+          "action": "scenarios",
+          "body": {
+            "count": 3
+          }
+        }
+      ],
+      "noDuplicateSubmission": true,
+      "failureRecovery": true,
+      "noOverflow": true,
+      "preservedState": true
+    },
+    {
+      "width": 320,
+      "posts": [
+        {
+          "action": "scenarios",
+          "body": {
+            "count": 3
+          }
+        },
+        {
+          "action": "start",
+          "body": null
+        },
+        {
+          "action": "pause",
+          "body": null
+        },
+        {
+          "action": "scenarios",
+          "body": {
+            "count": 3
+          }
+        },
+        {
+          "action": "scenarios",
+          "body": {
+            "count": 3
+          }
+        }
+      ],
+      "noDuplicateSubmission": true,
+      "failureRecovery": true,
+      "noOverflow": true,
+      "preservedState": true
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,45 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "question": "数据中心：当前使用中的煎药锅有多少台？",
+      "title": "当前使用中的煎药锅有 1 台",
+      "followupTitle": "当前空闲的煎药锅有 49 台",
+      "faultTitle": "当前故障的煎药锅有 0 台",
+      "sourceTimePresent": true,
+      "realUpstream": true,
+      "knowledgeFailureFixture": false,
+      "noCloudModel": true,
+      "targetFiltersCorrect": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "question": "数据中心：当前使用中的煎药锅有多少台？",
+      "title": "当前使用中的煎药锅有 1 台",
+      "followupTitle": "当前空闲的煎药锅有 49 台",
+      "faultTitle": "当前故障的煎药锅有 0 台",
+      "sourceTimePresent": true,
+      "realUpstream": true,
+      "knowledgeFailureFixture": false,
+      "noCloudModel": true,
+      "targetFiltersCorrect": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "question": "数据中心：当前使用中的煎药锅有多少台？",
+      "title": "当前使用中的煎药锅有 1 台",
+      "followupTitle": "当前空闲的煎药锅有 49 台",
+      "faultTitle": "当前故障的煎药锅有 0 台",
+      "sourceTimePresent": true,
+      "realUpstream": true,
+      "knowledgeFailureFixture": true,
+      "noCloudModel": true,
+      "targetFiltersCorrect": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "notes": "Operational answers and snapshots come from the actual configured platform through an isolated authenticated backend with no DeepSeek key. Only the 320px knowledge-loading error is a local fixture; operational responses are not mocked."
+}

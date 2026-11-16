@@ -1,0 +1,17 @@
+{
+  "health_checks": {
+    "http://127.0.0.1:8000/api/health": 200,
+    "http://127.0.0.1:3000/login": 200,
+    "http://127.0.0.1:3000/api/health": 200
+  },
+  "anonymous_chat_status": 401,
+  "pot_number_alias": {
+    "topic": "devices",
+    "kind": "pot",
+    "status": "",
+    "details": true,
+    "device_id": ""
+  },
+  "explicit_device_id": "pot-49",
+  "process_loaded_after_source_change": true
+}

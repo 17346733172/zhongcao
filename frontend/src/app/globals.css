@@ -4,6 +4,9 @@
 @import "./prescription.css";
 @import "./library-tools.css";
 @import "./data-center.css";
+@import "./operations-overview.css";
+@import "./test-execution.css";
+@import "./new-test-task.css";
 
 :root {
   --blue: #0862e8;

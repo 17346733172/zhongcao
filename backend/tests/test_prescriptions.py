@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import json
 import time
+import sys
 import unittest
 from unittest.mock import patch
 from uuid import UUID, uuid4
@@ -15,7 +16,7 @@ from app.security import hash_password
 from app.prescriptions.models import Intent, Prescription, Medicine, SimulationUploadRequest
 from app.integrations.decoction import upload_to_simulation
 from app.prescriptions.rules import check_prescription, canonical
-from app.prescriptions.files import ocr_image, read_upload, MAX_BYTES, validate_text
+from app.prescriptions.files import read_upload, MAX_BYTES, validate_text
 from app.prescriptions.extraction import extract, redact_identifiers
 
 
@@ -93,6 +94,34 @@ class PrescriptionRuleTests(unittest.TestCase):
         self.assertNotIn("13800000000", result)
         self.assertIn("陈皮 9 g", result)
 
+    def test_explicit_count_units_restore_omitted_fields_without_using_row_numbers(self):
+        settings = Settings(rag_enabled=False, deepseek_api_key="unit-test")
+        for name, unit, source in [("大枣", "枚", "11  大枣  大枣  3 枚  同煎"),
+                                   ("生姜", "片", "12 | 生姜 | 生姜 | ３ 片 | 同煎")]:
+            for dose_value, unit_value in [("", ""), ("3", ""), ("", unit), ("3", unit)]:
+                payload = prescription(medicines=[{"name": name, "dose": dose_value, "unit": unit_value,
+                                                   "dose_scope": "per_dose", "source": source}]).model_dump_json()
+                with self.subTest(name=name, dose=dose_value, unit=unit_value), patch(
+                    "app.prescriptions.extraction.request_json", return_value=payload,
+                ):
+                    result = extract(settings, source)
+                self.assertEqual((result.medicines[0].dose, result.medicines[0].unit), ("3", unit))
+                self.assertFalse(any(f["code"] in {"missing_dose", "unit_review", "reference_dose"}
+                                     for f in check_prescription(result)))
+
+    def test_ambiguous_or_absent_counts_stay_missing_and_existing_values_are_not_rewritten(self):
+        settings = Settings(rag_enabled=False, deepseek_api_key="unit-test")
+        for source in ["大枣", "大枣 2-3枚", "大枣 2 至 3 枚", "大枣 1/2枚", "大枣 3枚或5枚", "大枣 -3枚", "大枣 3枚至5枚", "大枣 3枚-5枚"]:
+            payload = prescription(medicines=[{"name": "大枣", "source": source}]).model_dump_json()
+            with self.subTest(source=source), patch("app.prescriptions.extraction.request_json", return_value=payload):
+                result = extract(settings, source)
+            self.assertEqual((result.medicines[0].dose, result.medicines[0].unit), ("", ""))
+        source = "生姜 3片，实测9g"
+        payload = prescription(medicines=[{"name": "生姜", "dose": "9", "unit": "g", "source": source}]).model_dump_json()
+        with patch("app.prescriptions.extraction.request_json", return_value=payload):
+            result = extract(settings, source)
+        self.assertEqual((result.medicines[0].dose, result.medicines[0].unit), ("9", "g"))
+
     def test_redaction_preserves_explicit_age_and_sex_from_the_patient_row(self):
         for text in ["| 患者 | 李某某（化名），男，58 岁 |", "姓名：李某某，性别：男，年龄：58岁\n陈皮 9 g"]:
             with self.subTest(text=text):
@@ -123,28 +152,16 @@ class PrescriptionRuleTests(unittest.TestCase):
 
 
 class PrescriptionFileTests(unittest.TestCase):
-    def test_ocr_recovers_only_a_nearby_sex_value_below_the_general_cutoff(self):
+    def test_images_are_prepared_for_vision_without_importing_local_ocr(self):
         from PIL import Image
-
-        def word(left, top, width, text, score):
-            box = [[left, top], [left + width, top], [left + width, top + 12], [left, top + 12]]
-            return [box, text, score]
-
-        image = Image.new("RGB", (180, 100), "white")
-        label = word(20, 10, 24, "性别", .7)
-        age = word(100, 10, 24, "年龄", .7)
-        sex = word(52, 10, 12, "男", .483)
-        dose = word(52, 40, 12, "9", .48)
-        other_row = word(70, 60, 12, "女", .48)
-        for words, expected in [
-            ([label, age, dose, other_row, sex], "性别  男  年龄"),
-            ([label, age, dose, other_row], "性别  年龄"),
-            ([label, age, sex, word(66, 10, 12, "女", .49)], "性别  年龄"),
-            ([label, age, word(80, 10, 12, "女", .49)], "性别  年龄"),
-            ([label, age, sex, word(44, 10, 7, "未知", .8)], "性别  未知  年龄"),
-        ]:
-            with self.subTest(expected=expected), patch("app.prescriptions.files.ocr_engine", return_value=lambda _: (words, None)):
-                self.assertEqual(ocr_image(image)[0], expected)
+        stream = BytesIO()
+        Image.new("RGB", (180, 100), "white").save(stream, "PNG")
+        with patch.dict(sys.modules, {"rapidocr_onnxruntime": None, "openvino": None}):
+            result = read_upload(stream.getvalue(), "rx.png")
+        self.assertEqual(result["method"], "image_vision")
+        self.assertEqual(result["text"], "")
+        self.assertIsNone(result["confidence"])
+        self.assertTrue(result["images"][0]["url"].startswith("data:image/jpeg;base64,"))
 
     def test_text_encoding_size_empty_and_type_boundaries(self):
         self.assertIn("陈皮", read_upload("陈皮 9 g 每剂".encode(), "处方.txt")["text"])
@@ -168,15 +185,13 @@ class PrescriptionFileTests(unittest.TestCase):
         stream = BytesIO(); document.save(stream); document.close()
         with self.assertRaises(HTTPException): read_upload(stream.getvalue(), "a.pdf")
 
-    def test_scanned_pdf_is_rendered_and_uses_ocr(self):
+    def test_scanned_pdf_is_rendered_for_cloud_vision(self):
         from PIL import Image
         stream = BytesIO(); Image.new("RGB", (500, 500), "white").save(stream, "PDF")
-        with patch("app.prescriptions.files.ocr_image", return_value=("陈皮 9 g 每剂", .8)) as ocr:
-            result = read_upload(stream.getvalue(), "scan.pdf")
-            self.assertEqual(result["method"], "pdf_ocr")
-            self.assertIn("第 1 页", result["text"])
-            self.assertTrue(result["notes"])
-            ocr.assert_called_once()
+        result = read_upload(stream.getvalue(), "scan.pdf")
+        self.assertEqual(result["method"], "pdf_vision")
+        self.assertEqual(result["images"][0]["page"], 1)
+        self.assertTrue(result["notes"])
 
 
 class PrescriptionApiTests(unittest.TestCase):
@@ -199,9 +214,9 @@ class PrescriptionApiTests(unittest.TestCase):
     def test_auth_csrf_confirmation_and_private_viewer_access(self):
         self.assertEqual(self.client.get("/api/prescriptions/status").status_code, 401)
         self.login()
-        with patch("app.prescriptions.routes.warm_ocr") as warm:
-            self.assertEqual(self.client.get("/api/prescriptions/status").status_code, 200)
-            warm.assert_called_once()
+        status = self.client.get("/api/prescriptions/status")
+        self.assertEqual(status.status_code, 200)
+        self.assertIn("多模态", status.json()["ocr"])
         payload = {"prescription": prescription().model_dump(), "confirmed": False}
         self.assertEqual(self.client.post("/api/prescriptions/check", json=payload).status_code, 422)
         payload["confirmed"] = True
@@ -280,6 +295,8 @@ class PrescriptionApiTests(unittest.TestCase):
         upload_id = uuid4()
         external_no = f"BENCAO-{upload_id.hex.upper()}"
         payload = {"upload_id": str(upload_id), "doses": 5, "medicines": [
+            {"name": "大枣", "dose": "3", "unit": "枚", "dose_scope": "per_dose"},
+            {"name": "演示枚数总量", "dose": "15", "unit": "枚", "dose_scope": "total"},
             {"name": "生姜", "dose": "3", "unit": "片", "dose_scope": "per_dose"},
             {"name": "演示计数饮片", "dose": "2.5", "unit": "片", "dose_scope": "total"},
             {"name": "陈皮", "dose": "9000", "unit": "mg", "dose_scope": "per_dose"},
@@ -291,6 +308,8 @@ class PrescriptionApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200, response.text)
         herbs = send.call_args.kwargs["json"]["herbs"]
         self.assertEqual(herbs, [
+            {"name": "大枣", "unit": "item", "quantity_per_dose": 3.0, "method": "normal"},
+            {"name": "演示枚数总量", "unit": "item", "quantity_per_dose": 3.0, "method": "normal"},
             {"name": "生姜", "unit": "piece", "quantity_per_dose": 3.0, "method": "normal"},
             {"name": "演示计数饮片", "unit": "piece", "quantity_per_dose": 0.5, "method": "normal"},
             {"name": "陈皮", "grams_per_dose": 9.0, "method": "normal"},
@@ -300,11 +319,11 @@ class PrescriptionApiTests(unittest.TestCase):
     def test_simulation_piece_upload_rejects_invalid_quantity_without_network(self):
         self.login()
         with patch("app.integrations.decoction.httpx.post") as send:
-            for dose in ["0", "-1", "NaN", "Infinity", "", "1e3"]:
-                with self.subTest(dose=dose):
+            for unit, dose in [(u, d) for u in ["枚", "片"] for d in ["0", "-1", "NaN", "Infinity", "", "1e3"]]:
+                with self.subTest(unit=unit, dose=dose):
                     response = self.client.post("/api/prescriptions/simulation", json={
                         "upload_id": str(uuid4()), "doses": 3, "medicines": [
-                            {"name": "生姜", "dose": dose, "unit": "片", "dose_scope": "per_dose"},
+                            {"name": "演示计数饮片", "dose": dose, "unit": unit, "dose_scope": "per_dose"},
                         ],
                     })
                     self.assertEqual(response.status_code, 422)
@@ -312,14 +331,15 @@ class PrescriptionApiTests(unittest.TestCase):
 
     def test_older_simulation_platform_rejection_is_not_reported_as_upload_success(self):
         self.login()
-        with patch("app.integrations.decoction.httpx.post", return_value=httpx.Response(422, json={"detail": "old contract"})):
-            response = self.client.post("/api/prescriptions/simulation", json={
-                "upload_id": str(uuid4()), "doses": 3, "medicines": [
-                    {"name": "生姜", "dose": "3", "unit": "片", "dose_scope": "per_dose"},
-                ],
-            })
-        self.assertEqual(response.status_code, 502)
-        self.assertIn("接收端已更新", response.json()["detail"])
+        for unit in ["枚", "片"]:
+            with self.subTest(unit=unit), patch("app.integrations.decoction.httpx.post", return_value=httpx.Response(422, json={"detail": "old contract"})):
+                response = self.client.post("/api/prescriptions/simulation", json={
+                    "upload_id": str(uuid4()), "doses": 3, "medicines": [
+                        {"name": "演示计数饮片", "dose": "3", "unit": unit, "dose_scope": "per_dose"},
+                    ],
+                })
+            self.assertEqual(response.status_code, 502)
+            self.assertIn("接收端已更新", response.json()["detail"])
 
     def test_simulation_gateway_auth_uses_server_credentials_and_hides_them(self):
         settings = Settings(rag_enabled=False, decoction_base_url="https://simulation.example",
@@ -383,6 +403,27 @@ class PrescriptionApiTests(unittest.TestCase):
                 self.assertFalse(any(f["code"] == "dose_scope" for f in report["findings"]))
                 self.assertTrue(any(f["code"] == "missing_allergies" for f in report["findings"]))
         self.assertTrue(all(m.dose_scope == "unknown" for m in extracted.medicines), "normalization must not mutate the model result")
+
+    def test_count_units_survive_prepare_confirmation_and_report(self):
+        self.login()
+        extracted = prescription(medicines=[
+            {"name": "大枣", "source": "11  大枣  大枣  3 枚  同煎"},
+            {"name": "生姜", "source": "12  生姜  生姜  3 片  同煎"},
+        ])
+        with patch("app.prescriptions.agent.classify", return_value=Intent(kind="prescription_check", explanation="一份测试处方")), patch(
+            "app.prescriptions.extraction.request_json", return_value=extracted.model_dump_json(),
+        ):
+            response = self.client.post("/api/prescriptions/prepare", data={
+                "text": "\n".join(m.source for m in extracted.medicines), "dose_scope": "per_dose",
+            })
+        self.assertEqual(response.status_code, 200, response.text)
+        prepared = response.json()["prescription"]
+        self.assertEqual([(m["dose"], m["unit"]) for m in prepared["medicines"]], [("3", "枚"), ("3", "片")])
+        response = self.client.post("/api/prescriptions/check", json={"prescription": prepared, "confirmed": True})
+        self.assertEqual(response.status_code, 200, response.text)
+        report = response.json()
+        self.assertEqual(report["prescription"], prepared)
+        self.assertFalse(any(item["field"].endswith((".dose", ".unit")) for item in report["missing_information"]))
 
     def test_server_resolves_whole_prescription_choice_before_rules_and_report(self):
         self.login()

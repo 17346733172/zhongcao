@@ -1,9 +1,9 @@
 from pathlib import PurePosixPath
 from uuid import uuid4
-from fastapi import BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi import Depends, File, Form, HTTPException, UploadFile
 from starlette.concurrency import run_in_threadpool
 from .agent import PrescriptionAgent
-from .files import MAX_BYTES, MAX_TEXT, FORMATS, warm_ocr
+from .files import MAX_BYTES, MAX_TEXT, FORMATS
 from ..integrations.decoction import upload_to_simulation
 from .models import DoseScope, ReviewRequest, SimulationUploadRequest, SimulationUploadResult
 
@@ -14,12 +14,10 @@ def register_prescription_routes(app, require, settings):
     authorized = require("knowledge:read")
 
     @app.get("/api/prescriptions/status")
-    def status(background_tasks: BackgroundTasks, user=Depends(authorized)):
-        if settings.deepseek_api_key:
-            background_tasks.add_task(warm_ocr)
+    def status(user=Depends(authorized)):
         return {"framework": "LangGraph", "ai_configured": bool(settings.deepseek_api_key),
                 "formats": FORMATS, "max_bytes": MAX_BYTES, "max_text": MAX_TEXT, "max_pdf_pages": 8,
-                "ocr": "RapidOCR（本地 CPU）", "persistence": "none"}
+                "ocr": "DeepSeek 多模态解析（云端）", "persistence": "none"}
 
     @app.post("/api/prescriptions/prepare")
     async def prepare(file: UploadFile | None = File(None), text: str = Form(""),

@@ -1,0 +1,51 @@
+.new-test-task-dialog { --nt-muted: #67758a; --nt-line: #d8dde5; margin: auto; padding: 24px; border: 1px solid var(--nt-line); border-radius: 12px; width: min(1100px, calc(100% - 48px)); max-width: calc(100% - 24px); max-height: 90dvh; overflow-y: auto; background: #fff; color: var(--text); font-family: var(--sans); font-size: 14px; box-shadow: 0 18px 70px #172c4f33; }
+.new-test-task-dialog::backdrop { background: #18243f50; }
+.nt-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.nt-heading { flex: 1; min-width: 0; }
+.nt-close { flex-shrink: 0; }
+.nt-heading h2 { margin: 0; font-size: 20px; line-height: 1.5; font-weight: 650; }
+.nt-heading p { margin-top: 6px; color: var(--nt-muted); font-size: 13px; line-height: 1.8; }
+.nt-toolbar { margin-top: 20px; padding: 16px; border: 1px solid #e2e7ee; border-radius: 8px; background: #f7f9fc; }
+.nt-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.nt-count-field { display: inline-flex; align-items: center; gap: 10px; color: #526176; font-size: 14px; white-space: nowrap; }
+.nt-count-field input { box-sizing: border-box; width: 88px; height: 40px; min-width: 0; padding: 8px 12px; border: 1px solid var(--nt-line); border-radius: 6px; color: var(--text); background: #fff; font-size: 16px; }
+.nt-count-field input:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+.nt-count-field input[aria-invalid="true"] { border-color: #b43434; }
+.nt-button { box-sizing: border-box; display: inline-flex; justify-content: center; align-items: center; min-width: 80px; height: 40px; padding: 8px 14px; border: 1px solid var(--nt-line); border-radius: 6px; background: #fff; color: #273446; white-space: nowrap; font-size: 16px; }
+.nt-generate-button { min-width: 144px; }
+.nt-playback-controls { display: inline-flex; align-items: center; gap: 8px; border-left: 1px solid var(--nt-line); padding-left: 12px; }
+.nt-button:disabled { color: #8a95a5; background: #fff; cursor: not-allowed; }
+.nt-button:not(:disabled) { border-color: #7e9bc6; color: #23549a; cursor: pointer; }
+.nt-button:not(:disabled):hover { border-color: #23549a; background: #edf3fc; }
+.nt-button:not(:disabled):focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.nt-generate-button:not(:disabled) { border-color: #23549a; background: #23549a; color: #fff; }
+.nt-generate-button:not(:disabled):hover { background: #1a437e; }
+.nt-feedback { margin: 0 0 12px; padding: 10px 12px; border-radius: 6px; background: #edf3fc; color: #23549a; line-height: 1.7; }
+.nt-success { background: #edf8f1; color: #247045; }
+.nt-operation-error { background: #fff1f1; color: #a12e2e; }
+.nt-hint { margin: 16px 0; color: var(--nt-muted); font-size: 13px; line-height: 1.9; }
+.nt-count-error { margin: -6px 0 14px; color: #b43434; font-size: 13px; line-height: 1.7; }
+.nt-status { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 8px; padding: 10px 15px; border: 1px solid #d9681e; border-left: 3px solid #c86119; border-radius: 3px; background: #fff6e6; color: #a34d10; line-height: 1.7; font-size: 16px; }
+.nt-status > svg { color: #1667d8; margin-top: 3px; }
+.nt-status p { flex: 1; min-width: 0; }
+.nt-status-error { border-color: #d9b3b3; background: #fff7f7; color: #a12e2e; }
+.nt-retry { border: 1px solid #d0a0a0; border-radius: 4px; background: #fff; padding: 5px 9px; color: inherit; font-size: 13px; }
+.nt-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 20px; padding-top: 12px; color: #677183; font-size: 12px; line-height: 1.8; }
+@media (max-width: 720px) {
+  .new-test-task-dialog { width: calc(100% - 20px); max-width: calc(100% - 20px); padding: 16px; max-height: 94dvh; }
+  .nt-header { gap: 12px; }
+  .nt-heading h2 { font-size: 18px; }
+  .nt-heading p { font-size: 12px; margin-top: 8px; }
+  .nt-button { font-size: 14px; }
+  .nt-hint { margin: 16px 0; }
+  .nt-status { padding: 11px; font-size: 13px; }
+  .nt-footer { font-size: 12px; }
+}
+@media (max-width: 640px) {
+  .nt-toolbar { padding: 14px; }
+  .nt-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .nt-count-field { grid-column: 1 / -1; display: flex; justify-content: space-between; }
+  .nt-generate-button { grid-column: 1 / -1; width: 100%; min-width: 0; }
+  .nt-playback-controls { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; border-left: 0; padding-left: 0; }
+  .nt-playback-controls .nt-button { min-width: 0; width: 100%; }
+}

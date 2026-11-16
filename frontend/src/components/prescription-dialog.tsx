@@ -12,10 +12,12 @@ export function PrescriptionDialog({ onClose, embedded = false, active = true }:
   const [statusError, setStatusError] = useState("");
   const [attempt, setAttempt] = useState(0);
   const [file, setFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
+  const pdfSelected = !!file && /\.pdf$/i.test(file.name);
   const [text, setText] = useState("");
   const [instruction, setInstruction] = useState("检查这份中药饮片处方的数据完整性和配伍疑点");
   const [preparation, setPreparation] = useState<Preparation | null>(null);
+  const modelTranscription = preparation?.source.verification === "model_transcription";
   const [prescription, setPrescription] = useState<Prescription>(blankPrescription);
   const [confirmed, setConfirmed] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
@@ -71,8 +73,8 @@ export function PrescriptionDialog({ onClose, embedded = false, active = true }:
     }
   }, [stage, report]);
   useEffect(() => {
-    if (!file || !/\.(png|jpe?g|webp)$/i.test(file.name)) { setImagePreview(""); return; }
-    const url = URL.createObjectURL(file); setImagePreview(url);
+    if (!file || !/\.(png|jpe?g|webp|pdf)$/i.test(file.name)) { setPreviewUrl(""); return; }
+    const url = URL.createObjectURL(file); setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
   function choose(files: File[]) {
@@ -81,7 +83,7 @@ export function PrescriptionDialog({ onClose, embedded = false, active = true }:
     const selected = files[0];
     if (selected.size > 10 * 1024 * 1024 || !selected.size) { setError("文件为空或超过 10 MB。"); return; }
     if (!/\.(txt|md|docx|pdf|png|jpe?g|webp)$/i.test(selected.name)) { setError("请使用 TXT、MD、DOCX、PDF、PNG、JPG 或 WEBP 文件。"); return; }
-    setImagePreview(""); setFile(selected); setText(""); setPreparation(null); setError(""); setFeedback("");
+    setPreviewUrl(""); setFile(selected); setText(""); setPreparation(null); setError(""); setFeedback("");
   }
   async function prepare() {
     if (busy || (!file && !text.trim())) return;
@@ -141,7 +143,7 @@ export function PrescriptionDialog({ onClose, embedded = false, active = true }:
     setStage("confirm"); setConfirmed(false); setFeedback(""); setError("");
   }
   function manual() { setPreparation(null); setPrescription(withDoseScope(blankPrescription(), prescription.dose_scope ?? "per_dose")); setConfirmed(false); setError(""); setFeedback(""); setStage("confirm"); }
-  function clearFile() { setFile(null); setImagePreview(""); }
+  function clearFile() { setFile(null); setPreviewUrl(""); }
   function startNew() { clearFile(); setText(""); setPreparation(null); setReport(null); setPrescription(blankPrescription()); setConfirmed(false); setStage("upload"); setError(""); setFeedback(""); }
   return <div className={embedded ? "rx-panel" : "modal-backdrop rx-backdrop"} onMouseDown={event => { if (!embedded && event.target === event.currentTarget) onClose(); }}>
     <section className={"rx-dialog" + (embedded ? " rx-embedded" : "")} role={embedded ? undefined : "dialog"} aria-modal={embedded ? undefined : true} aria-labelledby={embedded ? undefined : "rx-title"} tabIndex={-1} ref={dialog}>
@@ -159,24 +161,24 @@ export function PrescriptionDialog({ onClose, embedded = false, active = true }:
             <div className="rx-upload-actions"><button className="auth-secondary" disabled={busy} onClick={() => filesInput.current?.click()}><FileIcon size={18} />上传文件</button><button className="auth-secondary" disabled={busy} onClick={() => imagesInput.current?.click()}><ImageIcon size={18} />上传图片</button>{file && <button className="quiet-button" disabled={busy} onClick={clearFile}>移除文件</button>}</div>
             <span>TXT / MD / DOCX / PDF · PNG / JPG / WEBP</span>
           </div>
-          {imagePreview && <img className="rx-image-preview" src={imagePreview} alt="本次上传的处方图片，待核对" />}
+          {previewUrl && (pdfSelected ? <a href={previewUrl} target="_blank" rel="noreferrer">在新窗口查看原始 PDF</a> : <img className="rx-image-preview" src={previewUrl} alt="本次上传的处方图片，待核对" />)}
           <input ref={filesInput} type="file" className="visually-hidden" tabIndex={-1} aria-label="选择处方文件" accept=".txt,.md,.docx,.pdf" disabled={busy} onChange={event => { if (event.target.files?.length) choose(Array.from(event.target.files)); event.target.value = ""; }} />
           <input ref={imagesInput} type="file" className="visually-hidden" tabIndex={-1} aria-label="选择处方图片" accept=".png,.jpg,.jpeg,.webp" disabled={busy} onChange={event => { if (event.target.files?.length) choose(Array.from(event.target.files)); event.target.value = ""; }} />
           <label className="rx-label">或粘贴处方文字<textarea rows={6} maxLength={20000} disabled={busy || !!file} value={text} onChange={event => { setText(event.target.value); setPreparation(null); setError(""); }} placeholder="请粘贴一份处方，包括药名、剂量、单位、煎法和已知患者信息。" /></label>
           <label className="rx-label">检查说明<input maxLength={500} disabled={busy} value={instruction} onChange={event => setInstruction(event.target.value)} /></label>
           <PrescriptionDoseScope value={prescription} disabled={busy} onChange={value => { setPrescription(value); setConfirmed(false); }} />
-          <div className="rx-notice"><strong>文件使用范围</strong><p>图片在本地后端识别；识别文字会发送给已配置的 DeepSeek 做意图识别和提取。处方不加入共享知识库，原文件和结果不持久保存。请先遮盖姓名、证件、联系方式等无关信息。</p></div>
-          {statusError ? <p className="form-error" role="alert">{statusError} <button className="quiet-button" onClick={() => setAttempt(value => value + 1)}>重新连接</button></p> : <p className="rx-help">{status ? status.ai_configured ? "识别服务已配置，支持本地图片 OCR。" : "AI 识别尚未配置，可先手动录入并检查数据。" : "正在检查识别服务…"}</p>}
-          {preparation && <details open><summary>已读取的原文与识别提示</summary><p>{preparation.intent.explanation}</p><pre className="rx-original">{preparation.source.text}</pre></details>}
+          <div className="rx-notice"><strong>文件使用范围</strong><p>图片和扫描 PDF 的页面图像会发送至配置的 DeepSeek 云端模型做多模态解析；文字资料发送提取后的文本。请先遮盖姓名、证件、联系方式等无关信息。</p><p>处方不加入共享知识库，原文件和结果不持久保存。模型转录文字供对照参考，请以原图为准逐项核对。</p></div>
+          {statusError ? <p className="form-error" role="alert">{statusError} <button className="quiet-button" onClick={() => setAttempt(value => value + 1)}>重新连接</button></p> : <p className="rx-help">{status ? status.ai_configured ? "识别服务已配置，图片与扫描 PDF 使用云端多模态解析。" : "AI 识别尚未配置，可先手动录入并检查数据。" : "正在检查识别服务…"}</p>}
+          {preparation && <details open><summary>{modelTranscription ? "模型转录与识别提示" : "已读取的原文与识别提示"}</summary><p>{preparation.intent.explanation}</p><pre className="rx-original">{preparation.source.text}</pre></details>}
         </>}
         {stage === "confirm" && <>
-          {imagePreview && <details open><summary>对照原始图片核对</summary><a href={imagePreview} target="_blank" rel="noreferrer">在新窗口放大图片</a><img className="rx-image-preview" src={imagePreview} alt="原始处方图片，请对照下方识别数据" /></details>}
-          {preparation && <><p className="rx-notice">已识别为处方检查：{preparation.intent.explanation} · {preparation.prescription?.medicines.length} 味药</p>{preparation.source.notes.map(note => <p key={note} className="rx-notice">{note}</p>)}<details><summary>查看识别原文</summary><pre className="rx-original">{preparation.source.text}</pre></details></>}
+          {previewUrl && <details open><summary>{pdfSelected ? "对照原始 PDF 核对" : "对照原始图片核对"}</summary><a href={previewUrl} target="_blank" rel="noreferrer">{pdfSelected ? "在新窗口查看原始 PDF" : "在新窗口放大图片"}</a>{!pdfSelected && <img className="rx-image-preview" src={previewUrl} alt="原始处方图片，请对照下方识别数据" />}</details>}
+          {preparation && <><p className="rx-notice">已识别为处方检查：{preparation.intent.explanation} · {preparation.prescription?.medicines.length} 味药</p>{preparation.source.notes.map(note => <p key={note} className="rx-notice">{note}</p>)}<details><summary>{modelTranscription ? "查看模型转录文字（请对照原图）" : "查看读取的原文"}</summary><pre className="rx-original">{preparation.source.text}</pre></details></>}
           <PrescriptionFields value={prescription} disabled={busy} missingInformation={report?.missing_information} onChange={value => { setPrescription(value); setConfirmed(false); setError(""); }} />
           <label className="rx-confirm"><input type="checkbox" checked={confirmed} disabled={busy} onChange={event => setConfirmed(event.target.checked)} /><span>我已对照原文逐项核对药名、剂量、单位和每剂量口径。</span></label>
         </>}
         {stage === "report" && report && <PrescriptionReport report={report} busy={busy || uploading} uploading={uploading} uploaded={uploaded} onUpload={() => void uploadReport()} onSupplement={() => edit()} onFeedback={setFeedback} />}
-        {busy && <p className="rx-busy" role="status">{stage === "upload" ? "正在读取文件、识别意图并提取处方，首次图片识别可能需要更长时间…" : "正在检查已确认的处方数据…"}</p>}
+        {busy && <p className="rx-busy" role="status">{stage === "upload" ? "正在读取处方并解析药名、剂量和单位…" : "正在检查已确认的处方数据…"}</p>}
       </div>
       <footer className="rx-footer">
         {stage === "upload" ? <><button className="auth-secondary" disabled={busy} onClick={manual}>手动录入</button><button className="auth-primary" disabled={busy || !status?.ai_configured || (!file && !text.trim())} onClick={() => void prepare()}>{busy ? "正在识别…" : "识别并提取处方"}</button></>

@@ -1,0 +1,69 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "rounds": [
+        {
+          "fetched_at": "2026-11-13T09:40:42.215367Z",
+          "clock_now": 670935.6347320009
+        },
+        {
+          "fetched_at": "2026-11-13T09:40:46.277068Z",
+          "clock_now": 670939.9800935219
+        },
+        {
+          "fetched_at": "2026-11-13T09:41:06.319511Z",
+          "clock_now": 670958.805617679
+        }
+      ],
+      "elapsedMilliseconds": 40937,
+      "totalPrescriptions": 30,
+      "devices": 129,
+      "realBatchDetail": true,
+      "noErrorBanner": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "rounds": [
+        {
+          "fetched_at": "2026-11-13T09:41:28.402091Z",
+          "clock_now": 670979.9739567159
+        },
+        {
+          "fetched_at": "2026-11-13T09:41:32.920734Z",
+          "clock_now": 670985.836846433
+        }
+      ],
+      "elapsedMilliseconds": 17880,
+      "totalPrescriptions": 30,
+      "devices": 129,
+      "realBatchDetail": true,
+      "noErrorBanner": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "rounds": [
+        {
+          "fetched_at": "2026-11-13T09:41:32.920734Z",
+          "clock_now": 670985.836846433
+        },
+        {
+          "fetched_at": "2026-11-13T09:41:45.941377Z",
+          "clock_now": 670999.2302340289
+        }
+      ],
+      "elapsedMilliseconds": 9618,
+      "totalPrescriptions": 30,
+      "devices": 129,
+      "realBatchDetail": true,
+      "noErrorBanner": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "realUpstream": true,
+  "fixtureResponses": false,
+  "notes": "Actual Next.js page forwards requests to an isolated authenticated FastAPI instance using the same configured proxy. All business responses are read from the actual simulation platform; no outage or data fixtures."
+}

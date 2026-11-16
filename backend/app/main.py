@@ -15,6 +15,8 @@ from .chat import ChatService
 from .rag import KnowledgeRetriever
 from .prescriptions.routes import register_prescription_routes
 from .data_center import register_data_center_routes
+from .simulation_operations import register_simulation_routes
+from .data_center_chat import answer_from_data_center, detect_intent
 from .reference_document import download_reference_document, load_reference_document
 from .schemas import ChatQuestion, ChangePassword, CreateDocument, CreateUser, Login, ResetPassword, UpdateUser
 from .security import PERMISSIONS, hash_password, public_user, token_hash, verify_password
@@ -37,7 +39,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 documents = [document(row) for row in db.execute("SELECT * FROM documents ORDER BY created_at,id").fetchall()]
             await asyncio.to_thread(rag.warmup, documents)
             logging.getLogger("uvicorn.error").info("Local vector RAG ready in %.2fs", time.perf_counter() - started)
-        yield
+        logging.getLogger("uvicorn.error").info("Prescription image parser=DeepSeek multimodal model=%s; local OCR disabled", settings.deepseek_model)
+        logging.getLogger("uvicorn.error").info("Simulation transport=%s", "configured proxy" if settings.decoction_proxy_url else "direct")
+        try:
+            yield
+        finally:
+            await app.state.data_center_reader.close()
+            await app.state.statistics_reader.close()
 
     app = FastAPI(title="本草知问 API", version="0.2.0", lifespan=lifespan)
     app.state.database = database
@@ -93,6 +101,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return JSONResponse({"detail": "请检查处方字段、文件、字数和数值范围，并确认已核对原文后再检查。"}, status_code=422)
         if request.url.path == "/api/chat":
             return JSONResponse({"detail": "问题需为 1–2000 字；history 最多 5 轮，每轮 question 1–500 字、answer 最多 1000 字，且不接受其他字段。"}, status_code=422)
+        if request.url.path.startswith("/api/simulation/"):
+            return JSONResponse({"detail": "演示批次数量需为 1–50 之间的整数。"}, status_code=422)
         if request.url.path.startswith("/api/data-center/"):
             return JSONResponse({"detail": "请检查筛选状态和分页范围（每页 1–200 条，偏移量不可为负数）。"}, status_code=422)
         return JSONResponse({"detail": f"请检查输入（{fields}）：账号 3–32 位字母、数字或下划线，密码 10–128 位，资料仅支持非空 MD / TXT（10 MB 内）"}, status_code=422)
@@ -233,21 +243,30 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return {"provider": "DeepSeek", "configured": bool(settings.deepseek_api_key), "model": settings.deepseek_model}
 
     @app.post("/api/chat")
-    def chat(payload: ChatQuestion, response: Response, user=Depends(require("knowledge:read"))):
+    async def chat(payload: ChatQuestion, response: Response, user=Depends(require("knowledge:read"))):
         started = time.perf_counter()
         timings = {}
         try:
-            history = [turn.model_dump() for turn in payload.history]
+            intent = detect_intent(payload.question, payload.history) if payload.use_knowledge else None
+            if intent:
+                return await answer_from_data_center(intent, app.state.data_center_reader)
+            # Operational figures are not medical source material or LLM context.
+            boundary = max((i for i, turn in enumerate(payload.history) if turn.channel == "data_center"), default=-1)
+            history = [turn.model_dump(exclude={"channel"}) for turn in payload.history[boundary + 1:]]
             if not payload.use_knowledge:
-                return chat_service.answer_general(payload.question, history, timings)
-            reading = time.perf_counter()
-            reference = load_reference_document()
-            with database.connect() as db:
-                documents = [document(row) for row in db.execute("SELECT * FROM documents ORDER BY created_at, id").fetchall()]
-            if rag is not None:
-                documents = rag.documents() + documents
-            timings["load"] = (time.perf_counter() - reading) * 1000
-            return chat_service.answer(payload.question, documents, reference, history, timings, cache_scope=user["id"])
+                return await asyncio.to_thread(chat_service.answer_general, payload.question, history, timings)
+
+            def knowledge_answer():
+                reading = time.perf_counter()
+                reference = load_reference_document()
+                with database.connect() as db:
+                    documents = [document(row) for row in db.execute("SELECT * FROM documents ORDER BY created_at, id").fetchall()]
+                if rag is not None:
+                    documents = rag.documents() + documents
+                timings["load"] = (time.perf_counter() - reading) * 1000
+                return chat_service.answer(payload.question, documents, reference, history, timings, cache_scope=user["id"])
+
+            return await asyncio.to_thread(knowledge_answer)
         finally:
             timings["total"] = (time.perf_counter() - started) * 1000
             summary = ", ".join(f"{name};dur={duration:.2f}" for name, duration in timings.items())
@@ -283,6 +302,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     register_prescription_routes(app, require, settings)
     register_data_center_routes(app, require, settings)
+    register_simulation_routes(app, require, settings)
     return app
 
 

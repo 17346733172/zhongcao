@@ -1,0 +1,47 @@
+{
+  "observations": [
+    {
+      "fetched_at": "2026-11-13T08:51:36.956170+00:00",
+      "age_seconds": 0.34,
+      "clock_now": 667990.3832538469,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T08:51:55.514452+00:00",
+      "age_seconds": 0.84,
+      "clock_now": 668008.602417163,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T08:52:14.989630+00:00",
+      "age_seconds": 0.41,
+      "clock_now": 668027.407614278,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T08:52:33.798289+00:00",
+      "age_seconds": 0.64,
+      "clock_now": 668046.642460978,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    },
+    {
+      "fetched_at": "2026-11-13T08:52:55.655086+00:00",
+      "age_seconds": 0.85,
+      "clock_now": 668067.146274808,
+      "running": true,
+      "prescriptions": 30,
+      "devices": 129
+    }
+  ],
+  "actual_backend_cache": true,
+  "all_fresh_updates": true,
+  "no_manufactured_timestamp": true
+}

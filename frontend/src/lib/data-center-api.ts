@@ -1,12 +1,30 @@
 import { api } from "./api";
 
-export type Device = { id: string; name: string; kind: string; kind_name: string; status: string; batch_id: string | null; capacity_ml: number; utilization_percent: number };
+// Allow the backend's two read attempts to finish before cancelling the request.
+export const DATA_CENTER_TIMEOUT_MS = 75000;
+
+export type Device = { id: string; name: string; kind: string; kind_name: string; status: string; batch_id: string | null; capacity_ml: number; utilization_percent: number; default_processing_seconds?: number | null };
 export type Batch = { id: string; prescription_id: string; status: string; current_stage_name: string | null; progress_percent: number; temperature_c: number; waiting_reason: string | null; trace_code: string };
 export type Alarm = { id: string; device_id: string; batch_id: string | null; message: string; status: string; acknowledged: boolean; created_at: number; resolved_at: number | null };
 export type Snapshot = {
   clock: { now: number; running: boolean; speed: number };
   summary: { total_prescriptions: number; batch_counts: Record<"queued" | "running" | "paused" | "completed" | "cancelled", number>; dispatched_bags: number; active_alarms: number; waiting_batches: number; bags_per_virtual_hour: number };
   devices: Device[]; batches: Batch[]; alarms: Alarm[];
+};
+export type SnapshotState = { data: Snapshot | null; fetched_at: string | null; refreshing: boolean; stale: boolean; error: string | null };
+export type StatisticsDays = 1 | 7 | 30;
+export type StatisticsRange = StatisticsDays | { start_date: string; end_date: string };
+export type StatisticsTotals = { prescriptions: number; batches: number; completed: number; dispatched_bags: number; alarms: number };
+export type StatisticsReport = {
+  days: number; timezone: string; started_at: string; ended_at: string; earliest_record_at: string | null;
+  partial: boolean; totals: StatisticsTotals | null;
+  daily: { date: string; coverage: "complete" | "partial" | "missing"; totals: StatisticsTotals | null }[];
+};
+export type StatisticsState = { data: StatisticsReport | null; synced_at: string | null; stale: boolean; error: string | null };
+export const readStatistics = (range: StatisticsRange, signal: AbortSignal, refresh = false) => {
+  const query = new URLSearchParams(typeof range === "number" ? { days: String(range) } : range);
+  if (refresh) query.set("refresh", "true");
+  return api<StatisticsState>(`/data-center/statistics?${query}`, { signal });
 };
 export type Prescription = {
   id: string; external_no: string; patient_code: string; status: string; priority: number; doses: number; bags_per_dose: number; bag_volume_ml: number;
@@ -15,7 +33,8 @@ export type Prescription = {
   review: { approved: boolean; operator: string; comment: string; real_time?: string } | null; note: string;
 };
 export type PrescriptionPage = { items: Prescription[]; total: number; offset: number; limit: number };
-export const readSnapshot = (signal: AbortSignal) => api<Snapshot>("/data-center/snapshot", { signal });
+export const readSnapshot = (signal: AbortSignal, refresh = false) => api<SnapshotState>(`/data-center/snapshot${refresh ? "?refresh=true" : ""}`, { signal });
+export const readBatch = (id: string, signal: AbortSignal) => api<Batch>(`/data-center/batches/${encodeURIComponent(id)}`, { signal });
 export const readPrescriptions = (status: string, offset: number, signal: AbortSignal) => api<PrescriptionPage>(`/data-center/prescriptions?offset=${offset}&limit=20${status ? `&status=${encodeURIComponent(status)}` : ""}`, { signal });
 export const labels: Record<string, string> = { idle: "空闲", busy: "使用中", fault: "故障", offline: "已停用", queued: "排队中", running: "进行中", paused: "已暂停", completed: "已完成", cancelled: "已取消", pending_review: "待审核", approved: "已通过", rejected: "已驳回", active: "未解除", resolved: "已解除", normal: "常规", pre_decoct: "先煎", late_add: "后下", bag: "包煎" };
 export function beijingTime(value?: string | null) {

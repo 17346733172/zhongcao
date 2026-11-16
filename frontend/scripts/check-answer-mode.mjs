@@ -42,6 +42,21 @@ test("默认固定使用原文加 AI，发送一次生成并附加原文", async
   assert.deepEqual(result, { answer: aiAnswer, originalAnswer });
 });
 
+test("数据中心回答不再进行药材原文检索，保留来源与快捷查看", async () => {
+  const answer = { mode: "data_center", title: "当前使用中的煎药锅有 2 台", introduction: "来源：煎药流程仿真数据中心 · 数据读取时间：测试时间", sections: [{ title: "设备概况", content: "总数：6 台" }], sources: [], dataCenter: { tab: "devices", kind: "pot", status: "busy" } };
+  const result = await runAnswerMode("both", "现在工作有几个锅", async () => answer, () => { throw new Error("不应检索药材原文"); });
+  assert.deepEqual(result, { answer });
+  const { ConversationView } = await loadAnswerComponents();
+  const html = renderToStaticMarkup(createElement(ConversationView, {
+    mode: "both", messages: [{ id: "op", question: "现在工作有几个锅", time: "10:00", answer, showSources: true }],
+    busy: false, libraryName: "测试", onSource() {}, onToast() {}, onDataCenter() {},
+  }));
+  assert.match(html, /数据中心 · 仿真运行数据/);
+  assert.match(html, /查看数据中心/);
+  assert.match(html, /数据读取时间/);
+  assert.doesNotMatch(html, /原文摘录|class="citation"|资料未命中/);
+});
+
 test("输入框没有原文开关，默认请求启用知识库及其历史", async () => {
   const { QuestionComposer } = await loadAnswerComponents();
   const html = renderToStaticMarkup(createElement(QuestionComposer, {

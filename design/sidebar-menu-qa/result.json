@@ -1,0 +1,36 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "entries": 9,
+      "modules": 7,
+      "draftPreserved": true,
+      "focusRestored": true,
+      "keyboardClose": true,
+      "retainedEntriesOpen": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "entries": 9,
+      "modules": 7,
+      "draftPreserved": true,
+      "focusRestored": true,
+      "keyboardClose": true,
+      "retainedEntriesOpen": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "entries": 9,
+      "modules": 7,
+      "draftPreserved": true,
+      "focusRestored": true,
+      "keyboardClose": true,
+      "retainedEntriesOpen": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "note": "Local interface verification with explicitly labeled mocked API responses; no production writes or cloud calls."
+}

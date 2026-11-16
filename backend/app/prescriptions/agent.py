@@ -1,4 +1,4 @@
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 import logging
 from threading import BoundedSemaphore
 from time import perf_counter
@@ -8,6 +8,7 @@ from langgraph.graph import StateGraph, START, END
 from langsmith import tracing_context
 from .files import read_upload, validate_text
 from .extraction import classify, extract
+from .vision import parse_multimodal
 from .models import DoseScope, Prescription
 from .rules import check_prescription, RULES_VERSION
 from .review import build_conclusion
@@ -33,7 +34,7 @@ class State(TypedDict, total=False):
     dose_scope: DoseScope
     source: dict
     intent: dict
-    prescription: dict
+    prescription: dict | None
     findings: list
     steps: list[str]
     output: dict
@@ -47,11 +48,13 @@ class PrescriptionAgent:
         graph.add_node("read_upload", self.read)
         graph.add_node("recognize_intent", self.intent)
         graph.add_node("extract_prescription", self.extract)
+        graph.add_node("parse_multimodal", self.parse_image)
         graph.add_node("confirm_data", self.preview)
         graph.add_node("check_data", self.check)
         graph.add_node("build_report", self.report)
         graph.add_conditional_edges(START, lambda state: "read_upload" if state["phase"] == "prepare" else "check_data", ["read_upload", "check_data"])
-        graph.add_edge("read_upload", "recognize_intent")
+        graph.add_conditional_edges("read_upload", lambda state: "parse_multimodal" if state["source"].get("images") else "recognize_intent", ["parse_multimodal", "recognize_intent"])
+        graph.add_edge("parse_multimodal", "confirm_data")
         graph.add_conditional_edges("recognize_intent", lambda state: "extract_prescription" if state["intent"]["kind"] == "prescription_check" and not state["intent"]["multiple_prescriptions"] else "confirm_data", ["extract_prescription", "confirm_data"])
         graph.add_edge("extract_prescription", "confirm_data")
         graph.add_edge("confirm_data", END)
@@ -65,7 +68,8 @@ class PrescriptionAgent:
         try:
             # No remote traces/checkpoints containing patient data, even when tracing is globally enabled.
             with tracing_context(enabled=False):
-                return self.graph.invoke({**state, "steps": []}, config={"recursion_limit": 12})["output"]
+                with timed_stage("total") if state.get("phase") == "prepare" else nullcontext():
+                    return self.graph.invoke({**state, "steps": []}, config={"recursion_limit": 12})["output"]
         finally:
             self.slots.release()
 
@@ -93,6 +97,16 @@ class PrescriptionAgent:
                            "intent": state["intent"], "prescription": state.get("prescription"), "steps": steps,
                            "framework": "LangGraph", "model": self.settings.deepseek_model}}
 
+    def parse_image(self, state):
+        if not self.settings.deepseek_api_key:
+            raise HTTPException(503, "多模态解析需要配置 DeepSeek；仍可使用手动录入进行数据检查。")
+        with timed_stage("multimodal_parse"):
+            intent, prescription, source = parse_multimodal(self.settings, state["source"], state.get("instruction", ""))
+        if prescription is not None:
+            prescription = prescription.with_confirmed_scope(state.get("dose_scope", "unknown"))
+        return {"source": source, "intent": intent.model_dump(), "prescription": prescription.model_dump() if prescription else None,
+                "steps": state["steps"] + ["parse_multimodal"]}
+
     def check(self, state):
         prescription = Prescription.model_validate(state["prescription"]).with_confirmed_scope()
         return {"prescription": prescription.model_dump(), "findings": check_prescription(prescription), "steps": ["check_data"]}
@@ -111,4 +125,4 @@ class PrescriptionAgent:
                            "missing_information": [entry.model_dump() for entry in missing],
                            "steps": state["steps"] + ["build_report"], "framework": "LangGraph", "rules_version": RULES_VERSION,
                            "scope": ["基本信息完整性", "药名、数值、单位和每剂量口径", "重复饮片", "有限十八反与十九畏（人参—五灵脂）配伍规则", "采用参考剂量与特殊煎法"],
-                           "limitations": ["仅检查用户已确认的数据；OCR 与模型提取可能有误。", "不是完整现行药典数据库，未覆盖全部十九畏、妊娠禁忌、西药相互作用、诊断适宜性、机构授权和签章。", "通过仅表示本次已覆盖项目的系统辅助审核通过，不代表药师签署或实际调配授权。"]}}
+                           "limitations": ["仅检查用户已确认的数据；模型解析可能有误，图片请对照原图核实。", "不是完整现行药典数据库，未覆盖全部十九畏、妊娠禁忌、西药相互作用、诊断适宜性、机构授权和签章。", "通过仅表示本次已覆盖项目的系统辅助审核通过，不代表药师签署或实际调配授权。"]}}

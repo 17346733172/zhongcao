@@ -11,9 +11,9 @@ export const answerModeInfo: Record<AnswerMode, { label: string; description: st
   },
   both: {
     label: "原文 + AI",
-    description: "检索知识库原文，并由 AI 整理回答",
-    note: "基于知识库原文生成回答，请核对引用资料",
-    busy: "正在生成 AI 回答并整理原文检索结果…",
+    description: "中药问题查询知识库，设备运行问题查询数据中心",
+    note: "中药问题基于知识库原文生成回答；运行状态问题读取数据中心，请核对来源和数据时间。",
+    busy: "正在查询并整理回答…",
   },
 };
 
@@ -32,6 +32,7 @@ export async function runAnswerMode(
     } };
   }
   const answer = await generate(question);
+  if (answer.mode === "data_center") return { answer };
   if (mode === "both" && answer.mode !== "clarification") {
     const originalAnswer: Answer = answer.retrievalMethod === "vector"
       ? vectorOriginalAnswer(answer)

@@ -1,0 +1,69 @@
+{
+  "results": [
+    {
+      "width": 1591,
+      "createOpensDialog": true,
+      "countValidation": true,
+      "realtimeBeijingClock": true,
+      "clockTicksWhilePausedOrOffline": true,
+      "controlsAligned": true,
+      "runningPausedAndRetry": true,
+      "nestedEscapeAndFocus": true,
+      "parentTabAndDraftPreserved": true,
+      "noOverflow": true
+    },
+    {
+      "width": 1024,
+      "createOpensDialog": true,
+      "countValidation": true,
+      "realtimeBeijingClock": true,
+      "clockTicksWhilePausedOrOffline": true,
+      "controlsAligned": true,
+      "runningPausedAndRetry": true,
+      "nestedEscapeAndFocus": true,
+      "parentTabAndDraftPreserved": true,
+      "noOverflow": true
+    },
+    {
+      "width": 836,
+      "createOpensDialog": true,
+      "countValidation": true,
+      "realtimeBeijingClock": true,
+      "clockTicksWhilePausedOrOffline": true,
+      "controlsAligned": true,
+      "runningPausedAndRetry": true,
+      "nestedEscapeAndFocus": true,
+      "parentTabAndDraftPreserved": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "createOpensDialog": true,
+      "countValidation": true,
+      "realtimeBeijingClock": true,
+      "clockTicksWhilePausedOrOffline": true,
+      "controlsAligned": true,
+      "runningPausedAndRetry": true,
+      "nestedEscapeAndFocus": true,
+      "parentTabAndDraftPreserved": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "createOpensDialog": true,
+      "countValidation": true,
+      "realtimeBeijingClock": true,
+      "clockTicksWhilePausedOrOffline": true,
+      "controlsAligned": true,
+      "runningPausedAndRetry": true,
+      "nestedEscapeAndFocus": true,
+      "parentTabAndDraftPreserved": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "methods": [
+    "GET"
+  ],
+  "note": "Browser timezone is America/New_York; visible live clock must remain Asia/Shanghai and tick independently of snapshots. Isolated fixtures, GET only."
+}

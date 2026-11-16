@@ -26,6 +26,7 @@ class Settings:
     decoction_api_key: str = field(default="", repr=False)
     decoction_http_username: str = field(default="", repr=False)
     decoction_http_password: str = field(default="", repr=False)
+    decoction_proxy_url: str = field(default="", repr=False)
     rag_enabled: bool = True
     rag_data_path: Path = CODE_ROOT / "data"
     rag_persist_dir: Path = CODE_ROOT / "db"
@@ -59,6 +60,16 @@ class Settings:
         if (self.decoction_http_username and decoction.scheme != "https"
                 and decoction.hostname not in {"127.0.0.1", "localhost", "::1"}):
             raise ValueError("仿真平台 HTTP Basic 认证须使用 HTTPS，本地测试可使用回环 HTTP")
+        if self.decoction_proxy_url:
+            proxy = urlsplit(self.decoction_proxy_url)
+            if (proxy.scheme not in {"http", "https"} or not proxy.hostname
+                    or proxy.username is not None or proxy.password is not None
+                    or proxy.path not in {"", "/"} or proxy.query or proxy.fragment):
+                raise ValueError("DECOCTION_PROXY_URL 须为不含账号、路径或查询参数的 HTTP / HTTPS 代理地址")
+            try:
+                proxy.port
+            except ValueError:
+                raise ValueError("DECOCTION_PROXY_URL 的端口无效") from None
 
     @classmethod
     def from_env(cls):
@@ -81,6 +92,7 @@ class Settings:
             decoction_api_key=os.environ.get("DECOCTION_API_KEY", "").strip(),
             decoction_http_username=os.environ.get("DECOCTION_HTTP_USERNAME", "").strip(),
             decoction_http_password=os.environ.get("DECOCTION_HTTP_PASSWORD", ""),
+            decoction_proxy_url=os.environ.get("DECOCTION_PROXY_URL", "").strip().rstrip("/"),
             rag_enabled=os.environ.get("RAG_ENABLED", "true").lower() == "true",
             rag_data_path=code_path("RAG_DATA_PATH", cls.rag_data_path),
             rag_persist_dir=code_path("FAISS_PERSIST_DIR", cls.rag_persist_dir),

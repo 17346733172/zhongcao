@@ -1,0 +1,45 @@
+{
+  "results": [
+    {
+      "width": 1591,
+      "createOpensDialog": true,
+      "countValidation": true,
+      "runningPausedAndRetry": true,
+      "nestedEscapeAndFocus": true,
+      "parentTabAndDraftPreserved": true,
+      "noOverflow": true
+    },
+    {
+      "width": 1440,
+      "createOpensDialog": true,
+      "countValidation": true,
+      "runningPausedAndRetry": true,
+      "nestedEscapeAndFocus": true,
+      "parentTabAndDraftPreserved": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "createOpensDialog": true,
+      "countValidation": true,
+      "runningPausedAndRetry": true,
+      "nestedEscapeAndFocus": true,
+      "parentTabAndDraftPreserved": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "createOpensDialog": true,
+      "countValidation": true,
+      "runningPausedAndRetry": true,
+      "nestedEscapeAndFocus": true,
+      "parentTabAndDraftPreserved": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "methods": [
+    "GET"
+  ],
+  "note": "Isolated interface fixtures; no write, generation, start or pause requests sent."
+}

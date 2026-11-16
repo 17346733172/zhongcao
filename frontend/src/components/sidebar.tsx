@@ -1,43 +1,42 @@
 "use client";
 
-import { BookOpenTextIcon, BooksIcon, ChatTextIcon, ClockCounterClockwiseIcon, DatabaseIcon, PlusCircleIcon, SidebarSimpleIcon, XIcon } from "@phosphor-icons/react";
+import { BookOpenTextIcon, ChartDonutIcon, DatabaseIcon, FileCodeIcon, FlaskIcon, HardDrivesIcon, RobotIcon, SidebarSimpleIcon, SlidersHorizontalIcon, XIcon } from "@phosphor-icons/react";
 import { AccountNavigation } from "./authenticated";
 import { libraries } from "@/lib/demo-data";
-import type { Conversation } from "@/lib/types";
+
+export type WorkspaceModule = { id: string; label: string };
+
+const moduleGroups = [
+  { label: "测试", items: [{ id: "test-execution", label: "测试执行", Icon: FlaskIcon }, { id: "test-plans", label: "测试方案", Icon: FileCodeIcon }] },
+  { label: "智能", items: [{ id: "ai-agent", label: "AI Agent", Icon: RobotIcon }, { id: "token-statistics", label: "Token 统计", Icon: ChartDonutIcon }] },
+  { label: "设备与系统", items: [{ id: "devices", label: "设备配置", Icon: HardDrivesIcon }, { id: "system-settings", label: "系统设置", Icon: SlidersHorizontalIcon }] },
+];
 
 type Props = {
-  libraryId: string;
-  activeId: string | null;
-  conversations: Conversation[];
   open: boolean;
+  toolsOpen: boolean;
   dataCenterOpen: boolean;
+  activeModule: string | null;
   onLibrary: (id: string) => void;
   onDataCenter: () => void;
-  onConversation: (id: string) => void;
-  onNew: () => void;
+  onModule: (module: WorkspaceModule) => void;
   onClose: () => void;
   onCollapse: () => void;
 };
 
 export function Sidebar(props: Props) {
-  const history = props.conversations.filter((item) => item.libraryId === props.libraryId);
   return (
-    <aside className={"sidebar" + (props.open ? " drawer-open" : "")} aria-label="知识库与历史对话">
+    <aside className={"sidebar" + (props.open ? " drawer-open" : "")} aria-label="主导航">
       <div className="brand">
         <BookOpenTextIcon size={34} weight="fill" aria-hidden="true" />
         <span>本草知问</span>
         <button className="icon-button desktop-sidebar-toggle" aria-label="收起侧栏" onClick={props.onCollapse}><SidebarSimpleIcon size={22} /></button>
         <button className="icon-button sidebar-close" aria-label="关闭导航" onClick={props.onClose}><XIcon size={21} /></button>
       </div>
-      <button className="new-chat" onClick={props.onNew}>
-        <PlusCircleIcon size={21} aria-hidden="true" />新建对话
-      </button>
-      <nav className="sidebar-navigation">
-        <section aria-labelledby="library-label">
-          <h2 className="nav-label" id="library-label"><BooksIcon size={21} aria-hidden="true" />知识库</h2>
+      <nav className="sidebar-navigation" aria-label="功能导航">
           <div className="nav-list">
             {libraries.map((library) => (
-              <button key={library.id} className={"nav-item" + (props.libraryId === library.id && !props.dataCenterOpen ? " active" : "")} aria-pressed={props.libraryId === library.id && !props.dataCenterOpen} aria-haspopup="dialog" onClick={() => props.onLibrary(library.id)}>
+              <button key={library.id} className={"nav-item" + (props.toolsOpen ? " active" : "")} aria-expanded={props.toolsOpen} aria-haspopup="dialog" onClick={() => props.onLibrary(library.id)}>
                 <BookOpenTextIcon size={22} aria-hidden="true" /><span>中药资料与处方</span>
               </button>
             ))}
@@ -45,21 +44,20 @@ export function Sidebar(props: Props) {
               <DatabaseIcon size={22} aria-hidden="true" /><span>数据中心</span>
             </button>
           </div>
-        </section>
-        <section className="history-section" aria-labelledby="history-label">
-          <h2 className="nav-label" id="history-label"><ClockCounterClockwiseIcon size={23} aria-hidden="true" />历史对话</h2>
-          <div className="nav-list">
-            {history.map((item) => (
-              <button key={item.id} className={"nav-item history-item" + (props.activeId === item.id ? " active" : "")} aria-current={props.activeId === item.id ? "page" : undefined} onClick={() => props.onConversation(item.id)}>
-                <ChatTextIcon size={21} aria-hidden="true" /><span>{item.title}</span>
-              </button>
-            ))}
-            {!history.length && <p className="empty-history">从一次新的提问开始</p>}
-          </div>
-        </section>
+        {moduleGroups.map((group) => (
+          <section className="sidebar-module-group" key={group.label} aria-labelledby={`nav-group-${group.items[0].id}`}>
+            <h2 className="nav-label" id={`nav-group-${group.items[0].id}`}>{group.label}</h2>
+            <div className="nav-list">
+              {group.items.map(({ id, label, Icon }) => (
+                <button key={id} className={"nav-item" + (props.activeModule === id ? " active" : "")} aria-haspopup="dialog" aria-expanded={props.activeModule === id} onClick={() => props.onModule({ id, label })}>
+                  <Icon size={22} aria-hidden="true" /><span>{label}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        ))}
       </nav>
       <AccountNavigation />
-      <div className="sidebar-foot"><span className="demo-dot" />对话仅本次保留</div>
     </aside>
   );
 }

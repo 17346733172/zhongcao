@@ -1,0 +1,50 @@
+{
+  "warmup_seconds": 5.932,
+  "threads": [
+    4,
+    4,
+    4
+  ],
+  "spinning": [
+    "0",
+    "0",
+    "0"
+  ],
+  "results": [
+    {
+      "image": 0,
+      "seconds": 13.463,
+      "stages": [
+        3.8131368160247803,
+        0.12298774719238281,
+        8.999056577682495
+      ],
+      "text_boxes": 110,
+      "text_identical": true,
+      "text_sha256": "f2fa395fd2d4399351a84679bb08bb44c69623873e7cda5720dddbf7e1de37ed"
+    },
+    {
+      "image": 1,
+      "seconds": 2.803,
+      "stages": [
+        0.8208625316619873,
+        0.031183242797851562,
+        1.8462095260620117
+      ],
+      "text_boxes": 21,
+      "text_identical": true,
+      "text_sha256": "e941306ea1e581fbc402b017501ee5fe0c55c99801956d8b85c7b458452d9d12"
+    }
+  ],
+  "full_image_read_upload_seconds": 8.738,
+  "scope": "Real OCR and production file-reading functions, synthetic full-page prescription and user-provided crop; no cloud model or persisted prescription text.",
+  "applied_service": {
+    "pid": 18792,
+    "ocr_warmup_ms": 9121,
+    "cpu_threads": 4,
+    "before_api_ready": true,
+    "backend_regressions": 138,
+    "final_prescription_regressions": 51,
+    "final_warmup_regressions": 5
+  }
+}

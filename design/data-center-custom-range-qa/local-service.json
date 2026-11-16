@@ -1,0 +1,17 @@
+{
+  "loaded_custom_date_parameters": true,
+  "health_checks": {
+    "http://127.0.0.1:8000/api/health": 200,
+    "http://127.0.0.1:3000/login": 200,
+    "http://127.0.0.1:3000/api/health": 200
+  },
+  "anonymous_status": 401,
+  "real_local_history_totals": {
+    "prescriptions": 14,
+    "batches": 14,
+    "completed": 15,
+    "dispatched_bags": 96,
+    "alarms": 0
+  },
+  "days": 5
+}

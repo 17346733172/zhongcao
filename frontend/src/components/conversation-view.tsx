@@ -3,12 +3,12 @@
 import { ArrowUpRightIcon, BookOpenTextIcon, CaretDownIcon, CheckIcon, CopyIcon, FilePdfIcon, FileTextIcon, LinkIcon, SparkleIcon, UserIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { answerModeInfo } from "@/lib/answer-mode";
-import type { Answer, AnswerMode, Message, Source } from "@/lib/types";
+import type { Answer, AnswerMode, DataCenterTarget, Message, Source } from "@/lib/types";
 import { AnswerMarkdown } from "./answer-markdown";
 
-type AnswerActions = { onSource: (source: Source) => void; onToast: (text: string) => void };
+type AnswerActions = { onSource: (source: Source) => void; onToast: (text: string) => void; onDataCenter?: (target?: DataCenterTarget) => void };
 
-function AnswerResult({ answer, id, label, showSources, showSourceCard = true, onSource, onToast }: AnswerActions & { answer: Answer; id: string; label: string; showSources: boolean; showSourceCard?: boolean }) {
+function AnswerResult({ answer, id, label, showSources, showSourceCard = true, onSource, onToast, onDataCenter }: AnswerActions & { answer: Answer; id: string; label: string; showSources: boolean; showSourceCard?: boolean }) {
   const [activeSource, setActiveSource] = useState(0);
   const [expanded, setExpanded] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -41,7 +41,7 @@ function AnswerResult({ answer, id, label, showSources, showSourceCard = true, o
         <div className="avatar assistant-avatar"><SparkleIcon size={26} weight="fill" aria-hidden="true" /></div>
         <div className="answer-content">
           <div className={"answer-paper" + (!showTitle ? " answer-without-title" : "")}>
-            {answer.mode !== "generated" && <p className="answer-origin">{answer.mode === "greeting" ? "本草知问" : answer.mode === "clarification" ? "需要补充问题" : answer.mode === "no_match" ? "资料未命中 / 不足" : "原文摘录"}</p>}
+            {answer.mode !== "generated" && <p className="answer-origin">{answer.mode === "data_center" ? "数据中心 · 仿真运行数据" : answer.mode === "greeting" ? "本草知问" : answer.mode === "clarification" ? "需要补充问题" : answer.mode === "no_match" ? "资料未命中 / 不足" : "原文摘录"}</p>}
             {showTitle && <h2>{answer.title}</h2>}
             {introduction && <p className="answer-introduction">{introduction}</p>}
             <div className="answer-sections">
@@ -53,7 +53,7 @@ function AnswerResult({ answer, id, label, showSources, showSourceCard = true, o
               ))}
             </div>
           </div>
-          <div className="answer-actions"><button className="quiet-button copy-answer" onClick={copyAnswer}>{copied ? <CheckIcon size={18} /> : <CopyIcon size={18} />}{copied ? "已复制" : "复制回答"}</button></div>
+          <div className="answer-actions"><button className="quiet-button copy-answer" onClick={copyAnswer}>{copied ? <CheckIcon size={18} /> : <CopyIcon size={18} />}{copied ? "已复制" : "复制回答"}</button>{answer.dataCenter && onDataCenter && <button className="quiet-button" aria-haspopup="dialog" onClick={() => onDataCenter(answer.dataCenter)}><ArrowUpRightIcon size={18} />查看数据中心</button>}</div>
           {showSources && showSourceCard && !!answer.sources.length && <section className="sources-area" id={"sources-" + id} aria-label="引用资料">
             <button className="sources-heading" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}><LinkIcon size={22} aria-hidden="true" /><span>引用资料</span><CaretDownIcon className={expanded ? "rotated" : ""} size={15} /></button>
             {expanded && <div className="source-card">
@@ -69,14 +69,14 @@ function AnswerResult({ answer, id, label, showSources, showSourceCard = true, o
   );
 }
 
-function AnswerMessage({ message, onSource, onToast }: AnswerActions & { message: Message }) {
+function AnswerMessage({ message, onSource, onToast, onDataCenter }: AnswerActions & { message: Message }) {
   return (
     <article className="conversation-turn" aria-label="一轮问答">
       <div className="question-row">
         <div className="avatar user-avatar"><UserIcon size={23} weight="fill" aria-hidden="true" /></div>
         <div className="question-content"><p className="question-bubble">{message.question}</p><p className="message-time">{message.time}</p></div>
       </div>
-      <AnswerResult answer={message.answer} id={message.id} label="回答结果" showSources={message.showSources} showSourceCard={false} onSource={onSource} onToast={onToast} />
+      <AnswerResult answer={message.answer} id={message.id} label="回答结果" showSources={message.showSources} showSourceCard={false} onSource={onSource} onToast={onToast} onDataCenter={onDataCenter} />
     </article>
   );
 }
@@ -88,6 +88,7 @@ type Props = {
   libraryName: string;
   onSource: (source: Source) => void;
   onToast: (message: string) => void;
+  onDataCenter?: (target?: DataCenterTarget) => void;
 };
 
 export function ConversationView(props: Props) {
@@ -96,7 +97,7 @@ export function ConversationView(props: Props) {
       {!props.messages.length && <div className="welcome" aria-label={props.libraryName + "问答"}>
         <h2><BookOpenTextIcon size={41} weight="fill" aria-hidden="true" /><span>你好，有什么我能帮你的吗？</span></h2>
       </div>}
-      {props.messages.map((message) => <AnswerMessage key={message.id} message={message} onSource={props.onSource} onToast={props.onToast} />)}
+      {props.messages.map((message) => <AnswerMessage key={message.id} message={message} onSource={props.onSource} onToast={props.onToast} onDataCenter={props.onDataCenter} />)}
       {props.busy && <div className="thinking" role="status"><SparkleIcon size={20} weight="fill" aria-hidden="true" /><span>{answerModeInfo[props.mode].busy}</span></div>}
     </>
   );

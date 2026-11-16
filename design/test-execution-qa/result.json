@@ -1,0 +1,50 @@
+{
+  "results": [
+    {
+      "width": 1630,
+      "tabs": 3,
+      "layoutSlots": 2,
+      "actionsDisabled": true,
+      "noInventedRecords": true,
+      "keyboard": true,
+      "allRecordsNavigation": true,
+      "draftPreserved": true,
+      "noOverflow": true
+    },
+    {
+      "width": 1440,
+      "tabs": 3,
+      "layoutSlots": 2,
+      "actionsDisabled": true,
+      "noInventedRecords": true,
+      "keyboard": true,
+      "allRecordsNavigation": true,
+      "draftPreserved": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "tabs": 3,
+      "layoutSlots": 2,
+      "actionsDisabled": true,
+      "noInventedRecords": true,
+      "keyboard": true,
+      "allRecordsNavigation": true,
+      "draftPreserved": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "tabs": 3,
+      "layoutSlots": 2,
+      "actionsDisabled": true,
+      "noInventedRecords": true,
+      "keyboard": true,
+      "allRecordsNavigation": true,
+      "draftPreserved": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "note": "Layout only with explicit placeholders; isolated auth/document API responses, no test or simulation services contacted."
+}

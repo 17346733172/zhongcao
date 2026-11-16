@@ -1,0 +1,72 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "realMetrics": [
+        "35",
+        "0",
+        "0",
+        "0",
+        "35",
+        "0",
+        "230",
+        "0",
+        "1.1"
+      ],
+      "deviceCategories": 14,
+      "devices": 129,
+      "draftPreserved": true,
+      "keyboard": true,
+      "refresh": true,
+      "staleAndEmptyStates": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "realMetrics": [
+        "35",
+        "0",
+        "0",
+        "0",
+        "35",
+        "0",
+        "230",
+        "0",
+        "1.1"
+      ],
+      "deviceCategories": 14,
+      "devices": 129,
+      "draftPreserved": true,
+      "keyboard": true,
+      "refresh": true,
+      "staleAndEmptyStates": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "realMetrics": [
+        "35",
+        "0",
+        "0",
+        "0",
+        "35",
+        "0",
+        "230",
+        "0",
+        "1.1"
+      ],
+      "deviceCategories": 14,
+      "devices": 129,
+      "draftPreserved": true,
+      "keyboard": true,
+      "refresh": true,
+      "staleAndEmptyStates": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "methods": [
+    "GET"
+  ],
+  "note": "Actual simulator data for overview/device screenshots; fixture-* screenshots cover isolated errors. No model or external writes."
+}

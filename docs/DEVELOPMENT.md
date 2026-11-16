@@ -2,7 +2,19 @@
 
 ## 环境与启动
 
+2026-11-14新增仿真控制：部署后需重启本草后端，前端开发服务自动更新。复用现有`DECOCTION_*`配置，无新依赖或环境变量。`GET /api/simulation/status`直接读取平台dashboard时钟；`POST /api/simulation/scenarios`接收严格整数`{count: 1..50}`；`POST /api/simulation/start`固定向平台提交`speed: 1`；`POST /api/simulation/pause`无参数。全部需登录及knowledge:read，写入沿用CSRF / Origin保护。控制请求20秒总期限、前端25秒等待，写入只提交一次，不沿用处方上传的自动重试。超时可能已经生效，先查看平台状态和批次数量，再决定是否重试。
+
 Python 3.11+、Node.js 20.9+、pnpm 11。根目录启动后端.cmd 建立 backend/.venv 并配置首个管理员；启动前端.cmd 运行前端。两个终端均保持开启。
+
+依赖、管理员、本地模型和索引准备好后，日常运行可双击根目录 [启动本草.cmd](../启动本草.cmd)。该入口调用 [scripts/start-local.ps1](../scripts/start-local.ps1)，通过 Windows WMI 创建独立后台进程并复用原有两个启动脚本；关闭调用终端或开发工具后服务继续运行。不会安装系统服务或配置开机自启，电脑重启后需重新运行。
+
+启动入口用互斥锁避免同时启动，已有服务或仍在预热的启动进程会复用。它最多等待 240 秒，核验 `8000/api/health`、`3000/login` 和 `3000/api/health` 后才提示就绪；超时不代表模型已停止，先检查日志再重试。日志保存在忽略目录 `tmp/local-servers/backend.log`、`frontend.log`。首次安装和首个管理员设置仍使用上面的交互式脚本。
+
+仅检查运行状态（失败退出码为 1，不启动进程）：
+
+```powershell
+powershell.exe -NoProfile -File scripts/start-local.ps1 -Check
+```
 
 后端手动启动（backend 目录）：
 
@@ -32,7 +44,13 @@ pnpm build
 - 无默认账号密码。app.cli create-admin 只在没有启用管理员时可用；后续从管理页面创建成员。
 - 不将真实 .env、数据库、密码或日志提交到仓库。
 
+仿真平台可单独设置后端 `DECOCTION_PROXY_URL`（HTTP / HTTPS 代理入口）。默认留空直连；若本机浏览器走已启用的代理、后端直连跨网服务持续超时，可填写相同的本机代理地址并重启后端。代理地址不接受内嵌账号、路径、查询参数或片段，不返回到前端。只影响仿真统计、处方、批次与上传；不会自动读取系统 / 环境代理，也不改变 DeepSeek 请求或 TLS 证书校验。代理服务须保持运行，入口端口变更后应同步此配置。根因与验证见[连接修复验收](DATA-CENTER-PROXY-QA.md)。
+
 ## 开发约定
+
+数据中心时间统计入口为 `/api/data-center/statistics?days=1|7|30`，可附 `refresh=true` 强制同步。启动时为现有 SQLite 增加三张历史统计表，无需新增依赖或环境变量。只缓存统计所需事件字段；平台事件读取复用 `DECOCTION_*`，按真实日期与北京时间自然日统计，含今天且不等同过去24小时。35秒同步上限，60秒缓存 / 失败退避，失败时只显示上次真实同步结果。验证见[时间统计验收](DATA-CENTER-TIME-STATS-QA.md)。
+
+自选日期使用 `/api/data-center/statistics?start_date=2026-11-06&end_date=2026-11-10`；两个日期都必填，不与 days 同传，结束日不得晚于北京时间今天，一次最多366天。返回 days 为实际包含的天数；同一份已同步历史可用于不同区间，无需重新下载全量事件。见[自选日期验收](DATA-CENTER-CUSTOM-RANGE-QA.md)。
 
 页面组装、组件交互、API 请求和数据库逻辑分层。Python 使用 snake_case 和类型注解，前端沿用 kebab-case 文件名及现有组件规范。依赖运行版和测试版分开；Python 约束锁定至已验证版本。
 
@@ -69,16 +87,24 @@ demo-data.ts 仅保留知识库配置与空初始状态；检索逻辑在 knowle
 
 知识库模式（use_knowledge=true）向配置的云服务发送问题及相关片段，优先依据资料，相关资料未覆盖的内容允许用模型一般知识单独补充；自然语言首次未命中可以先调用一次语义整理，再按整理后的完整问题重检；仍无相关片段时返回未找到，不调用回答生成。附加原文在浏览器直接摘录，不额外调用模型。两种模式分别结合当前会话的同模式最近 5 轮承接，前端通过 resolvedQuestion 保留连续省略的主题；历史只辅助理解，不作为事实或引用来源，每轮重检原文。附加原文按 AI 整理的完整问题（未整理时使用当前输入）检索。兼容模式关键词检索的召回范围有限；默认已接入本地向量检索，流式回答与会话持久化仍需后续实现。官方配置参考：[接入说明](https://api-docs.deepseek.com/quick_start/agent_integrations/)、[Chat Completion](https://api-docs.deepseek.com/api/create-chat-completion/)、[JSON 输出](https://api-docs.deepseek.com/guides/json_mode/)。
 
-## 处方检查接口与本地识别
+## 处方检查接口与多模态解析
 
-安装后端 requirements.txt（含官方 PyPI 源、LangGraph、RapidOCR、PDFium、python-docx 与 multipart；完整版本受 requirements-lock.txt 约束），然后重启后端。复用已有 DEEPSEEK_API_KEY / BASE_URL / MODEL，不新增图片云服务密钥。模型随 OCR 依赖提供；本机验证为 Python 3.14，依赖元数据保留 Python 3.11+ 范围。
+图片和扫描 PDF 使用既有 `DEEPSEEK_API_KEY / BASE_URL / MODEL` 配置的视觉模型。目前本机为 DeepSeek 官方接口的 `deepseek-flash`；其他部署必须确认所配模型支持图像输入。无需新增密钥。原图和扫描页会发送至云端，上传前须自行遮盖身份信息；本机不自动遮盖图像中的姓名或号码。
 
-- `GET /api/prescriptions/status`：需登录及 knowledge:read，返回服务是否配置、支持格式与大小限制，不返回密钥。
+`backend/app/prescriptions/files.py` 校验并准备图像，`vision.py` 一次模型请求完成意图分类、文字转录和结构化提取，图节点为 `read_upload → parse_multimodal → confirm_data`。TXT、MD、DOCX 和原生文本 PDF 保留 `read_upload → recognize_intent → extract_prescription → confirm_data`。混合 PDF 保留原生文字，并只将缺少可读文本的页面渲染为图像，一并提交一次解析。
+
+图片限制为单帧、最多 1600 万像素，读取 EXIF 方向后转换为 RGB JPEG（质量 95，移除元数据），最长边不超过 8192 像素。扫描 PDF 页面渲染最长边不超过 2400 像素；最多 8 页、编码后图像合计不超过 40 MiB。模型输出受严格 schema、文本长度及药物行一致性约束；`source.verification=model_transcription` 明确表示模型转录，不能作为独立图像核验。接口不返回内部图像编码；原文件不入库、不启用 tracing。
+
+处方日志记录 `read_upload`、`multimodal_parse`（或文字路径的意图 / 提取）及 `Prescription prepare total`，不包括 HTTP 文件传输。只记录阶段与耗时，不含处方正文、图像编码、文件名或密钥。接口不接受图片、超时或返回无效字段时明确报错，保留前端文件供重试或手动录入，不回退至本地 OCR。模型单次最长等待 90 秒。验证见[多模态解析验收](MULTIMODAL-PRESCRIPTION-QA.md)。
+
+安装后端 requirements.txt（官方 PyPI 源，含 LangGraph、Pillow、PDFium、python-docx 与 multipart；完整版本受 requirements-lock.txt 约束），然后重启后端。本地 RapidOCR、OpenVINO 直接依赖与 OCR 预热已移除；旧环境安装的包可以保留，但处方流程不再加载，`OCR_WARMUP` / `OCR_BACKEND` 不再生效。本机验证为 Python 3.14，依赖元数据保留 Python 3.11+ 范围。
+
+- `GET /api/prescriptions/status`：需登录及 knowledge:read，返回服务是否配置、支持格式与大小限制，不返回密钥；为兼容保留 `ocr` 字段，其值已改为「DeepSeek 多模态解析（云端）」，不再触发本地预热。
 - `POST /api/prescriptions/prepare`：multipart，提交 `file` 或 `text` 二选一，可附 `instruction`（500 字以内）与 `dose_scope`（`per_dose / total / unknown`，省略保持逐味口径；界面按用户要求默认发送 per_dose）。文件最多 10 MB，文字 2 万字符，PDF 8 页，整体请求上限 12 MB。返回读取方式、原文、识别提醒、意图、待核对处方和已执行节点；非处方 / 多个版本返回澄清，不自动检查。只处理正文和表格；DOCX 内嵌图片会明确提醒未识别。
 - `POST /api/prescriptions/check`：JSON `{prescription, confirmed: true}`，总请求上限 128 KB。最多 100 味药；`prescription.dose_scope` 为整方口径，per_dose / total 在执行规则前统一各行，unknown / 省略则保留逐味口径。报告返回归一化后的实际处方；数值与单位不作换算。用户确认数据后执行规则并返回分级 findings、依据、范围、规则版本和局限，不调用模型改方。新增 `conclusion` 包含 status / result / detail / finding_codes / note，status 为 passed、not_passed、needs_information，decision_reasons 列明具体系统依据；十八反 / 已登记十九畏及数据异常优先不通过，真实信息缺失待补充，其他阻断项不通过，无阻断项通过本次系统辅助审核。Finding.blocking 为 false 时仅为持续提醒，不代表已排除临床风险。新增 `sections` 为固定 3.1—3.5 五节：每节包含 number / title / paragraphs / items / ordered，每条内容包含 lead（加粗前缀）/ text / children / sources；页面与复制均使用此结构，原元数据字段保留兼容。`missing_information` 始终返回数组（无缺失时为空），每项含 field / label / prompt；field 为患者字段或 `medicines.<零基行号>.<字段>`，只用于定位已存在的核对控件，具体清单也写入 3.1 sections，复制无需另行拼接。
 - 三种角色均可使用个人处方流程，仍不能越权写共享资料；所有写请求沿用 `X-CSRF-Protection: 1` 和 Origin 校验。错误反馈不回显输入。无数据库写入、无检查点持久化，禁用该流程远程追踪。每进程最多两个处方任务。
 
-本地 OCR 不保证手写、低清图片与小数点准确；界面原图对照和人工确认不可跳过。前端上传识别等待最多 180 秒，关闭弹窗取消浏览器等待，已经发出的后端模型调用可能继续完成。基础标识遮盖不等于完整匿名化，真实文件应先脱敏。
+视觉模型不保证手写、低清图片、小数点或单位准确；模型转录与提取字段一致也可能同时读错，原图 / 原始 PDF 对照和人工确认不可跳过。前端上传识别等待最多 180 秒，关闭弹窗取消浏览器等待，已经发出的后端模型调用可能继续完成。文字的基础标识遮盖不等于完整匿名化，真实文件应先脱敏。
 
 规则、来源及验收见 [处方 Agent](PRESCRIPTION-AGENT.md)。共享知识库 PDF / Word 解析仍未接入，不能把处方解析等同于共享资料上传成功。
 
@@ -94,22 +120,35 @@ demo-data.ts 仅保留知识库配置与空初始状态；检索逻辑在 knowle
 
 平台接收后处方进入待人工审核。工艺时间及包装参数使用平台默认值；支持的煎法仅映射至对应工序，处方中附带的具体时长不作为仿真参数。失败时保留报告，同一报告重试沿用编号，平台按外部编号防止重复录入。
 
-计数单位「片」上传为 `unit="piece"` 和 `quantity_per_dose`，不填写或猜测 `grams_per_dose`。每剂量直接保留片数，总量除以总剂数；支持半片等正小数。平台保存原始片数，审核通过前补充 `herb_grams_per_dose`（按药名记录每剂实测克数），按实际重量计算水量。克 / 毫克继续沿用原有 `grams_per_dose` 协议。旧平台拒绝计数协议时明确提示更新接收端，不伪装上传成功。
+计数单位「枚」上传为 `unit="item"`，「片」上传为 `unit="piece"`，均使用 `quantity_per_dose`，不填写或猜测 `grams_per_dose`。每剂量保留原数量，总量除以总剂数；支持正小数。平台分别保存枚数、片数和原单位，审核通过前补充 `herb_grams_per_dose`（按药名记录每剂实测克数），按实际重量计算水量。克 / 毫克继续沿用原有 `grams_per_dose` 协议。旧平台拒绝计数协议时明确提示更新接收端，不伪装上传成功。
 
 连接和响应中断最多尝试 3 次，单次连接等待 10 秒、读取等待 15 秒，写入和连接池等待各 5 秒；前端为整个上传流程保留 120 秒。校验或认证拒绝直接返回反馈。连接失败日志仅记录尝试次数和异常类型，便于识别 HTTPS 握手超时。首次请求已写入但响应丢失时，后续相同编号的重复响应按已录入处理。
 
 ## 自动验证
 
+### 聊天运行数据查询
+
+`POST /api/chat` 沿用登录、`knowledge:read` 和 CSRF 保护。页面 `use_knowledge=true` 时，先由 `data_center_chat.py` 识别常见锅 / 设备数量、使用 / 空闲 / 故障及报警 / 概况问题；命中后从共享 `SnapshotReader` 的状态构造回答，不读取药材资料或调用模型。`use_knowledge=false` 的内部普通 AI 分支保持独立。
+
+结果沿用原回答结构，增加 `mode=data_center`、`dataCenter` 目标筛选和用于追问的 `resolvedQuestion`，`sources` 为空。有有效近时数据直接回答；没有数据或缓存过期 / 更新失败时可等后台刷新最多 8 秒，然后明确返回旧数据标记或不可确认说明。标题数量按设备实际状态统计，使用中表示设备占用，不保证每台都正在加热。
+
+历史 `ChatTurn` 新增可选 `channel`（`knowledge / data_center`，默认 knowledge）。页面运行回合仅传主题，answer 为空；后端也会隔离最近运行回合，避免旧数字进入模型或将设备话题当作药材追问。知识回答在线程执行，后台刷新保持异步。知识库加载和模型未配置不阻止运行查询，附件上传仍受资料加载状态限制。
+
+现支持常见中文问法，未接入任意设备控制、故障推断或通用自然语言数据库查询。比如「铁锅可以煎药吗」「工作原理」仍走知识分支；缺少故障原因时不猜原因。实现与实际验证见[数据中心问答](DATA-CENTER-CHAT-QA.md)。
+
 ### 数据中心读取
 
-数据中心与上传共用 `DECOCTION_BASE_URL`、`DECOCTION_API_KEY`、`DECOCTION_HTTP_USERNAME` / `DECOCTION_HTTP_PASSWORD`，无需新增依赖或环境变量。修改代码后重启本草后端；修改配置也需重启。平台必须提供 `GET /api/v1/simulation` 和 `GET /api/v1/prescriptions`；不直接读取另一个项目的数据库。
+数据中心与上传共用 `DECOCTION_BASE_URL`、`DECOCTION_API_KEY`、`DECOCTION_HTTP_USERNAME` / `DECOCTION_HTTP_PASSWORD` 及可选的 `DECOCTION_PROXY_URL`，无需新增依赖。修改代码后重启本草后端；修改配置也需重启。平台须提供 `GET /api/v1/dashboard`、`/batches`、`/batches/{id}`、`/alarms` 和 `/prescriptions`；不直接读取另一个项目的数据库。
 
-- `GET /api/data-center/snapshot`：需要 `knowledge:read`，读取平台完整快照并仅返回界面需要的统计、时钟、设备、报警和批次摘要。
+- `GET /api/data-center/snapshot`：需要 `knowledge:read`，立即返回 `{data, fetched_at, refreshing, stale, error}`。`data` 是最近一次成功读取的真实快照，无记录时为 null；`fetched_at` 是成功读取平台的时间，重复读缓存不会修改。`?refresh=true` 只唤醒共享后台任务，不等待网络请求。
+- `GET /api/data-center/batches/{id}`：需要登录，展开处方时按需读取历史批次摘要；ID 限定为 1–128 个字母、数字、下划线或短横线。
 - `GET /api/data-center/prescriptions?offset=0&limit=20&status=approved`：同样要求登录，平台分页透传；`status` 可省略或为 `pending_review / approved / rejected`，`offset >= 0`，`limit` 为 1–200。每页包含完整处方信息，不只限于本草上传的记录。
 
-概览与设备每次读取结束后等待 15 秒再更新；处方在进入标签、筛选、翻页和手动刷新时读取。界面手动刷新同时更新当前处方页和快照。关闭取消等待及刷新计时。平台故障、认证失败、接口 / 格式不匹配返回清晰的 502 提示，不回显响应正文、地址或凭据。请求不跟随认证重定向，禁止使用服务器环境代理；不修改平台时钟、处方、设备或报警。
+概览后台在单轮内复用 HTTP 连接读取轻量统计、活跃批次和分页报警，本轮结束关闭客户端。传输失败时先关闭失效客户端，再用新客户端重试，防止代理握手失败累积占满连接池。最大连接数 4、池等待 2 秒、清理等待最多 2 秒；网络整轮限定 45 秒，结束后等待 15 秒再更新。首次需要快照时启动共享任务，应用退出时取消；关闭弹窗停止浏览器轮询，不取消其他用户共享的后台任务。前端读取本机状态最多等待 5 秒，后台刷新期间每秒查看一次状态，空闲时每 15 秒查看。平台失败信息在 `error` 中返回，保留旧 `data` 与原时间并标注过期；处方 / 批次读取失败仍返回脱敏 502。日志以每轮结果和耗时区分真实更新成功 / 失败，不将本机状态接口 200 当成平台更新成功。
 
-真实平台只读与浏览器隔离场景的验收见 [数据中心验收](DATA-CENTER-LIVE-QA.md)。
+最近快照保存在 SQLite 旁的 `<数据库文件名>.simulation-cache.json`，默认位于被忽略的 `backend/data/`。只保存已校验的统计、设备、报警和活跃批次摘要，不保存网关凭据、原始处方或报告；按平台地址校验缓存来源，损坏或来源不同的缓存不使用。页面说明该缓存的实际时间，长期离线不假装实时更新。请求不跟随认证重定向，禁止使用服务器环境代理；不修改平台时钟、处方、设备或报警。
+
+最新验收见[缓存与后台刷新](DATA-CENTER-CACHE-QA.md)；首次真实平台只读与浏览器隔离场景见[数据中心验收](DATA-CENTER-LIVE-QA.md)。
 
 前端 typecheck 检查类型，test 使用 Node 测试运行器检查来源隔离、追问摘要、默认 AI 问答及附加原文开关的请求边界，build 执行生产构建。默认 AI 问答及历次回答方式的桌面 / 手机浏览器结果见 [回答方式验收](ANSWER-OPTIONS-QA.md)。
 

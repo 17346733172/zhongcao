@@ -53,4 +53,26 @@ class Database:
                     created_by INTEGER NOT NULL REFERENCES users(id),
                     created_at INTEGER NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS simulation_events (
+                    source TEXT NOT NULL,
+                    event_id INTEGER NOT NULL,
+                    event_type TEXT NOT NULL,
+                    occurred_at REAL NOT NULL,
+                    amount INTEGER NOT NULL,
+                    PRIMARY KEY(source, event_id)
+                );
+                CREATE INDEX IF NOT EXISTS simulation_events_time
+                    ON simulation_events(source, occurred_at);
+                CREATE TABLE IF NOT EXISTS simulation_event_cursors (
+                    source TEXT NOT NULL,
+                    event_type TEXT NOT NULL,
+                    after_id INTEGER NOT NULL,
+                    PRIMARY KEY(source, event_type)
+                );
+                CREATE TABLE IF NOT EXISTS simulation_history_state (
+                    source TEXT PRIMARY KEY,
+                    origin TEXT NOT NULL,
+                    earliest_at REAL,
+                    synced_at REAL NOT NULL
+                );
             """)

@@ -1,0 +1,132 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "rangeResults": [
+        {
+          "days": 1,
+          "metrics": [
+            "11张",
+            "11个",
+            "6个",
+            "44袋",
+            "0次"
+          ],
+          "rows": 1
+        },
+        {
+          "days": 7,
+          "metrics": [
+            "25张",
+            "25个",
+            "20个",
+            "140袋",
+            "0次"
+          ],
+          "rows": 7
+        },
+        {
+          "days": 30,
+          "metrics": [
+            "35张",
+            "35个",
+            "30个",
+            "200袋",
+            "0次"
+          ],
+          "rows": 30
+        }
+      ],
+      "noPageOverflow": true,
+      "cumulativeUnchanged": true,
+      "realUpstream": true,
+      "statsRequests": 11
+    },
+    {
+      "width": 390,
+      "rangeResults": [
+        {
+          "days": 1,
+          "metrics": [
+            "11张",
+            "11个",
+            "6个",
+            "44袋",
+            "0次"
+          ],
+          "rows": 1
+        },
+        {
+          "days": 7,
+          "metrics": [
+            "25张",
+            "25个",
+            "20个",
+            "140袋",
+            "0次"
+          ],
+          "rows": 7
+        },
+        {
+          "days": 30,
+          "metrics": [
+            "35张",
+            "35个",
+            "30个",
+            "200袋",
+            "0次"
+          ],
+          "rows": 30
+        }
+      ],
+      "noPageOverflow": true,
+      "cumulativeUnchanged": true,
+      "realUpstream": true,
+      "statsRequests": 5
+    },
+    {
+      "width": 320,
+      "rangeResults": [
+        {
+          "days": 1,
+          "metrics": [
+            "11张",
+            "11个",
+            "6个",
+            "44袋",
+            "0次"
+          ],
+          "rows": 1
+        },
+        {
+          "days": 7,
+          "metrics": [
+            "25张",
+            "25个",
+            "20个",
+            "140袋",
+            "0次"
+          ],
+          "rows": 7
+        },
+        {
+          "days": 30,
+          "metrics": [
+            "35张",
+            "35个",
+            "30个",
+            "200袋",
+            "0次"
+          ],
+          "rows": 30
+        }
+      ],
+      "noPageOverflow": true,
+      "cumulativeUnchanged": true,
+      "realUpstream": true,
+      "statsRequests": 5
+    }
+  ],
+  "errors": [],
+  "notes": "Real source events through isolated authenticated backend. Only explicitly named loading/error/empty fixtures are browser-local. No production accounts or platform events were changed."
+}

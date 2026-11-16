@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "timestamp": "数据读取时间：2026/11/14 17:39",
+      "noClock": true,
+      "aligned": true,
+      "noOverflow": true,
+      "preservedState": true
+    },
+    {
+      "width": 836,
+      "timestamp": "数据读取时间：2026/11/14 17:39",
+      "noClock": true,
+      "aligned": true,
+      "noOverflow": true,
+      "preservedState": true
+    },
+    {
+      "width": 320,
+      "timestamp": "数据读取时间：2026/11/14 17:39",
+      "noClock": true,
+      "aligned": true,
+      "noOverflow": true,
+      "preservedState": true
+    }
+  ],
+  "errors": []
+}

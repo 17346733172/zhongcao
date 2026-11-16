@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "openingMilliseconds": 1276,
+      "reopeningMilliseconds": 86,
+      "maxSnapshotApiMilliseconds": 621,
+      "prescriptions": 25,
+      "devices": 129,
+      "offlineRetainedActualTimestamp": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "openingMilliseconds": 374,
+      "reopeningMilliseconds": 347,
+      "maxSnapshotApiMilliseconds": 13,
+      "prescriptions": 25,
+      "devices": 129,
+      "offlineRetainedActualTimestamp": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "openingMilliseconds": 387,
+      "reopeningMilliseconds": 327,
+      "maxSnapshotApiMilliseconds": 18,
+      "prescriptions": 25,
+      "devices": 129,
+      "offlineRetainedActualTimestamp": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "noCacheSlowMessage": true,
+  "notes": "All displayed statistics come from a validated snapshot read from the real configured platform. Outage, delayed upstream and no-cache states are local fixtures in an isolated authenticated backend/browser."
+}

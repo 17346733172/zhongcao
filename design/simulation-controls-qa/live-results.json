@@ -1,0 +1,29 @@
+{
+  "initial_running": true,
+  "prescriptions_before": 35,
+  "steps": [
+    {
+      "action": "scenarios",
+      "count": 1,
+      "batch_ids": [
+        "batch_2c6655077f3a40b1"
+      ],
+      "running": null
+    },
+    {
+      "action": "pause",
+      "count": null,
+      "batch_ids": [],
+      "running": false
+    },
+    {
+      "action": "start",
+      "count": null,
+      "batch_ids": [],
+      "running": true
+    }
+  ],
+  "prescriptions_after": 36,
+  "passed": true,
+  "final_running": true
+}

@@ -1,0 +1,19 @@
+{
+  "health_checks": {
+    "http://127.0.0.1:8000/api/health": 200,
+    "http://127.0.0.1:3000/login": 200,
+    "http://127.0.0.1:3000/api/health": 200
+  },
+  "anonymous_status": 401,
+  "question_intent": {
+    "topic": "utilization",
+    "kind": "pot",
+    "status": "",
+    "details": false,
+    "device_id": "",
+    "period": "今天"
+  },
+  "accurate_daily_utilization_available": false,
+  "references_are_cumulative_and_current_only": true,
+  "running_process_started_after_source_changes": true
+}

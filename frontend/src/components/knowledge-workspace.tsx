@@ -6,16 +6,19 @@ import { initialConversations, initialDocuments, libraries } from "@/lib/demo-da
 import { createAnswer } from "@/lib/knowledge-answer";
 import { generateAnswer, loadAIStatus, type AIStatus } from "@/lib/chat-api";
 import { answerModeInfo, DEFAULT_ANSWER_MODE, runAnswerMode } from "@/lib/answer-mode";
-import type { Conversation, KnowledgeDocument, Source } from "@/lib/types";
+import type { Conversation, DataCenterTarget, KnowledgeDocument, Source } from "@/lib/types";
 import { api, errorMessage } from "@/lib/api";
 import { useAuth } from "./authenticated";
-import { Sidebar } from "./sidebar";
+import { Sidebar, type WorkspaceModule } from "./sidebar";
 import { ConversationView } from "./conversation-view";
 import { QuestionComposer } from "./question-composer";
 import { UploadPanel } from "./upload-panel";
 import { SourceDialog } from "./source-dialog";
 import { LibraryToolsDialog } from "./library-tools-dialog";
 import { DataCenterDialog } from "./data-center-dialog";
+import { WorkspaceModuleDialog } from "./workspace-module-dialog";
+import { TestExecutionHeader, TestExecutionPage } from "./test-execution-page";
+import { NewTestTaskDialog } from "./new-test-task-dialog";
 
 export default function KnowledgeWorkspace() {
   const { user } = useAuth();
@@ -41,6 +44,9 @@ export default function KnowledgeWorkspace() {
   const [source, setSource] = useState<Source | null>(null);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [dataCenterOpen, setDataCenterOpen] = useState(false);
+  const [activeModule, setActiveModule] = useState<WorkspaceModule | null>(null);
+  const [newTestTaskOpen, setNewTestTaskOpen] = useState(false);
+  const [dataCenterTarget, setDataCenterTarget] = useState<DataCenterTarget | undefined>();
   const [referenceDocument, setReferenceDocument] = useState<Source | null>(null);
   const [toast, setToast] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -53,6 +59,8 @@ export default function KnowledgeWorkspace() {
   const closeSource = useCallback(() => setSource(null), []);
   const closeTools = useCallback(() => setToolsOpen(false), []);
   const closeDataCenter = useCallback(() => setDataCenterOpen(false), []);
+  const closeModule = useCallback(() => { setNewTestTaskOpen(false); setActiveModule(null); }, []);
+  const closeNewTestTask = useCallback(() => setNewTestTaskOpen(false), []);
   const loadDocuments = useCallback(async () => {
     setDocumentsLoading(true);
     setDocumentError("");
@@ -103,13 +111,13 @@ export default function KnowledgeWorkspace() {
 
   useEffect(() => {
     function escape(event: globalThis.KeyboardEvent) {
-      if (event.key !== "Escape" || source || toolsOpen || dataCenterOpen) return;
+      if (event.key !== "Escape" || source || toolsOpen || dataCenterOpen || activeModule) return;
       setNavigationOpen(false);
       setUploadsOpen(false);
     }
     document.addEventListener("keydown", escape);
     return () => document.removeEventListener("keydown", escape);
-  }, [source, toolsOpen, dataCenterOpen]);
+  }, [source, toolsOpen, dataCenterOpen, activeModule]);
 
   useEffect(() => {
     const selector = navigationOpen && mobile ? ".sidebar" : uploadsOpen ? ".upload-panel" : null;
@@ -130,39 +138,26 @@ export default function KnowledgeWorkspace() {
     return () => { document.removeEventListener("keydown", containFocus); previous?.focus(); };
   }, [navigationOpen, uploadsOpen, mobile]);
 
-  function cancelPending() {
-    answerRequest.current?.abort();
-    answerRequest.current = null;
-    setBusy(false);
-    setAnswerError("");
-  }
-  function newConversation() {
-    cancelPending();
-    setActiveId(null);
-    setDraft("");
-    setNavigationOpen(false);
-    requestAnimationFrame(() => composerRef.current?.focus());
-  }
   function selectLibrary(id: string) {
     setLibraryId(id);
     setUploadsOpen(false);
     setNavigationOpen(false);
     setToolsOpen(true);
   }
-  function selectConversation(id: string) {
-    cancelPending();
-    setActiveId(id);
-    setDraft("");
-    setNavigationOpen(false);
-  }
-  function openDataCenter() {
+  function openModule(module: WorkspaceModule) {
     setUploadsOpen(false);
     setNavigationOpen(false);
+    setActiveModule(module);
+  }
+  function openDataCenter(target?: DataCenterTarget) {
+    setUploadsOpen(false);
+    setNavigationOpen(false);
+    setDataCenterTarget(target);
     setDataCenterOpen(true);
   }
   async function ask(question: string) {
     const text = question.trim();
-    if (!text || busy || answerRequest.current || !documentsLoaded || documentsLoading || documentError) return;
+    if (!text || busy || answerRequest.current) return;
     const controller = new AbortController();
     answerRequest.current = controller;
     setBusy(true);
@@ -246,8 +241,8 @@ export default function KnowledgeWorkspace() {
     <div className={"workspace" + (!uploadsOpen ? " uploads-hidden" : "") + (sidebarCollapsed ? " nav-collapsed" : "")}>
       {navigationOpen && <button className="drawer-backdrop navigation-backdrop" aria-label="关闭导航遮罩" onClick={() => setNavigationOpen(false)} />}
       {uploadsOpen && <button className="drawer-backdrop upload-backdrop" aria-label="关闭上传遮罩" onClick={() => setUploadsOpen(false)} />}
-      <Sidebar libraryId={libraryId} activeId={activeId} conversations={conversations} open={navigationOpen} dataCenterOpen={dataCenterOpen} onLibrary={selectLibrary} onDataCenter={openDataCenter} onConversation={selectConversation} onNew={newConversation} onClose={() => setNavigationOpen(false)} onCollapse={() => setSidebarCollapsed(true)} />
-      <main className="main-panel" id="main-content" inert={!!source || toolsOpen || dataCenterOpen || (navigationOpen && mobile) || uploadsOpen}>
+      <Sidebar open={navigationOpen} toolsOpen={toolsOpen} dataCenterOpen={dataCenterOpen} activeModule={activeModule?.id ?? null} onLibrary={selectLibrary} onDataCenter={() => openDataCenter()} onModule={openModule} onClose={() => setNavigationOpen(false)} onCollapse={() => setSidebarCollapsed(true)} />
+      <main className="main-panel" id="main-content" inert={!!source || toolsOpen || dataCenterOpen || !!activeModule || (navigationOpen && mobile) || uploadsOpen}>
         <header className="main-header">
           <button className={"icon-button mobile-menu" + (sidebarCollapsed ? " desktop-visible" : "")} aria-label={mobile ? "打开导航" : "展开侧栏"} aria-expanded={mobile ? navigationOpen : !sidebarCollapsed} onClick={() => mobile ? setNavigationOpen(true) : setSidebarCollapsed(false)}><ListIcon size={25} /></button>
           <div className="header-context">
@@ -259,15 +254,17 @@ export default function KnowledgeWorkspace() {
         {(documentsLoading || documentError) && <div className="document-feedback" role={documentError ? "alert" : "status"}><span>{documentError || "正在读取知识库资料…"}</span>{documentError && <button onClick={() => void loadDocuments()}>重新读取</button>}</div>}
         <div className={"chat-body" + (!(currentConversation?.messages.length) ? " welcome-state" : "")}>
           <div ref={scrollRef} className="conversation-scroll" aria-label="问答内容" aria-busy={busy}>
-            <ConversationView mode={mode} messages={currentConversation?.messages ?? []} busy={busy} libraryName={currentLibrary.name} onSource={setSource} onToast={setToast} />
+            <ConversationView mode={mode} messages={currentConversation?.messages ?? []} busy={busy} libraryName={currentLibrary.name} onSource={setSource} onToast={setToast} onDataCenter={openDataCenter} />
           </div>
-          <QuestionComposer draft={draft} busy={busy} disabled={!documentsLoaded || documentsLoading || !!documentError} canWrite={canWrite} uploading={uploading} error={answerError} status={aiStatus} statusError={aiStatusError} inputRef={composerRef} onDraft={setDraft} onSubmit={submit} onKeyDown={composerKey} onAttach={attach} />
+          <QuestionComposer draft={draft} busy={busy} disabled={false} attachmentDisabled={!documentsLoaded || documentsLoading || !!documentError} canWrite={canWrite} uploading={uploading} error={answerError} status={aiStatus} statusError={aiStatusError} inputRef={composerRef} onDraft={setDraft} onSubmit={submit} onKeyDown={composerKey} onAttach={attach} />
         </div>
       </main>
       <UploadPanel canWrite={canWrite} uploading={uploading || documentsLoading} onRefresh={() => void loadDocuments()} documents={libraryDocuments} open={uploadsOpen} inputRef={inputRef} onFiles={addFiles} onClose={() => setUploadsOpen(false)} onRemove={(id) => void removeDocument(id)} onPreview={previewDocument} />
       {source && <SourceDialog source={source} onClose={closeSource} />}
       {toolsOpen && <LibraryToolsDialog onClose={closeTools} />}
-      {dataCenterOpen && <DataCenterDialog onClose={closeDataCenter} />}
+      {dataCenterOpen && <DataCenterDialog initialTarget={dataCenterTarget} onClose={closeDataCenter} />}
+      {activeModule && <WorkspaceModuleDialog title={activeModule.label} onClose={closeModule} className={activeModule.id === "test-execution" ? "test-execution-dialog" : undefined} headerContent={activeModule.id === "test-execution" ? <TestExecutionHeader onNewTask={() => setNewTestTaskOpen(true)} newTaskOpen={newTestTaskOpen} /> : undefined}>{activeModule.id === "test-execution" ? <TestExecutionPage /> : undefined}</WorkspaceModuleDialog>}
+      {newTestTaskOpen && <NewTestTaskDialog onClose={closeNewTestTask} />}
       {toast && <div className="toast" role="status">{toast}</div>}
     </div>
   );

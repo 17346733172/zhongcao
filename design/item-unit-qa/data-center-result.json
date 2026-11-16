@@ -1,0 +1,17 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "itemPerDose": 3,
+      "totalItems": 15,
+      "measuredGramsPerDose": 6
+    },
+    {
+      "width": 320,
+      "itemPerDose": 3,
+      "totalItems": 15,
+      "measuredGramsPerDose": 6
+    }
+  ],
+  "realApi": true
+}

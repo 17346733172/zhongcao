@@ -1,5 +1,23 @@
 # 项目架构与目录
 
+2026-11-14（仿真控制接通，最新）：新增`simulation_operations.py`，提供独立的`/api/simulation/status`及`scenarios / start / pause`写接口。复用DECOCTION配置、登录与CSRF，不改变数据中心只读接口；控制状态直接读取轻量dashboard，不依赖旧快照。写请求单次发送、校验回执、进程内串行防重，写入后通知数据中心刷新。前端`simulation-api.ts`负责协议，`use-simulation-controls.ts`负责请求、竞态隔离与反馈，弹窗负责展示。
+
+2026-11-14（时间显示，最新）：按用户反馈移除新建弹窗的整个实时时钟区域，清理对应定时器、监听、状态与样式。仅保留现有平台快照的底部「数据读取时间」，快照读取和状态反馈继续复用原流程；没有后端或业务控制变更。
+
+2026-11-14（新建测试任务）：`KnowledgeWorkspace` 管理上层弹窗的开关，测试执行页头的新建按钮打开 `new-test-task-dialog.tsx`；弹窗与原测试执行dialog为兄弟节点，由原生模态机制隔离焦点，关闭返回新建按钮。数量与反馈仅保存在本次弹窗，运行状态复用现有只读快照，样式集中在 `new-test-task.css`；没有新增控制接口或后端修改。
+
+2026-11-14（测试执行）：`test-execution-page.tsx` 负责截图指定的布局、三个标签和空状态，不包含测试业务数据或接口请求；样式集中于 `test-execution.css`。通过现有 `WorkspaceModuleDialog` 的内容、页头和样式插槽呈现，其余栏目继续使用原占位弹窗。没有新增后端、依赖或环境变量。
+
+2026-11-14：`operations-overview.tsx` 由 `DataCenterDialog` 在第四个「运行总览」标签中呈现，直接消费该弹窗已有的 SnapshotState，不再独立轮询；刷新共用顶部按钮。`operations-device-categories.tsx` 负责14类设备说明和状态汇总，设备列表在同标签展开，样式集中在 `operations-overview.css`。侧栏不再显示运行总览；测试执行提供布局页，其余五个栏目继续使用占位弹窗。设备投影可选保留 `default_processing_seconds`，兼容旧快照；没有新增控制接口、依赖或环境变量。
+
+2026-11-13：`data_center_utilization.py` 负责利用率口径与日期能力限制，复用共享设备快照。累计利用率使用平台字段，多个设备取算术平均；占用率是busy台数除以所选设备数，指标词不作为busy筛选。指定日期请求保留规范主题与设备ID，明确缺少完整时段记录，累计 / 当前只作参考；无额外平台调用、表或依赖。
+
+2026-11-13：`data_center_chat.py` 将锅号视为设备编号，识别显式pot编号或带设备编号标签的ID，按快照设备ID精确匹配。编号追问继承设备类型 / 状态，具体编号保存在规范主题中；查询仍不调用模型，设备控制命令保持只读拒绝。回答目标通过可选deviceId传到前端设备筛选，不改变平台ID或新增远程接口。
+
+2026-11-13：统计接口可选 `start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`，与 days 参数互斥，默认仍为近7天。共享范围校验在平台读取前执行，包含起止日期且最多366天；SQL 使用北京时间开始日零点为下界、结束日次日零点为排除上界，并限定到真实同步时间。自定义只改变本地汇总范围，不改变增量同步、来源隔离或持久化结构。
+
+2026-11-13：`simulation_statistics.py` 与 `statistics_models.py` 独立提供历史统计，通过已配置代理 / 网关只读分页拉取五种业务事件，按平台 `real_time` 转北京时间自然日汇总；不使用仿真累计秒数。SQLite 保存来源摘要、事件 ID / 类型 / 时间 / 数量及游标；全部类型成功后一起提交，来源隔离，首事件标识变化后重建。`/api/data-center/statistics?days=1|7|30` 复用 knowledge:read 鉴权，合并同时请求，60秒缓存 / 失败退避，单轮35秒上限，客户端单轮使用并在传输错误后重建。统计同步与当前快照任务独立，失败不影响现有设备概览。
+
 2026-11-01 展示更新：ConversationView 每轮只渲染 message.answer，不再渲染独立 originalAnswer；兼容保留返回数据，AI 引用继续使用 answer.sources 打开完整原文，检索和回答生成流程不变。
 
 ## 技术栈
@@ -38,13 +56,17 @@
 | frontend/src/lib/knowledge-answer.ts | 中文分词、章节匹配与真实原文摘录；无命中不生成引用 |
 | frontend/next.config.ts | /api/* 代理至 FastAPI，后端地址仅在服务端使用 |
 | backend/app/config.py、database.py | 环境配置、SQLite 连接与幂等建表 |
+| backend/app/config.py 的 DECOCTION_PROXY_URL | 可选显式代理，供全部仿真 HTTP 请求统一使用；不全局读取系统代理 |
 | backend/app/security.py、schemas.py | Argon2id、令牌摘要、权限映射与输入模型 |
 | backend/app/main.py | 应用工厂、会话、账号与共享资料 API |
 | backend/app/prescriptions/agent.py | LangGraph 状态图、意图条件分支、确认与检查两阶段，不配置持久检查点或远程追踪 |
-| backend/app/prescriptions/files.py、extraction.py | 有限文件解析、本地 OCR、DeepSeek 意图与提取、原文证据和数值校验 |
+| backend/app/prescriptions/files.py、extraction.py | 有限文件读取、图像规范化 / PDF 渲染、文字意图与提取、药物行证据和数值校验 |
+| backend/app/prescriptions/vision.py | 单次 DeepSeek 视觉请求完成分类、模型转录和处方字段提取；严格结构校验，标明转录不等于独立图像核验 |
 | backend/app/prescriptions/models.py、rules.py、routes.py | 处方输入边界、可追溯有限规则、登录 / CSRF 保护 API |
 | backend/app/integrations/decoction.py | 煎药平台字段转换、认证、同编号重试和回执确认 |
-| backend/app/data_center.py | 登录保护的仿真快照和处方分页读取、响应校验与脱敏错误 |
+| backend/app/data_center.py、data_center_models.py | 登录保护的快照状态、处方分页与按需批次读取，以及响应模型 |
+| backend/app/data_center_chat.py | 运行问题识别、同主题追问、快照状态统计和来源时间；不调用模型或执行平台写操作 |
+| backend/app/simulation_snapshot.py | 共享后台轻量刷新、单轮连接范围与失败重建、整轮超时、真实快照缓存与实际时间 |
 | frontend/src/components/data-center-dialog.tsx、data-center-panels.tsx、src/lib/data-center-api.ts | 简约数据中心、设备与报警筛选、处方分页 / 详情和只读请求 |
 | frontend/src/components/prescription-*.tsx、src/lib/prescription-api.ts | 上传、原图核对、编辑确认、报告与 multipart 请求 |
 | backend/app/cli.py | 终端交互式创建首个管理员 |
@@ -62,6 +84,8 @@
 
 ## 数据流与权限边界
 
+`POST /api/chat` 在原文 / AI 模式中先识别运行数据问题，命中后复用应用唯一 `SnapshotReader`，无需加载中药文档、检索或调用 DeepSeek。非运行问题继续在线程中执行既有同步知识回答，避免阻塞后台刷新事件循环。历史新增可选 `channel=data_center`，运行回合只携带主题，不携带统计正文；中药回答不继承最近设备话题及其前面的旧药材主题。
+
 浏览器通过同源 /api 请求 → Next.js 转发到本机 FastAPI → 后端读取 HttpOnly 会话 Cookie → 根据数据库中账号当前状态和角色鉴权 → 执行资料或账号操作。
 
 页面固定发送 use_knowledge=true，界面没有模式开关；每轮 showSources=true。服务端保留严格布尔字段 use_knowledge（接口省略时默认 false）用于旧调用兼容。下述普通 AI 分支及按模式隔离仅为兼容行为。false 在读取任何知识库之前进入 ChatService.answer_general，只调用模型处理当前问题及同模式历史；true 才加载基础文档与 documents 表并进入原有 ChatService.answer。新页面每轮 showSources=true；摘要只保留最近五轮知识库问答，内部仍能过滤旧普通 AI 记录。普通 AI 的返回段落没有 origin 或来源索引，sources 始终为空。两条分支共用模型请求错误处理和并发限额。
@@ -76,7 +100,7 @@
 
 用户手动上传处方时，由独立适配模块调用煎药平台 HTTP API。平台保存匿名处方并进入待审核状态，后续审核与批次事务由平台后端执行。两项目的接口、字段与配置见 [后端对接说明](DECOCTION-INTEGRATION.md)。
 
-处方检查是私有的请求级流程，不读取 / 写入共享 documents，也不写入 SQLite。`prepare` 经 LangGraph 返回识别原文与待确认字段，`check` 只接收用户确认的数据，再运行规则并报告。所有登录角色可通过 knowledge:read 使用，写请求沿用 CSRF 和 Origin 校验。上传总请求限制 12 MB，文件限制 10 MB，原文 2 万字符，PDF 8 页；并发处方任务最多 2 个。OCR 与 PDFium 有全局互斥，防止非线程安全模型 / PDF 操作重入。关闭前端不会保证终止已经开始的后端模型调用。
+处方检查是私有的请求级流程，不读取 / 写入共享 documents，也不写入 SQLite。`prepare` 经 LangGraph 返回读取原文或标注为模型转录的文字及待确认字段，`check` 只接收用户确认的数据，再运行规则并报告。图片与扫描 PDF 页发送到配置的 DeepSeek 云端模型，一次完成分类、转录与提取；原生文字沿用两阶段文本流程。内部图像编码不返回前端，原始图片 / PDF 以浏览器对象 URL 对照。所有登录角色可通过 knowledge:read 使用，写请求沿用 CSRF 和 Origin 校验。上传总请求限制 12 MB，文件限制 10 MB，文字 2 万字符，PDF 8 页；并发处方任务最多 2 个。PDFium 仍有全局互斥；本地 OCR 及其初始化、预热已移除。关闭前端不会保证终止已经开始的后端模型调用。
 
 SQLite 默认位于 backend/data/bencao.db，保存用户、会话、登录尝试与共享文本。目录不进入版本库。SQL 使用参数绑定。
 

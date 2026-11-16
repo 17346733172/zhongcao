@@ -1,13 +1,13 @@
 # 处方检查 Agent
 
-更新与验收：2026-10-28。
+更新：2026-11-12。当前图片路径和验收见[多模态解析验收](MULTIMODAL-PRESCRIPTION-QA.md)，下文 2026-10-28 验收保留为历史记录。
 
 ## 使用
 
 打开 [本地应用](http://127.0.0.1:3000)，登录后点击侧栏「中药资料与处方」，切换到「处方检查」标签。与「基础资料」相互切换会保留本次处方数据，关闭整个弹窗后清除。右上角「知识库资料」仅管理共享资料，抽屉中的重复处方入口已移除。合并入口的验证见 [资料与处方入口验收](LIBRARY-TOOLS-QA.md)。
 
 1. 上传一份处方文件或图片，也可粘贴文字；没有配置 AI 时可直接手动录入。支持 TXT / MD / DOCX / PDF / PNG / JPG / WEBP，单文件 10 MB，文字 2 万字符，PDF 1–8 页。
-2. 系统识别是否为单一中药饮片处方，再提取字段。非处方、含多个版本、无法确定的输入会要求补充；不会把教学介绍当作待审核处方。核对页提供原图、识别原文和可编辑药物明细。
+2. 系统识别是否为单一中药饮片处方并提取字段；图片路径一次模型请求完成分类、转录与提取。非处方、含多个版本、无法确定的输入会要求补充。核对页提供原始图片 / PDF、读取原文或明确标注的模型转录及可编辑药物明细。
 3. 逐项核对药名、数字、小数点、单位、煎法和每剂量口径，勾选确认后检查。修改字段会清除勾选；报告可复制、修改后复查。检查另一份会立即清空上一份的数据与图片。
 
 按用户明确要求，当前应用默认「每一剂的量」。上传与核对页显示「本方剂量口径」，支持每剂量、总量、逐味设置：整方选择会随 prepare、人工核对、check、报告完整传递；后台在运行规则前统一各味口径，返回实际检查的处方快照。新增药行继承本方选择，改动不换算数值 / 单位，不根据总剂数相除。单味改成其他口径会自动切换逐味模式，后台保留各行口径和真正未知项。新处方清空旧数据并重置为明确显示的每剂量默认；仍须对照原文核对并勾选确认。
@@ -24,8 +24,11 @@
 
 ```mermaid
 flowchart TD
-  A[prepare 上传或文字] --> B[read_upload 解析 / 本地 OCR]
-  B --> C[recognize_intent 意图识别]
+  A[prepare 上传或文字] --> B[read_upload 读取文字或准备图像]
+  B -->|原生文字| C[recognize_intent 意图识别]
+  B -->|图片或扫描页| V[parse_multimodal 一次分类、转录、提取]
+  V -->|一份处方| F
+  V -->|非处方 / 多版本 / 不确定| E
   C -->|一份中药饮片处方| D[extract_prescription 提取并校验原文证据]
   C -->|非处方 / 多版本 / 不确定| E[返回补充提示]
   D --> F[confirm_data 返回待核对字段]
@@ -35,9 +38,9 @@ flowchart TD
   I --> J[build_report 分级报告]
 ```
 
-读取与提取分层：RapidOCR 在本地 CPU 处理图片和扫描 PDF，PDFium 读取文本 / 渲染页面，python-docx 按原顺序读取正文和表格。DOCX 内嵌图片不作为文字解析，并向用户提示单独上传。所有原文和药物字段均有限长边界；模型提取的药名、剂量和单位须能对应所给原文，不能补造来源。
+读取与提取分层：Pillow 规范化上传图片，PDFium 读取文本 / 渲染扫描页，python-docx 按原顺序读取正文和表格。图片与扫描页送至配置的 DeepSeek 视觉模型，本地 RapidOCR 已移除。DOCX 内嵌图片不作为文字解析，并提示单独上传。所有文字和药物字段均有限长边界；原生文本提取校验原文证据，图片字段校验与模型转录的一致性。模型转录可能与字段同时出错，不能称为独立核验原图。
 
-DeepSeek 只承担意图与结构化提取；规则检查以确认后的数据执行，不由模型决定审核通过，不自动生成替代处方。意图阶段展示输入类型说明，不提前显示模型的用药判断。
+DeepSeek 承担意图、图片转录与结构化提取；规则检查仍以人工确认后的数据执行，不由模型决定审核通过，不自动生成替代处方。意图阶段展示输入类型说明，不提前显示模型的用药判断。
 
 ## 已接入规则与边界
 
@@ -56,13 +59,13 @@ DeepSeek 只承担意图与结构化提取；规则检查以确认后的数据�
 - [《医院中药饮片管理规范（2026版）》官方转载](https://wsjk.ln.gov.cn/wsjk/zfxxgk/zc/gjjwj/2026042809553322479/index.shtml)：审核与管理范围依据。
 - [香港卫生署：安全使用含乌头类生物碱中药材](https://www.cmro.gov.hk/html/b5/useful_information/public_health/exhibit_boards/The_Safe_Use_of_Chinese_Medicines_Containing_Aconitum_Alkaloids.html)、[生半夏和制半夏](https://www.cmro.gov.hk/html/b5/useful_information/public_health/publication/AdverseEvents7.html)：相关用药复核提示。
 - 项目登录后可下载的《中药基础知识（详解版）》：有限配伍、参考剂量和特殊煎法依据；不是完整现行药典数据库。
-- [LangGraph Graph API 官方文档](https://docs.langchain.com/oss/python/langgraph/graph-api)、[RapidOCR 官方仓库](https://github.com/RapidAI/RapidOCR)、[PDFium Python API](https://pypdfium2.readthedocs.io/en/stable/python_api.html)：实现接口依据。
+- [LangGraph Graph API 官方文档](https://docs.langchain.com/oss/python/langgraph/graph-api)、[DeepSeek 视觉输入](https://api-docs.deepseek.com/guides/vision/)、[PDFium Python API](https://pypdfium2.readthedocs.io/en/stable/python_api.html)：实现接口依据。
 
 所有接口需登录，写接口沿用 CSRF / Origin 校验；三种角色均能使用个人处方流程。处方文件、结果不写入共享 documents 或 SQLite，不启用持久检查点；该流程禁用远程 tracing。请求解析可能使用临时缓冲，处理后关闭文件，未建立原文件库或报告历史。
 
-识别文字发送给既有 DeepSeek 服务；原图片不发送到图片云服务。基础遮盖会处理明显姓名 / 电话 / 证件等，但不保证完整匿名化，请先脱敏。关闭弹窗会终止浏览器等待，已经发出的后端调用可能继续完成。
+图片和扫描页图像会发送给既有 DeepSeek 云端服务；用户已明确授权本轮切换。本机不自动遮盖图像中的身份信息，请先自行脱敏。文字路径保留明显姓名 / 电话 / 证件等基础遮盖，但不保证完整匿名化。关闭弹窗会终止浏览器等待，已经发出的后端调用可能继续完成。
 
-## 验收
+## 历史验收（2026-10-28）
 
 - 依赖安装与 `pip check` 通过，NumPy 固定为同时支持 Python 3.11+ 与本机 Python 3.14 的 2.3.5；本轮未逐一运行其他 Python / 操作系统版本。
 - `pnpm typecheck`、前端 22 项回归、后端 72 项回归通过，其中处方新增 19 项。覆盖 LangGraph 意图分支、确认边界、权限、上传限制、Word 顺序、扫描 PDF 渲染、原文证据、负数剂量、重复、未知药名、单位和参考剂量边界。

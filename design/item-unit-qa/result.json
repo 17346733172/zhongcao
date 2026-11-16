@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "item_per_dose": 3,
+      "total_items": 15,
+      "piece_per_dose": 3,
+      "total_pieces": 15,
+      "measured_item_grams": 6,
+      "measured_piece_grams": 4.5,
+      "herb_mass_g": 97.5
+    },
+    {
+      "width": 390,
+      "item_per_dose": 3,
+      "total_items": 15,
+      "piece_per_dose": 3,
+      "total_pieces": 15,
+      "measured_item_grams": 6,
+      "measured_piece_grams": 4.5,
+      "herb_mass_g": 97.5
+    },
+    {
+      "width": 320,
+      "item_per_dose": 3,
+      "total_items": 15,
+      "piece_per_dose": 3,
+      "total_pieces": 15,
+      "measured_item_grams": 6,
+      "measured_piece_grams": 4.5,
+      "herb_mass_g": 97.5
+    }
+  ],
+  "pageErrors": [],
+  "manualItemEntryAndUnitReset": true,
+  "environment": "Isolated SQLite and PostgreSQL; real Next.js proxy, both FastAPI applications and platform UI; no mocked API responses or production prescription writes."
+}
