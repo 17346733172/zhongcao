@@ -1,5 +1,43 @@
 # 项目架构与目录
 
+2026-11-18（统一语义调度，最新）：`/api/chat` 在配置模型时无关键词门槛地进入MCP工具选择，移除MODULE_QUESTION/PLANNER_QUESTION及默认herbal_reference回退。只有选择知识工具才执行原RAG，知识/规则问答参数绑定当前原问题与完整历史。`commands.EXECUTION_SUBJECT` 仅用于独立写入数量授权，不再路由读取。无模型时只保留明确规则运行查询，其他Agent请求503；选择/执行失败不改为知识检索。`test_execution/progress` 经鉴权GET `/api/data-center/recent-batches` 读取批次，最多核验1000条完整分页后按创建时间倒序选取，保留单独的BatchProgress工序投影，不扩大常规快照；实际处理秒数、配置秒数与等待原因由formatter直接展示。规则不授予模型额外写入权限。
+
+2026-11-18（统一页面滚动）：`page-scroll.css` 统一主栏纵向滚动，聊天与总览不再建立第二个纵向滚动容器。`KnowledgeWorkspace.mainScrollRef` 负责新回答定位，按主页面保存/恢复scrollTop，ResizeObserver测量标题和输入区高度，为正文/图表定位留白。固定导航和输入控件不参与该留白，关闭导航/弹窗使用preventScroll恢复焦点，避免改变阅读位置。弹窗与导航打开时main为inert并锁定背景滚动；业务请求边界不变。
+
+2026-11-18（Agent回答展示）：`mcp_tools/presentation.py` 从已校验的成功结果派生调用摘要、实际耗时、数据时间与图表，`agent.finish` 保留最新同名图表并避免修改原知识回答缓存。`request_decision` 只透传合法的上游Token计数，按请求累计并标明 `scope=tool_selection`，不包含知识生成用量。前端 `answer-header.tsx` 展示元信息，`answer-charts.tsx` 校验并绘制图表及可展开数据表，`conversation-view.tsx` 继续负责正文、引用和复制，样式集中于 `agent-answer.css`；旧回答缺失新字段时兼容展示，不补造记录。
+
+2026-11-18（任务口语修复）：聊天路由覆盖“任务/作业”，送至同一 MCP 工具选择流程；`mcp_tools/commands.py` 统一全角/空白规范化和明确创建数量提取，供路由与写入授权使用。任务与仿真批次语义同时写入 Agent 提示与工具描述，避免“下3个测试任务”误入药材检索；实际数量仍与当前指令核对，不从模型或历史猜测，不自动开始仿真。
+
+2026-11-18（MCP，最新）：`app/mcp_tools/` 使用官方 MCP SDK 注册五模块工具，所有业务经现有鉴权 HTTP API 执行。页面请求在内存 MCP ClientSession 中调用，转发当前会话；外部 `python -m app.mcp_tools` 使用 stdio 和独立账号环境变量登录同一 API。`/api/knowledge/query` 复用原知识库流程，`/api/data-center/question` 复用规则运行问答，避免回调 `/api/chat` 递归。模块问题由 DeepSeek Tool Calls 最多选择3步，写入须核对当前用户明确指令，保存先读取可写版本，成功写入后停止；运行回答由工具数据格式化，不采用模型生成的数字。普通 AI 兼容路径独立保留。详见 [MCP 工具](MCP-TOOLS.md)。此条替代此前聊天不执行任何仿真写入的范围，不涉及物理设备控制。
+
+2026-11-18（默认用时真实保存）：当前仿真服务器已部署接收端 GET / POST 默认用时接口，本草沿用既有 `device_defaults.py`、数据层和编辑页即可真实保存。服务器补丁保留内存缓存、检查点及拆分状态表，在既有状态元信息中保存配置和独立修订号，变更事件同事务提交；已有批次步骤不重算。独立 PostgreSQL 63 项及本草相关 17 项回归通过，详见[真实保存验收](DEVICE-DEFAULTS-ENABLE-QA.md)。此条替代下文服务器缺少修改接口的历史状态。
+
+2026-11-17（默认用时读取恢复，最新）：`device_defaults.py` 对 GET 传输失败最多重试一次，整轮限定 40 秒；确认旧平台后优先使用共享快照设备和原 fetched_at，过期快照在独立读取也失败时显式标为 stale / error。404 能力结果仅缓存 60 秒，`refresh=true` 绕过缓存重新探测；未知能力的网络失败不判成旧版。前端仅在读失败 / 过期时每 15 秒重新读取，保持草稿和时间语义，不自动重复写入。
+
+探测未成功但共享值有效时，返回 nullable supported 和 capability_pending，保留值并单独说明能力待确认，自动再次探测；不会把网络失败转换成永久只读结论。
+
+2026-11-17（测试方案默认用时，最新）：`test-plans-page.tsx` 复用设备分类卡片元信息，`use-device-defaults.ts` 管理读取、草稿、版本、保存回执及关闭锁定，API 集中于 `device-defaults-api.ts`，样式集中 `test-plans.css`。后端 `device_defaults.py` 提供独立的读取 / 保存适配，复用 DECOCTION 认证、代理与单次写请求；旧平台回退读取 dashboard 默认值并返回 supported=false，不在本草存储覆盖值。`integrations/simulator-device-defaults.patch` 是接收端待部署补丁，未改动关联平台仓库；无新增依赖或环境变量。
+
+2026-11-17（已完成历史批次，最新）：`GET /api/data-center/completed-batches` 复用 `read_simulation`、DECOCTION 配置与 `knowledge:read` 鉴权，固定向平台 `/batches` 传递 `status=completed` 及分页，校验状态与分页并附成功读取时间，不扩大活跃快照。`use-completed-batches.ts` 在历史标签挂载时读取、每轮结束后 15 秒更新，离开时取消；同页失败保留数据，翻页失败不将旧页当作新页。`CompletedBatchRecords` 展示列表与累计统计各自时间；标签数量消费现有共享快照，无新增依赖或环境变量。
+
+2026-11-17（实时批次记录，最新）：新增 `running-batch-records.tsx` 消费共享 `DataCenterSnapshotReader`，仅派生 `status=running` 的批次，使用快照已有的 `prescription_id` 展示关联处方编号，不额外读取处方明细。`TestExecutionPage` 在实时记录和测试记录标签复用该组件，刷新继续调用原 reader；原空表仅保留历史批次部分。样式集中于 `test-execution.css`，无新增后端、轮询、依赖或环境变量。此条替代下文测试记录占位的说明。
+
+2026-11-17（任务区域 02 设备，最新）：将原 `active-pots-task.tsx` 统一为 `active-devices-task.tsx`，`ActiveDevicesTask` 用 `group=pots / other` 分别展示使用中的煎药锅和非煎药锅设备；`TestExecutionPage` 组装区域 01 / 02，删除区域 02 占位。两区消费同一个 `DataCenterSnapshotReader`，保留批次 / 报警关联、刷新和状态反馈，无新增轮询、接口、依赖或环境变量。此条替代下文组件名称和区域 02 占位的说明。
+
+2026-11-17（任务区域 01 药锅，最新）：`active-pots-task.tsx` 消费工作区传入的共享 `DataCenterSnapshotReader`，筛选 `kind=pot / status=busy` 并按批次 ID 关联同一快照的工序与报警；不写入平台或建立独立请求。`TestExecutionPage` 组装区域 01 与原区域 02，占位记录保留。工作区在运行总览、数据中心或测试执行打开时启用唯一快照 reader；从 AI Agent 打开测试执行同样启用，关闭后按现有页面需求停止轮询。样式集中于 `test-execution.css`，无新增依赖、后端接口或环境变量。此条替代下文测试执行仅展示占位的说明。
+
+2026-11-17（数据中心移除重复总览，最新）：`DataCenterDialog` 删除运行总览导入、第四个标签和条件渲染；`DataCenterTarget.tab` 恢复 overview / devices / prescriptions。独立总览主页面与共享快照 reader 保留，不改变原三项索引和聊天定位。 此条替代下文数据中心保留四标签的历史说明。
+
+2026-11-17（运行总览主页面，最新）：`KnowledgeWorkspace.mainPage` 管理 operations / ai-agent，默认 operations；运行总览直接渲染现有 `OperationsOverview`，问答保持挂载并用 hidden 切换，保留会话、草稿及阅读位置。`use-data-center-snapshot.ts` 从原数据中心抽出快照读取、刷新、取消和轮询，工作区在总览可见或数据中心打开时启用；同一 reader 传给数据中心，避免重复轮询。重复渲染的总览标题由 useId 隔离。此条替代此前默认 AI Agent 和总览快捷入口打开弹窗的说明。
+
+2026-11-16（运行总览快捷入口，最新）：`DataCenterTarget.tab` 增加 `operations`，侧栏经 `KnowledgeWorkspace.openDataCenter` 复用 `DataCenterDialog` 并初始化到第四个标签。标签变化回传工作区，同步侧栏高亮；共用原快照和刷新。 此条替代下文侧栏移除运行总览的历史说明。
+
+2026-11-16（AI Agent 入口，最新）：`KnowledgeWorkspace.openModule` 将 `ai-agent` 映射到现有主区，其他模块继续使用 `WorkspaceModuleDialog`。基础资料、数据中心和模块弹窗均关闭时，侧栏选中 AI Agent；不重新挂载问答组件、不清除会话或草稿。`Sidebar` 对该入口使用 `aria-current="page" / aria-controls="main-content"`，仅其他模块保留弹窗语义。
+
+2026-11-16（资料入口拆分，最新）：`LibraryToolsDialog` 只管理基础资料容器和键盘焦点，删除资料 / 处方标签、切换状态及 `PrescriptionDialog` 嵌入。侧栏与弹窗改名「中药基础资料」。`PrescriptionDialog` 仅保留独立弹窗模式，由输入框按钮打开；资料读取、章节定位和下载继续复用 `ReferenceDocumentDialog / SourceDialog`。
+
+2026-11-16：`QuestionComposer` 的附件入口改为所有登录用户可用的「处方检查」，由 `KnowledgeWorkspace` 打开现有独立 `PrescriptionDialog`，不依赖共享资料加载。删除 `UploadPanel`、共享资料前端上传 / 移除逻辑与抽屉状态 / 样式；资料读取继续用于问答，后端 API 与已保存资料保留。独立弹窗关闭后恢复新按钮焦点。
+
 2026-11-14（仿真控制接通，最新）：新增`simulation_operations.py`，提供独立的`/api/simulation/status`及`scenarios / start / pause`写接口。复用DECOCTION配置、登录与CSRF，不改变数据中心只读接口；控制状态直接读取轻量dashboard，不依赖旧快照。写请求单次发送、校验回执、进程内串行防重，写入后通知数据中心刷新。前端`simulation-api.ts`负责协议，`use-simulation-controls.ts`负责请求、竞态隔离与反馈，弹窗负责展示。
 
 2026-11-14（时间显示，最新）：按用户反馈移除新建弹窗的整个实时时钟区域，清理对应定时器、监听、状态与样式。仅保留现有平台快照的底部「数据读取时间」，快照读取和状态反馈继续复用原流程；没有后端或业务控制变更。
@@ -39,8 +77,8 @@
 | frontend/src/components/user-management.tsx | 创建账号、角色、停用和重置密码 |
 | frontend/src/components/account-settings.tsx | 当前账号信息与改密 |
 | frontend/src/components/knowledge-workspace.tsx | 资料加载、问答模式 / 请求取消与文件状态编排 |
-| frontend/src/components/question-composer.tsx | 多行输入、真实回答模式、附件和可访问发送按钮 |
-| frontend/src/components/sidebar.tsx、upload-panel.tsx | 导航、账号入口与按权限展示资料操作 |
+| frontend/src/components/question-composer.tsx | 多行输入、处方检查快捷入口和可访问发送按钮 |
+| frontend/src/components/sidebar.tsx | 导航、账号与资料 / 处方工具入口 |
 | frontend/src/components/conversation-view.tsx、source-dialog.tsx | 回答、按 Message.showSources 展示引用和完整原文；该标志记录发送时的原文开关 |
 | frontend/src/components/reference-document-dialog.tsx、document-content.tsx | 正式基础资料加载、重试和章节 / 表格阅读 |
 | frontend/src/lib/reference-document.ts | 内置资料元信息与只读 API 请求 |

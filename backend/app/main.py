@@ -16,10 +16,12 @@ from .rag import KnowledgeRetriever
 from .prescriptions.routes import register_prescription_routes
 from .data_center import register_data_center_routes
 from .simulation_operations import register_simulation_routes
+from .device_defaults import register_device_default_routes
 from .data_center_chat import answer_from_data_center, detect_intent
 from .reference_document import download_reference_document, load_reference_document
 from .schemas import ChatQuestion, ChangePassword, CreateDocument, CreateUser, Login, ResetPassword, UpdateUser
 from .security import PERMISSIONS, hash_password, public_user, token_hash, verify_password
+from .mcp_tools.agent import answer_with_mcp
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -77,7 +79,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             # Bound request bytes even for chunked requests before JSON parsing.
             maximum = (12 * 1024 * 1024 if request.url.path in {"/api/documents", "/api/prescriptions/prepare"}
                        else 128 * 1024 if request.url.path in {"/api/prescriptions/check", "/api/prescriptions/simulation"}
-                       else 64 * 1024 if request.url.path == "/api/chat" else 16 * 1024)
+                       else 64 * 1024 if request.url.path in {"/api/chat", "/api/knowledge/query", "/api/data-center/question"} else 16 * 1024)
             size = 0
             chunks = []
             async for chunk in request.stream():
@@ -99,8 +101,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return JSONResponse({"detail": "上传数据无效，请返回核对页检查药材和剂数后重新生成报告。"}, status_code=422)
         if request.url.path.startswith("/api/prescriptions/"):
             return JSONResponse({"detail": "请检查处方字段、文件、字数和数值范围，并确认已核对原文后再检查。"}, status_code=422)
-        if request.url.path == "/api/chat":
+        if request.url.path in {"/api/chat", "/api/knowledge/query", "/api/data-center/question"}:
             return JSONResponse({"detail": "问题需为 1–2000 字；history 最多 5 轮，每轮 question 1–500 字、answer 最多 1000 字，且不接受其他字段。"}, status_code=422)
+        if request.url.path.startswith("/api/simulation/device-defaults"):
+            return JSONResponse({"detail": "请选择支持的设备类型，用时需为 0.1–120 分钟（6–7200 秒），并重新读取当前版本后保存。"}, status_code=422)
         if request.url.path.startswith("/api/simulation/"):
             return JSONResponse({"detail": "演示批次数量需为 1–50 之间的整数。"}, status_code=422)
         if request.url.path.startswith("/api/data-center/"):
@@ -243,13 +247,31 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return {"provider": "DeepSeek", "configured": bool(settings.deepseek_api_key), "model": settings.deepseek_model}
 
     @app.post("/api/chat")
-    async def chat(payload: ChatQuestion, response: Response, user=Depends(require("knowledge:read"))):
+    async def chat(payload: ChatQuestion, request: Request, response: Response, user=Depends(require("knowledge:read"))):
+        if not payload.use_knowledge:
+            return await knowledge_query(payload, response, user)
+        # Every configured Agent request gets semantic tool selection. Unmatched
+        # operational wording must never silently become a medical retrieval query.
+        if not settings.deepseek_api_key:
+            intent = detect_intent(payload.question, payload.history)
+            if intent:
+                return await answer_with_mcp(app, request, payload, direct=("data_center", {
+                    "action": "question", "question": payload.question,
+                    "history": [t.model_dump() for t in payload.history]}), response=response)
+        return await answer_with_mcp(app, request, payload, response=response)
+
+    @app.post("/api/data-center/question", tags=["数据中心"])
+    async def data_center_question(payload: ChatQuestion, user=Depends(require("knowledge:read"))):
+        intent = detect_intent(payload.question, payload.history)
+        if not intent:
+            raise HTTPException(422, "请提供设备、锅号、报警或运行概况问题。")
+        return await answer_from_data_center(intent, app.state.data_center_reader)
+
+    @app.post("/api/knowledge/query", tags=["中药基础资料"])
+    async def knowledge_query(payload: ChatQuestion, response: Response, user=Depends(require("knowledge:read"))):
         started = time.perf_counter()
         timings = {}
         try:
-            intent = detect_intent(payload.question, payload.history) if payload.use_knowledge else None
-            if intent:
-                return await answer_from_data_center(intent, app.state.data_center_reader)
             # Operational figures are not medical source material or LLM context.
             boundary = max((i for i, turn in enumerate(payload.history) if turn.channel == "data_center"), default=-1)
             history = [turn.model_dump(exclude={"channel"}) for turn in payload.history[boundary + 1:]]
@@ -303,6 +325,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_prescription_routes(app, require, settings)
     register_data_center_routes(app, require, settings)
     register_simulation_routes(app, require, settings)
+    register_device_default_routes(app, require, settings)
     return app
 
 

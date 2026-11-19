@@ -33,6 +33,8 @@ export type Prescription = {
   review: { approved: boolean; operator: string; comment: string; real_time?: string } | null; note: string;
 };
 export type PrescriptionPage = { items: Prescription[]; total: number; offset: number; limit: number };
+export type CompletedBatchPage = { items: Batch[]; total: number; offset: number; limit: number; fetched_at: string };
+export const readCompletedBatches = (offset: number, signal: AbortSignal) => api<CompletedBatchPage>(`/data-center/completed-batches?offset=${offset}&limit=20`, { signal });
 export const readSnapshot = (signal: AbortSignal, refresh = false) => api<SnapshotState>(`/data-center/snapshot${refresh ? "?refresh=true" : ""}`, { signal });
 export const readBatch = (id: string, signal: AbortSignal) => api<Batch>(`/data-center/batches/${encodeURIComponent(id)}`, { signal });
 export const readPrescriptions = (status: string, offset: number, signal: AbortSignal) => api<PrescriptionPage>(`/data-center/prescriptions?offset=${offset}&limit=20${status ? `&status=${encodeURIComponent(status)}` : ""}`, { signal });

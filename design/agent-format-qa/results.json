@@ -1,0 +1,131 @@
+{
+  "passed": 15,
+  "results": [
+    {
+      "width": 1440,
+      "question": "查看运行总览",
+      "toolCount": 1,
+      "chartCount": 1,
+      "realUsage": {
+        "inputTokens": 5117,
+        "outputTokens": 251,
+        "scope": "tool_selection"
+      }
+    },
+    {
+      "width": 1440,
+      "question": "把包装默认用时改成2分钟",
+      "toolCount": 2,
+      "chartCount": 1,
+      "realUsage": {
+        "inputTokens": 5333,
+        "outputTokens": 152,
+        "scope": "tool_selection"
+      }
+    },
+    {
+      "width": 1440,
+      "question": "陈皮的功效",
+      "toolCount": 1,
+      "chartCount": 0,
+      "realUsage": null
+    },
+    {
+      "width": 1440,
+      "question": "旧格式回答兼容",
+      "toolCount": 0,
+      "chartCount": 0,
+      "realUsage": null
+    },
+    {
+      "width": 1440,
+      "question": "失败反馈验收",
+      "draftPreserved": true,
+      "noFalseSuccess": true
+    },
+    {
+      "width": 390,
+      "question": "查看运行总览",
+      "toolCount": 1,
+      "chartCount": 1,
+      "realUsage": {
+        "inputTokens": 2422,
+        "outputTokens": 22,
+        "scope": "tool_selection"
+      }
+    },
+    {
+      "width": 390,
+      "question": "把包装默认用时改成2分钟",
+      "toolCount": 1,
+      "chartCount": 1,
+      "realUsage": {
+        "inputTokens": 5337,
+        "outputTokens": 120,
+        "scope": "tool_selection"
+      }
+    },
+    {
+      "width": 390,
+      "question": "陈皮的功效",
+      "toolCount": 1,
+      "chartCount": 0,
+      "realUsage": null
+    },
+    {
+      "width": 390,
+      "question": "旧格式回答兼容",
+      "toolCount": 0,
+      "chartCount": 0,
+      "realUsage": null
+    },
+    {
+      "width": 390,
+      "question": "失败反馈验收",
+      "draftPreserved": true,
+      "noFalseSuccess": true
+    },
+    {
+      "width": 320,
+      "question": "查看运行总览",
+      "toolCount": 1,
+      "chartCount": 1,
+      "realUsage": {
+        "inputTokens": 2422,
+        "outputTokens": 44,
+        "scope": "tool_selection"
+      }
+    },
+    {
+      "width": 320,
+      "question": "把包装默认用时改成2分钟",
+      "toolCount": 1,
+      "chartCount": 1,
+      "realUsage": {
+        "inputTokens": 5335,
+        "outputTokens": 101,
+        "scope": "tool_selection"
+      }
+    },
+    {
+      "width": 320,
+      "question": "陈皮的功效",
+      "toolCount": 1,
+      "chartCount": 0,
+      "realUsage": null
+    },
+    {
+      "width": 320,
+      "question": "旧格式回答兼容",
+      "toolCount": 0,
+      "chartCount": 0,
+      "realUsage": null
+    },
+    {
+      "width": 320,
+      "question": "失败反馈验收",
+      "draftPreserved": true,
+      "noFalseSuccess": true
+    }
+  ]
+}

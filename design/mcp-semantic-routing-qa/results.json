@@ -1,0 +1,198 @@
+{
+  "passed": 11,
+  "reports": [
+    {
+      "width": 1440,
+      "question": "帮我看看最近几个方子用时 都卡在哪一步？",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "progress",
+          "status": "success",
+          "summary": "本页 3 条 · 共 3 条",
+          "durationMs": 6.8,
+          "stale": false,
+          "fetchedAt": "2026-11-18T12:09:25.301527Z"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "这几张单怎么还没好",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "progress",
+          "status": "success",
+          "summary": "本页 3 条 · 共 3 条",
+          "durationMs": 3.9,
+          "stale": false,
+          "fetchedAt": "2026-11-18T12:09:26.671568Z"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "最近的处方做到哪了",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "progress",
+          "status": "success",
+          "summary": "本页 3 条 · 共 3 条",
+          "durationMs": 4.4,
+          "stale": false,
+          "fetchedAt": "2026-11-18T12:09:28.673833Z"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "下3个测试方子",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "create",
+          "status": "success",
+          "summary": "已确认生成 3 个批次",
+          "durationMs": 101.8,
+          "stale": false,
+          "fetchedAt": "2026-11-18T12:09:30.908022Z"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "我现在工作有几个锅",
+      "tools": [
+        {
+          "name": "data_center",
+          "title": "数据中心",
+          "action": "question",
+          "status": "success",
+          "summary": "已读取",
+          "durationMs": 6.6,
+          "stale": false
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "把包装默认用时改成2分钟",
+      "tools": [
+        {
+          "name": "test_plans",
+          "title": "测试方案",
+          "action": "read",
+          "status": "success",
+          "summary": "已读取 13 类设备 · 修订号 2",
+          "durationMs": 8.3,
+          "stale": false,
+          "fetchedAt": "2026-11-18T12:09:34.888945Z"
+        },
+        {
+          "name": "test_plans",
+          "title": "测试方案",
+          "action": "save",
+          "status": "success",
+          "summary": "已保存 包装 · 2 分钟 · 修订号 3",
+          "durationMs": 5,
+          "stale": false,
+          "fetchedAt": "2026-11-18T12:09:36.218650Z"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "陈皮的功效",
+      "tools": [
+        {
+          "name": "herbal_reference",
+          "title": "中药基础资料",
+          "action": "ask",
+          "status": "success",
+          "summary": "1 份引用资料",
+          "durationMs": 12.3,
+          "stale": false
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 390,
+      "question": "帮我看看最近几个方子用时 都卡在哪一步？",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "progress",
+          "status": "success",
+          "summary": "本页 3 条 · 共 3 条",
+          "durationMs": 3.8,
+          "stale": false,
+          "fetchedAt": "2026-11-18T12:09:42.001840Z"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 390,
+      "question": "陈皮的功效",
+      "tools": [
+        {
+          "name": "herbal_reference",
+          "title": "中药基础资料",
+          "action": "ask",
+          "status": "success",
+          "summary": "1 份引用资料",
+          "durationMs": 10,
+          "stale": false
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 320,
+      "question": "帮我看看最近几个方子用时 都卡在哪一步？",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "progress",
+          "status": "success",
+          "summary": "本页 3 条 · 共 3 条",
+          "durationMs": 5,
+          "stale": false,
+          "fetchedAt": "2026-11-18T12:09:47.086180Z"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 320,
+      "question": "陈皮的功效",
+      "tools": [
+        {
+          "name": "herbal_reference",
+          "title": "中药基础资料",
+          "action": "ask",
+          "status": "success",
+          "summary": "1 份引用资料",
+          "durationMs": 7.3,
+          "stale": false
+        }
+      ],
+      "status": 200
+    }
+  ]
+}

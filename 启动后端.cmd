@@ -11,7 +11,7 @@ if not defined BENCAO_PYTHON goto python_missing
 if errorlevel 1 goto failed
 :ready
 set "BENCAO_PYTHON=%CD%\.venv\Scripts\python.exe"
-"%BENCAO_PYTHON%" -c "from importlib.metadata import version; import fastapi,uvicorn,argon2,dotenv; assert version('fastapi') == '0.159.1'; assert version('uvicorn') == '0.54.0'; assert version('argon2-cffi') == '25.1.0'; assert version('python-dotenv') == '1.2.1'; assert version('torch') == '2.15.0'; assert version('transformers') == '4.57.6'; assert version('faiss-cpu') == '1.15.1'" >nul 2>nul
+"%BENCAO_PYTHON%" -c "from importlib.metadata import version; import fastapi,uvicorn,argon2,dotenv; assert version('fastapi') == '0.159.1'; assert version('uvicorn') == '0.54.0'; assert version('argon2-cffi') == '25.1.0'; assert version('python-dotenv') == '1.2.1'; assert version('torch') == '2.15.0'; assert version('transformers') == '4.57.6'; assert version('faiss-cpu') == '1.15.1'; assert version('mcp') == '1.30.0'" >nul 2>nul
 if not errorlevel 1 goto dependencies_ready
 "%BENCAO_PYTHON%" -m pip install -r requirements.txt
 if errorlevel 1 goto failed

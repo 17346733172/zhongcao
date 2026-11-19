@@ -50,7 +50,7 @@ async function login(page, username, secret = password) {
   await page.getByRole('button', { name: '登录', exact: true }).click();
   await page.waitForURL(origin + '/');
   await page.getByRole('heading', { name: '中药基础资料', exact: true }).waitFor();
-  await page.getByRole('button', { name: '刷新共享资料', includeHidden: true }).waitFor({ state: 'attached' });
+  await page.getByRole('button', { name: '处方检查', exact: true }).waitFor();
   await page.waitForFunction(() => !document.querySelector('.document-feedback'));
 }
 function observe(page) { page.on('pageerror', error => errors.push(error.message)); }
@@ -92,22 +92,21 @@ try {
   const editor = await editorContext.newPage(); observe(editor);
   await login(editor, 'qa_editor');
   assert.equal(await editor.getByRole('link', { name: '账号管理', exact: true }).count(), 0);
-  await editor.getByLabel('选择知识库资料').setInputFiles({ name: '权限验收.txt', mimeType: 'text/plain', buffer: Buffer.from('青蓝书签：这是一段用于核对账号权限和共享持久化的测试原文。') });
-  await editor.getByText('已保存 · 共享', { exact: true }).waitFor();
+  const storedDocument = await editor.evaluate(async () => {
+    const response = await fetch('/api/documents', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Protection': '1' }, body: JSON.stringify({ name: '权限验收.txt', content: '青蓝书签：这是一段用于核对账号权限和共享持久化的测试原文。' }) });
+    if (!response.ok) throw new Error('编辑员资料 API 写入失败');
+    return response.json();
+  });
   await editor.reload();
-  await editor.getByRole('button', { name: '权限验收.txt', exact: true }).waitFor();
-  await editor.getByRole('button', { name: '权限验收.txt', exact: true }).click();
-  await editor.getByText('青蓝书签：这是一段用于核对账号权限和共享持久化的测试原文。', { exact: true }).waitFor();
-  await editor.keyboard.press('Escape');
-  await editor.getByRole('textbox', { name: '向中药资料提问' }).fill('青蓝书签');
-  await editor.getByRole('button', { name: '发送', exact: true }).click();
-  await editor.getByText('未调用 AI', { exact: false }).first().waitFor();
+  assert.equal(await editor.evaluate(async id => (await (await fetch('/api/documents')).json()).some(doc => doc.id === id), storedDocument.id), true);
+  await editor.getByRole('button', { name: '处方检查', exact: true }).waitFor();
   await editor.screenshot({ path: path.join(root, 'design/editor-workspace.png'), fullPage: true });
-  pass('编辑员上传文本、刷新持久化、核对原文与摘录问答');
+  pass('编辑员仍可调用资料 API，保存后刷新可读；页面入口改为处方检查');
   const viewerContext = await browser.newContext({ viewport: { width: 1487, height: 1058 } });
   const viewer = await viewerContext.newPage(); observe(viewer);
   await login(viewer, 'qa_viewer');
-  await viewer.getByRole('button', { name: '权限验收.txt', exact: true }).waitFor();
+  await viewer.getByRole('button', { name: '处方检查', exact: true }).waitFor();
+  assert.equal(await viewer.evaluate(async id => (await (await fetch('/api/documents')).json()).some(doc => doc.id === id), storedDocument.id), true);
   assert.equal(await viewer.getByLabel('选择知识库资料').count(), 0);
   assert.equal(await viewer.getByRole('button', { name: '移除权限验收.txt', exact: true }).count(), 0);
   assert.equal(await viewer.getByRole('link', { name: '账号管理', exact: true }).count(), 0);
@@ -120,7 +119,7 @@ try {
   });
   assert.deepEqual(statuses, [403, 403]);
   await viewer.goto(origin + '/admin'); await viewer.waitForURL(origin + '/');
-  await viewer.getByText('当前为普通用户', { exact: false }).waitFor();
+  await viewer.getByRole('button', { name: '处方检查', exact: true }).waitFor();
   await viewer.screenshot({ path: path.join(root, 'design/viewer-workspace.png'), fullPage: true });
   pass('普通用户可读共享资料，不能绕过 UI 写资料或管理账号');
   const editorRow = admin.locator('.user-row').filter({ hasText: 'qa_editor' });
@@ -131,10 +130,8 @@ try {
   await editorRow.getByRole('button', { name: '启用账号', exact: true }).click();
   await editorRow.getByText('正常', { exact: true }).waitFor();
   await login(editor, 'qa_editor');
-  await editor.getByRole('button', { name: '移除权限验收.txt', exact: true }).click();
-  await editor.getByRole('button', { name: '权限验收.txt', exact: true }).waitFor({ state: 'detached' });
-  await viewer.getByRole('button', { name: '刷新共享资料', exact: true }).click();
-  await viewer.getByRole('button', { name: '权限验收.txt', exact: true }).waitFor({ state: 'detached' });
+  assert.equal(await editor.evaluate(async id => (await fetch(`/api/documents/${id}`, { method: 'DELETE', headers: { 'X-CSRF-Protection': '1' } })).status, storedDocument.id), 204);
+  assert.equal(await viewer.evaluate(async id => (await (await fetch('/api/documents')).json()).some(doc => doc.id === id), storedDocument.id), false);
   pass('启用账号后重新登录，资料移除对其他用户可见');
   await viewer.getByRole('link', { name: /验收普通用户/ }).click();
   await viewer.getByLabel('原密码', { exact: true }).fill(password);
@@ -153,8 +150,8 @@ try {
   await mobile.screenshot({ path: path.join(root, 'design/login-mobile.png'), fullPage: true });
   await login(mobile, 'qa_viewer', replacement);
   await noOverflow(mobile, '手机知识库');
-  await mobile.getByRole('button', { name: '查看资料', exact: true }).click();
-  await mobile.getByText('当前为普通用户', { exact: false }).waitFor();
+  await mobile.getByRole('button', { name: '处方检查', exact: true }).click();
+  await mobile.getByRole('dialog', { name: '处方检查', exact: true }).waitFor();
   await mobile.keyboard.press('Escape');
   await mobile.getByRole('button', { name: '打开导航', exact: true }).click();
   await mobile.getByRole('button', { name: '退出登录', exact: true }).waitFor({ state: 'visible' });
@@ -172,7 +169,7 @@ try {
   await mobileAdmin.screenshot({ path: path.join(root, 'design/admin-mobile.png'), fullPage: true });
   await mobileAdmin.setViewportSize({ width: 768, height: 1024 });
   await noOverflow(mobileAdmin, '平板账号管理');
-  pass('390px 手机登录、只读资料、导航抽屉、管理员布局及 768px 平板布局');
+  pass('390px 手机登录、处方检查、导航抽屉、管理员布局及 768px 平板布局');
   assert.deepEqual(errors, [], '浏览器未处理异常');
   pass('无浏览器未处理异常');
   await writeFile(path.join(root, 'design/auth-qa-result.json'), JSON.stringify({ date: '2026-10-27', status: 'passed', desktop: '1487x1058', mobile: '390x844', tablet: '768x1024', flows: 9, pageErrors: errors }, null, 2));

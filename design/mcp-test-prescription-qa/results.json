@@ -1,0 +1,106 @@
+{
+  "passed": 6,
+  "reports": [
+    {
+      "width": 1440,
+      "question": "下3个测试方子",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "create",
+          "status": "success",
+          "summary": "已确认生成 3 个批次",
+          "durationMs": 117.8,
+          "stale": false,
+          "fetchedAt": "2026-11-18T11:47:53.398520Z"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "帮我下三份测试处方",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "create",
+          "status": "success",
+          "summary": "已确认生成 3 个批次",
+          "durationMs": 14.6,
+          "stale": false,
+          "fetchedAt": "2026-11-18T11:47:55.031195Z"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "下发3张模拟药方",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "create",
+          "status": "success",
+          "summary": "已确认生成 3 个批次",
+          "durationMs": 6.4,
+          "stale": false,
+          "fetchedAt": "2026-11-18T11:47:56.209406Z"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "下3个方子",
+      "tools": [
+        {
+          "name": "herbal_reference",
+          "title": "中药基础资料",
+          "action": "ask",
+          "status": "success",
+          "summary": "1 份引用资料",
+          "durationMs": 32.7,
+          "stale": false
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 390,
+      "question": "下3个测试方子",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "create",
+          "status": "success",
+          "summary": "已确认生成 3 个批次",
+          "durationMs": 6.3,
+          "stale": false,
+          "fetchedAt": "2026-11-18T11:48:02.642662Z"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 320,
+      "question": "下3个测试方子",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "create",
+          "status": "success",
+          "summary": "已确认生成 3 个批次",
+          "durationMs": 5.5,
+          "stale": false,
+          "fetchedAt": "2026-11-18T11:48:06.520855Z"
+        }
+      ],
+      "status": 200
+    }
+  ]
+}

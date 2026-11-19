@@ -1,0 +1,27 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "editableInputs": 13,
+      "saveEnabledWhenChanged": true,
+      "reset": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "editableInputs": 13,
+      "saveEnabledWhenChanged": true,
+      "reset": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "editableInputs": 13,
+      "saveEnabledWhenChanged": true,
+      "reset": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "note": "Defaults from deployed live API; browser login and other APIs are fixtures. Browser makes no production writes; real save verified separately through authenticated Bencao API with unchanged values."
+}

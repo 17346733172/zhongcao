@@ -1,0 +1,9 @@
+{
+  "supported": true,
+  "categories": 13,
+  "live_save_confirmed": true,
+  "stale_revision_rejected": true,
+  "reread_persisted": true,
+  "existing_values_unchanged": true,
+  "revision": 1
+}

@@ -1,0 +1,77 @@
+{
+  "passed": 4,
+  "results": [
+    {
+      "width": 1440,
+      "height": 1000,
+      "scrollInfo": {
+        "scrollers": [
+          "main-panel"
+        ],
+        "rootHeight": 1000,
+        "viewport": 1000,
+        "windowY": 0,
+        "width": 1440,
+        "viewportWidth": 1440
+      },
+      "footerVisible": true,
+      "positionsRestored": true,
+      "modalLock": true,
+      "twoTurns": true
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scrollInfo": {
+        "scrollers": [
+          "main-panel"
+        ],
+        "rootHeight": 844,
+        "viewport": 844,
+        "windowY": 0,
+        "width": 390,
+        "viewportWidth": 390
+      },
+      "footerVisible": true,
+      "positionsRestored": true,
+      "modalLock": true,
+      "twoTurns": true
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scrollInfo": {
+        "scrollers": [
+          "main-panel"
+        ],
+        "rootHeight": 844,
+        "viewport": 844,
+        "windowY": 0,
+        "width": 320,
+        "viewportWidth": 320
+      },
+      "footerVisible": true,
+      "positionsRestored": true,
+      "modalLock": true,
+      "twoTurns": true
+    },
+    {
+      "width": 1280,
+      "height": 600,
+      "scrollInfo": {
+        "scrollers": [
+          "main-panel"
+        ],
+        "rootHeight": 600,
+        "viewport": 600,
+        "windowY": 0,
+        "width": 1280,
+        "viewportWidth": 1280
+      },
+      "footerVisible": true,
+      "positionsRestored": true,
+      "modalLock": true,
+      "twoTurns": true
+    }
+  ]
+}

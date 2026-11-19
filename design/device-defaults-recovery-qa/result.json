@@ -1,0 +1,60 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "all14Kinds": true,
+      "minutesToSeconds": true,
+      "singleWriteAndCloseLock": true,
+      "validation": true,
+      "dirtyDraftPreserved": true,
+      "pristineRefresh": true,
+      "conflictRequiresRead": true,
+      "legacyReadOnly": true,
+      "noFalseSuccess": true,
+      "noOverflow": true,
+      "draftPreserved": true,
+      "readRecovery": true,
+      "staleRecovery": true,
+      "combinedFeedback": true,
+      "closingCancelsRetry": true
+    },
+    {
+      "width": 390,
+      "all14Kinds": true,
+      "minutesToSeconds": true,
+      "singleWriteAndCloseLock": true,
+      "validation": true,
+      "dirtyDraftPreserved": true,
+      "pristineRefresh": true,
+      "conflictRequiresRead": true,
+      "legacyReadOnly": true,
+      "noFalseSuccess": true,
+      "noOverflow": true,
+      "draftPreserved": true,
+      "readRecovery": true,
+      "staleRecovery": true,
+      "combinedFeedback": true,
+      "closingCancelsRetry": true
+    },
+    {
+      "width": 320,
+      "all14Kinds": true,
+      "minutesToSeconds": true,
+      "singleWriteAndCloseLock": true,
+      "validation": true,
+      "dirtyDraftPreserved": true,
+      "pristineRefresh": true,
+      "conflictRequiresRead": true,
+      "legacyReadOnly": true,
+      "noFalseSuccess": true,
+      "noOverflow": true,
+      "draftPreserved": true,
+      "readRecovery": true,
+      "staleRecovery": true,
+      "combinedFeedback": true,
+      "closingCancelsRetry": true
+    }
+  ],
+  "errors": [],
+  "note": "Mock platform and account; no real platform writes."
+}

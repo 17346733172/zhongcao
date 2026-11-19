@@ -1,0 +1,33 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "tabs": 3,
+      "duplicateOverviewRemoved": true,
+      "keyboard": true,
+      "sharedRefresh": true,
+      "standaloneOverview": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "tabs": 3,
+      "duplicateOverviewRemoved": true,
+      "keyboard": true,
+      "sharedRefresh": true,
+      "standaloneOverview": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "tabs": 3,
+      "duplicateOverviewRemoved": true,
+      "keyboard": true,
+      "sharedRefresh": true,
+      "standaloneOverview": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "note": "Isolated UI fixtures; no live platform, model or business writes."
+}

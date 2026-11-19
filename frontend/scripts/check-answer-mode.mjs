@@ -29,6 +29,8 @@ function loadAnswerComponents() {
     }
     const markdownComponent = await compile("../src/components/answer-markdown.tsx");
     dependencies["./answer-markdown"] = markdownComponent;
+    dependencies["./answer-header"] = await compile("../src/components/answer-header.tsx");
+    dependencies["./answer-charts"] = await compile("../src/components/answer-charts.tsx");
     return { ...markdownComponent, ...await compile("../src/components/conversation-view.tsx"), ...await compile("../src/components/question-composer.tsx") };
   })();
 }
@@ -60,9 +62,9 @@ test("数据中心回答不再进行药材原文检索，保留来源与快捷�
 test("输入框没有原文开关，默认请求启用知识库及其历史", async () => {
   const { QuestionComposer } = await loadAnswerComponents();
   const html = renderToStaticMarkup(createElement(QuestionComposer, {
-    draft: "陈皮", busy: false, disabled: false, canWrite: false, uploading: false,
+    draft: "陈皮", busy: false, disabled: false, prescriptionOpen: false,
     error: "", status: null, statusError: "", inputRef: { current: null },
-    onDraft() {}, onSubmit() {}, onKeyDown() {}, onAttach() {},
+    onDraft() {}, onSubmit() {}, onKeyDown() {}, onPrescription() {},
   }));
   assert.doesNotMatch(html, /answer-mode-switch|aria-pressed|原文检索<\/button>/);
   assert.match(html, /基于知识库原文生成回答/);
@@ -195,4 +197,39 @@ test("生成正文渲染加粗、列表和表格且不执行 HTML，原文摘录
   }));
   assert.match(extractHtml, /\*\*原文保留\*\*/);
   assert.doesNotMatch(extractHtml, /<strong>|<ul>/);
+});
+
+test("Agent回答显示实际工具记录、北京时间与已提供用量", async () => {
+  const { ConversationView } = await loadAnswerComponents();
+  const answer = { mode: "data_center", title: "测试方案", introduction: "已调用 MCP 工具：测试方案（read）。 数据读取时间：18:43:04。", sections: [{ title: "当前用时", content: "包装：2分钟" }], sources: [],
+    toolCalls: [{ name: "test_plans", title: "测试方案", action: "read", status: "success", summary: "已读取13类设备", durationMs: 1250 }],
+    usage: { inputTokens: 9800, outputTokens: 1320, scope: "tool_selection" } };
+  const html = renderToStaticMarkup(createElement(ConversationView, { mode: "both", busy: false, libraryName: "测试", onSource() {}, onToast() {},
+    messages: [{ id: "trace", question: "测试", time: "今天 18:43", answeredAt: "2026-11-18T10:43:04Z", answer, showSources: true }] }));
+  assert.match(html, /Agent/); assert.match(html, /工具调用记录/);
+  assert.match(html, /test_plans.read/); assert.match(html, /已读取13类设备/); assert.match(html, /1.3 s/);
+  assert.match(html, /18:43:04/); assert.match(html, /9,800/); assert.match(html, /1,320/);
+  assert.doesNotMatch(html, /已调用 MCP 工具/);
+  assert.match(html, /包装：2分钟/);
+});
+
+test("旧回答缺少元数据时不补造工具记录、用量或图表", async () => {
+  const { ConversationView } = await loadAnswerComponents();
+  const html = renderToStaticMarkup(createElement(ConversationView, { mode: "both", busy: false, libraryName: "测试", onSource() {}, onToast() {},
+    messages: [{ id: "legacy", question: "陈皮", time: "今天 10:00", answer: aiAnswer, showSources: true }] }));
+  assert.match(html, /Agent/); assert.match(html, /10:00/);
+  assert.doesNotMatch(html, /工具调用记录|agent-token-usage|agent-chart-card/);
+});
+
+test("图表保持实际数据和过期说明，非法数据不渲染", async () => {
+  const { ConversationView } = await loadAnswerComponents();
+  const chart = { title: "批次状态分布", unit: "批", categories: ["进行中", "已完成"], series: [{ name: "批次数量", values: [2, 8] }], stale: true, source: "运行总览" };
+  function render(charts) {
+    return renderToStaticMarkup(createElement(ConversationView, { mode: "both", busy: false, libraryName: "测试", onSource() {}, onToast() {},
+      messages: [{ id: "chart", question: "运行总览", time: "10:00", answer: { ...aiAnswer, charts }, showSources: true }] }));
+  }
+  const html = render([chart]);
+  assert.match(html, /批次状态分布/); assert.match(html, /上次成功数据/); assert.match(html, /查看图表数据/);
+  assert.match(html, /<td>2<\/td>/); assert.match(html, /<td>8<\/td>/);
+  for (const values of [[-1, 8], [2], [NaN, 8]]) assert.doesNotMatch(render([{ ...chart, series: [{ name: "错误", values }] }]), /agent-chart-card/);
 });

@@ -1,12 +1,37 @@
 # 开发与验证
 
+2026-11-18 Agent语义调度：重启后端加载，前端无源码或构建变更，无新增依赖/环境变量。配置模型时Agent的每个问题均进入语义工具选择，取代旧关键词入口；首次知识问答也会增加一次工具选择请求。新增鉴权GET `/api/data-center/recent-batches?limit=5` 与测试执行progress，使用已有平台batches列表读取完整有界分页并投影工序计时，不修改平台。接口范围/失败语义与验收见 [运行查询验证](MCP-SEMANTIC-ROUTING-QA.md)。
+
+2026-11-18 Agent回答展示：新增前端元信息/图表组件和MCP结果展示字段，需重启后端加载 `mcp_tools/presentation.py`。无新增依赖或环境变量；旧调用方可忽略 `toolCalls` 新字段、`charts` 和 `usage`。用量字段源自 [DeepSeek返回的usage](https://api-docs.deepseek.com/api/create-chat-completion/)，当前只累计模型工具选择请求，不含知识回答生成。界面验收使用隔离平台回执，不在真实平台执行写入。
+
+2026-11-18 MCP：更新 `requirements.txt` 后重启后端，页面 AI Agent 即可调用五模块工具；前端无构建变更。外部 stdio 配置、独立环境变量示例、工具 schema 与验证命令见 [MCP 工具说明](MCP-TOOLS.md)。新增官方 SDK `mcp==1.30.0` 及固定传递依赖，沿用本草账号、CSRF、平台认证、代理与写入校验；不另设免登录 MCP HTTP 端口。知识专用 `/api/knowledge/query` 与规则运行问答 `/api/data-center/question` 同样需要登录和 `knowledge:read`，POST 限64 KiB。
+
 ## 环境与启动
+
+2026-11-18 默认用时修改：当前仿真服务器已部署读取 / 保存接口，本草无需新增配置即可编辑并真实保存 13 类设备默认分钟值。已打开的测试方案若保留旧只读提示，点击「重新读取」重新确认能力；保存后用于后续创建的数据，处方显式工艺参数优先。部署备份、独立数据库测试和真实保存验证见[真实保存验收](DEVICE-DEFAULTS-ENABLE-QA.md)。下文服务器缺少接口的说明属于此前版本。
+
+2026-11-17 读取恢复修复：`GET /api/simulation/device-defaults?refresh=true` 可强制重新确认平台能力；默认仅短期缓存真实 404（60 秒），旧平台优先复用共享快照。GET 传输错误可重试一次，单轮最多 40 秒，前端保留 45 秒等待；保存仍单次发送。响应新增 `stale / error`，回退旧值时不修改原 fetched_at。页面仅对读取故障每 15 秒恢复，写入冲突仍手动核对。无新增依赖或配置，本机后端需重启加载。
+
+首次探测失败但有共享设备值时，返回 `supported=null / capability_pending=true`，明确修改能力待确认而非宣称接口不存在。共享值仍按原时间和 stale 状态显示，前端每 15 秒重新确认；只有收到真实 404 才认定旧平台，只有有效完整响应才启用保存。
+
+2026-11-17 测试方案：本草新增 `GET /api/simulation/device-defaults` 与 `POST /api/simulation/device-defaults/{kind}`。全部需登录及 knowledge:read，保存沿用 CSRF / Origin；请求为 `{default_processing_seconds: 6..7200, expected_revision: 非负整数}`。写请求只提交一次，回执确认后刷新共享快照。旧仿真服务器无接口时 GET 回退读取 dashboard 并返回 supported=false，前端只读。接收端协议、配套补丁与待完成的 PostgreSQL 联调见[集成说明](../integrations/README.md)；不能通过修改本草本地值冒充平台保存成功。
 
 2026-11-14新增仿真控制：部署后需重启本草后端，前端开发服务自动更新。复用现有`DECOCTION_*`配置，无新依赖或环境变量。`GET /api/simulation/status`直接读取平台dashboard时钟；`POST /api/simulation/scenarios`接收严格整数`{count: 1..50}`；`POST /api/simulation/start`固定向平台提交`speed: 1`；`POST /api/simulation/pause`无参数。全部需登录及knowledge:read，写入沿用CSRF / Origin保护。控制请求20秒总期限、前端25秒等待，写入只提交一次，不沿用处方上传的自动重试。超时可能已经生效，先查看平台状态和批次数量，再决定是否重试。
 
 Python 3.11+、Node.js 20.9+、pnpm 11。根目录启动后端.cmd 建立 backend/.venv 并配置首个管理员；启动前端.cmd 运行前端。两个终端均保持开启。
 
-依赖、管理员、本地模型和索引准备好后，日常运行可双击根目录 [启动本草.cmd](../启动本草.cmd)。该入口调用 [scripts/start-local.ps1](../scripts/start-local.ps1)，通过 Windows WMI 创建独立后台进程并复用原有两个启动脚本；关闭调用终端或开发工具后服务继续运行。不会安装系统服务或配置开机自启，电脑重启后需重新运行。
+依赖、管理员、本地模型和索引准备好后，日常运行可双击根目录 [启动本草.cmd](../启动本草.cmd)。该入口调用 [scripts/start-local.ps1](../scripts/start-local.ps1)，通过 Windows WMI 创建独立后台进程并复用原有两个启动脚本；关闭调用终端或开发工具后服务继续运行。默认不安装系统服务；未启用以下登录自启时，电脑重启后需重新运行。
+
+可选的当前用户登录自启（在项目根目录运行，不需要管理员权限）：
+
+```powershell
+powershell.exe -NoProfile -File scripts/set-autostart.ps1
+powershell.exe -NoProfile -File scripts/set-autostart.ps1 -Check
+# 关闭登录自启，不影响当前已运行的服务
+powershell.exe -NoProfile -File scripts/set-autostart.ps1 -Disable
+```
+
+[set-autostart.ps1](../scripts/set-autostart.ps1) 仅管理当前账号 Startup 目录内的 `Bencao-Local.lnk`，已有设置会复用；若同名快捷方式指向其他位置则报错，不覆盖或删除。[start-at-logon.ps1](../scripts/start-at-logon.ps1) 静默复用现有启动和就绪检查，将本轮启动结果写入 `tmp/local-servers/startup.log`，各服务日志仍在下面的原位置。自启发生在登录 Windows 后，不自动打开浏览器；模型预热通常需要 1–3 分钟，之后访问原来的 `http://127.0.0.1:3000/`。项目目录、依赖和模型必须保留，移动目录前关闭旧自启，移动后重新启用。此设置仅对本机当前账号生效，不随 Git 自动部署。
 
 启动入口用互斥锁避免同时启动，已有服务或仍在预热的启动进程会复用。它最多等待 240 秒，核验 `8000/api/health`、`3000/login` 和 `3000/api/health` 后才提示就绪；超时不代表模型已停止，先检查日志再重试。日志保存在忽略目录 `tmp/local-servers/backend.log`、`frontend.log`。首次安装和首个管理员设置仍使用上面的交互式脚本。
 
@@ -132,7 +157,7 @@ demo-data.ts 仅保留知识库配置与空初始状态；检索逻辑在 knowle
 
 结果沿用原回答结构，增加 `mode=data_center`、`dataCenter` 目标筛选和用于追问的 `resolvedQuestion`，`sources` 为空。有有效近时数据直接回答；没有数据或缓存过期 / 更新失败时可等后台刷新最多 8 秒，然后明确返回旧数据标记或不可确认说明。标题数量按设备实际状态统计，使用中表示设备占用，不保证每台都正在加热。
 
-历史 `ChatTurn` 新增可选 `channel`（`knowledge / data_center`，默认 knowledge）。页面运行回合仅传主题，answer 为空；后端也会隔离最近运行回合，避免旧数字进入模型或将设备话题当作药材追问。知识回答在线程执行，后台刷新保持异步。知识库加载和模型未配置不阻止运行查询，附件上传仍受资料加载状态限制。
+历史 `ChatTurn` 新增可选 `channel`（`knowledge / data_center`，默认 knowledge）。页面运行回合仅传主题，answer 为空；后端也会隔离最近运行回合，避免旧数字进入模型或将设备话题当作药材追问。知识回答在线程执行，后台刷新保持异步。知识库加载和模型未配置不阻止运行查询；输入框附件入口已改为独立「处方检查」，不依赖知识库资料加载。
 
 现支持常见中文问法，未接入任意设备控制、故障推断或通用自然语言数据库查询。比如「铁锅可以煎药吗」「工作原理」仍走知识分支；缺少故障原因时不猜原因。实现与实际验证见[数据中心问答](DATA-CENTER-CHAT-QA.md)。
 
@@ -142,6 +167,7 @@ demo-data.ts 仅保留知识库配置与空初始状态；检索逻辑在 knowle
 
 - `GET /api/data-center/snapshot`：需要 `knowledge:read`，立即返回 `{data, fetched_at, refreshing, stale, error}`。`data` 是最近一次成功读取的真实快照，无记录时为 null；`fetched_at` 是成功读取平台的时间，重复读缓存不会修改。`?refresh=true` 只唤醒共享后台任务，不等待网络请求。
 - `GET /api/data-center/batches/{id}`：需要登录，展开处方时按需读取历史批次摘要；ID 限定为 1–128 个字母、数字、下划线或短横线。
+- `GET /api/data-center/completed-batches?offset=0&limit=20`：需登录和 `knowledge:read`，固定读取当前配置平台的 `status=completed` 批次分页，`offset >= 0`、`limit` 为 1–200，返回 `items / total / offset / limit / fetched_at`。包含关联处方编号与追溯码；非已完成状态或异常分页返回脱敏 502。历史标签每页 20 批，完成读取后间隔 15 秒刷新，退出标签取消。沿用已有网络超时、认证、代理与两次只读尝试；无新依赖或配置，部署后需重启本草后端。
 - `GET /api/data-center/prescriptions?offset=0&limit=20&status=approved`：同样要求登录，平台分页透传；`status` 可省略或为 `pending_review / approved / rejected`，`offset >= 0`，`limit` 为 1–200。每页包含完整处方信息，不只限于本草上传的记录。
 
 概览后台在单轮内复用 HTTP 连接读取轻量统计、活跃批次和分页报警，本轮结束关闭客户端。传输失败时先关闭失效客户端，再用新客户端重试，防止代理握手失败累积占满连接池。最大连接数 4、池等待 2 秒、清理等待最多 2 秒；网络整轮限定 45 秒，结束后等待 15 秒再更新。首次需要快照时启动共享任务，应用退出时取消；关闭弹窗停止浏览器轮询，不取消其他用户共享的后台任务。前端读取本机状态最多等待 5 秒，后台刷新期间每秒查看一次状态，空闲时每 15 秒查看。平台失败信息在 `error` 中返回，保留旧 `data` 与原时间并标注过期；处方 / 批次读取失败仍返回脱敏 502。日志以每轮结果和耗时区分真实更新成功 / 失败，不将本机状态接口 200 当成平台更新成功。

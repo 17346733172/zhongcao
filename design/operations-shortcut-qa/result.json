@@ -1,0 +1,42 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "tabs": 4,
+      "shortcutDirectTab": true,
+      "focusRestored": true,
+      "sidebarSynced": true,
+      "sharedSnapshotAndRefresh": true,
+      "keyboard": true,
+      "preservedExistingTabs": true,
+      "draftPreserved": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "tabs": 4,
+      "shortcutDirectTab": true,
+      "focusRestored": true,
+      "sidebarSynced": true,
+      "sharedSnapshotAndRefresh": true,
+      "keyboard": true,
+      "preservedExistingTabs": true,
+      "draftPreserved": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "tabs": 4,
+      "shortcutDirectTab": true,
+      "focusRestored": true,
+      "sidebarSynced": true,
+      "sharedSnapshotAndRefresh": true,
+      "keyboard": true,
+      "preservedExistingTabs": true,
+      "draftPreserved": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "note": "Isolated UI API fixtures based on a prior actual snapshot; no upstream calls or writes."
+}

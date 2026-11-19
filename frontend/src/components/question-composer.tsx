@@ -1,20 +1,19 @@
 "use client";
 
-import { ArrowUpIcon, PaperclipIcon } from "@phosphor-icons/react";
+import { ArrowUpIcon, CheckCircleIcon } from "@phosphor-icons/react";
 import type { FormEvent, KeyboardEvent, RefObject } from "react";
 import type { AIStatus } from "@/lib/chat-api";
 import { answerModeInfo, DEFAULT_ANSWER_MODE } from "@/lib/answer-mode";
 
 type Props = {
   draft: string; busy: boolean; disabled: boolean;
-  attachmentDisabled?: boolean;
-  canWrite: boolean; uploading: boolean; error: string;
+  prescriptionOpen: boolean; error: string;
   status: AIStatus | null; statusError: string;
   inputRef: RefObject<HTMLTextAreaElement | null>;
   onDraft: (value: string) => void;
   onSubmit: (event: FormEvent) => void;
   onKeyDown: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
-  onAttach: () => void;
+  onPrescription: () => void;
 };
 
 export function QuestionComposer(props: Props) {
@@ -26,7 +25,7 @@ export function QuestionComposer(props: Props) {
         <textarea id="question" aria-describedby="answer-mode-help" ref={props.inputRef} rows={2} maxLength={2000} value={props.draft} onChange={(event) => props.onDraft(event.target.value)} onKeyDown={props.onKeyDown} placeholder="给本草知问发送消息" disabled={props.busy || props.disabled} />
         <div className="composer-tools">
           <div className="composer-actions">
-            {props.canWrite && <button type="button" disabled={props.uploading || props.disabled || props.attachmentDisabled} className="icon-button attach-button" aria-label="添加资料附件" onClick={props.onAttach}><PaperclipIcon size={23} /></button>}
+            <button type="button" disabled={props.disabled} className="prescription-trigger" aria-haspopup="dialog" aria-expanded={props.prescriptionOpen} onClick={props.onPrescription}><CheckCircleIcon size={20} aria-hidden="true" /><span>处方检查</span></button>
             <button className="send-button primary-button" type="submit" aria-label={props.busy ? "正在生成回答" : "发送"} disabled={!props.draft.trim() || props.busy || props.disabled}><ArrowUpIcon size={25} weight="bold" aria-hidden="true" /></button>
           </div>
         </div>

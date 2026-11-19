@@ -1,0 +1,32 @@
+{
+  "passed": 3,
+  "results": [
+    {
+      "width": 1440,
+      "remaining_entries": 7,
+      "groups": [
+        "测试",
+        "智能"
+      ],
+      "switching_and_draft": true
+    },
+    {
+      "width": 390,
+      "remaining_entries": 7,
+      "groups": [
+        "测试",
+        "智能"
+      ],
+      "switching_and_draft": true
+    },
+    {
+      "width": 320,
+      "remaining_entries": 7,
+      "groups": [
+        "测试",
+        "智能"
+      ],
+      "switching_and_draft": true
+    }
+  ]
+}

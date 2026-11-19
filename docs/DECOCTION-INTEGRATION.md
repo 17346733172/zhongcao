@@ -1,6 +1,10 @@
 # 两个项目的后端对接
 
+2026-11-18（工序查询）：本草新增鉴权只读 `GET /api/data-center/recent-batches?limit=5`，复用既有平台 `GET /api/v1/batches`，不修改平台接口。单次最多核验1000条完整分页，按创建时间/序号倒序选取最近1–20批，单独投影steps中的elapsed_seconds、duration_seconds、current_stage和waiting_reason。实际处理时间不含排队/暂停，缺失计时不以默认值代替；分页变化或超范围时明确失败，缺少创建时间时不声称最近。详见 [运行查询验证](MCP-SEMANTIC-ROUTING-QA.md)。
+
 更新于 2026-11-12。
+
+2026-11-17：测试方案的接收端协议为 `GET /api/v1/device-defaults` 及 `POST /api/v1/device-defaults/{kind}`，保存带秒数与 expected_revision，版本冲突 409。当前连接服务器尚未提供此协议；本草回退只读。可应用的接收端补丁和未完成验证见[集成说明](../integrations/README.md)，未执行服务器部署。
 
 2026-11-14：新建测试任务的控制经`backend/app/simulation_operations.py`调用平台`POST /api/v1/simulation/scenarios`（count）、`/start`（speed固定1）及`/pause`。与上传共用DECOCTION连接及认证；生成须确认数量和批次编号，启停须确认clock.running。平台未提供生成幂等键，因此单次发送且禁止自动重试；本草进程内锁拒绝并发控制，前端锁定提交中控件。状态单独读取`GET /api/v1/dashboard`的clock，避免控制后显示旧缓存。无需改动或重新部署仿真项目。
 

@@ -12,7 +12,6 @@
 .dc-refresh:hover:not(:disabled), .dc-pagination button:hover:not(:disabled) { background: var(--paper); }
 .data-center-dialog button:disabled { opacity: .5; }
 .dc-content { flex: 1; min-height: 0; overflow: auto; padding: 20px 28px 28px; scrollbar-gutter: stable; }
-.dc-content.dc-content-operations { display: flex; flex-direction: column; padding: 0; overflow: hidden; scrollbar-gutter: auto; }
 .dc-notice { color: var(--dc-subtle); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 20px; font-size: 12px; line-height: 1.8; margin-bottom: 24px; }
 .dc-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 24px 0 14px; }
 .dc-section-heading h3 { font-size: 15px; font-weight: 600; }

@@ -38,7 +38,31 @@ export type AnswerSection = {
   sourceIndices?: number[];
 };
 
+export type AnswerToolCall = {
+  name: string;
+  title: string;
+  action: string;
+  status?: "success" | "error";
+  summary?: string;
+  durationMs?: number;
+  fetchedAt?: string;
+  stale?: boolean;
+};
+
+export type AnswerChart = {
+  title: string;
+  unit: string;
+  categories: string[];
+  series: { name: string; values: number[] }[];
+  source?: string;
+  fetchedAt?: string | null;
+  stale?: boolean;
+};
+
 export type Answer = {
+  toolCalls?: AnswerToolCall[];
+  charts?: AnswerChart[];
+  usage?: { inputTokens: number; outputTokens: number; scope?: "tool_selection" };
   mode?: "extract" | "generated" | "no_match" | "clarification" | "greeting" | "data_center";
   dataCenter?: DataCenterTarget;
   resolvedQuestion?: string;
@@ -64,6 +88,7 @@ export type Message = {
   id: string;
   question: string;
   time: string;
+  answeredAt?: string;
   answer: Answer;
   showSources: boolean;
   originalAnswer?: Answer;

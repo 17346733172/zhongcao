@@ -1,0 +1,44 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "defaultOverview": true,
+      "pageNavigation": true,
+      "sharedReaderAndRefresh": true,
+      "retainedOnFailure": true,
+      "chatAndDraftPreserved": true,
+      "noDuplicateIds": true,
+      "mobileNavigation": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "defaultOverview": true,
+      "pageNavigation": true,
+      "sharedReaderAndRefresh": true,
+      "retainedOnFailure": true,
+      "chatAndDraftPreserved": true,
+      "noDuplicateIds": true,
+      "mobileNavigation": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "defaultOverview": true,
+      "pageNavigation": true,
+      "sharedReaderAndRefresh": true,
+      "retainedOnFailure": true,
+      "chatAndDraftPreserved": true,
+      "noDuplicateIds": true,
+      "mobileNavigation": true,
+      "noOverflow": true
+    },
+    {
+      "initialNoSnapshot": true,
+      "noFabricatedMetrics": true,
+      "refreshRecovery": true
+    }
+  ],
+  "errors": [],
+  "note": "Isolated UI fixtures and prior simulation snapshot; no real platform or cloud calls."
+}

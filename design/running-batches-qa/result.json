@@ -1,0 +1,45 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "onlyRunningStatus": true,
+      "prescriptionIds": true,
+      "sharedSnapshot": true,
+      "refresh": true,
+      "autoUpdates": true,
+      "emptyFailureRecovery": true,
+      "allRecordsTab": true,
+      "keyboard": true,
+      "noOverflow": true,
+      "draftPreserved": true
+    },
+    {
+      "width": 390,
+      "onlyRunningStatus": true,
+      "prescriptionIds": true,
+      "sharedSnapshot": true,
+      "refresh": true,
+      "autoUpdates": false,
+      "emptyFailureRecovery": true,
+      "allRecordsTab": true,
+      "keyboard": true,
+      "noOverflow": true,
+      "draftPreserved": true
+    },
+    {
+      "width": 320,
+      "onlyRunningStatus": true,
+      "prescriptionIds": true,
+      "sharedSnapshot": true,
+      "refresh": true,
+      "autoUpdates": false,
+      "emptyFailureRecovery": true,
+      "allRecordsTab": true,
+      "keyboard": true,
+      "noOverflow": true,
+      "draftPreserved": true
+    }
+  ],
+  "errors": [],
+  "note": "Isolated UI fixtures; no live platform, model or business writes."
+}

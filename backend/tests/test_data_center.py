@@ -42,7 +42,7 @@ class DataCenterTests(unittest.TestCase):
 
     @patch("app.data_center.httpx.get")
     def test_anonymous_cannot_contact_platform(self, get):
-        for path in ("snapshot", "prescriptions", "statistics"):
+        for path in ("snapshot", "prescriptions", "statistics", "completed-batches"):
             self.assertEqual(self.client.get(f"/api/data-center/{path}").status_code, 401)
         get.assert_not_called()
 
@@ -225,3 +225,49 @@ class DataCenterTests(unittest.TestCase):
         for query in ("limit=201", "offset=-1", "status=anything"):
             self.assertEqual(self.client.get("/api/data-center/prescriptions?" + query).status_code, 422)
         get.assert_not_called()
+
+    @patch("app.data_center.httpx.get")
+    def test_completed_batches_roles_filter_pagination_and_projection(self, get):
+        item = {"id": "batch_done", "prescription_id": "rx_done", "status": "completed",
+                "progress_percent": 100, "temperature_c": 30, "trace_code": "trace_done", "steps": []}
+        get.return_value = httpx.Response(200, json={"items": [item], "total": 56, "offset": 40, "limit": 20})
+        for role in ("admin", "editor", "viewer"):
+            self.login(role)
+            response = self.client.get("/api/data-center/completed-batches?offset=40&limit=20")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.headers["cache-control"], "no-store")
+            self.assertEqual(response.json()["total"], 56)
+            self.assertEqual(response.json()["items"][0]["prescription_id"], "rx_done")
+            self.assertNotIn("steps", response.json()["items"][0])
+            self.assertIsNotNone(datetime.fromisoformat(response.json()["fetched_at"]).tzinfo)
+        self.assertEqual(get.call_args.args[0], "https://simulation.example/api/v1/batches")
+        self.assertEqual(get.call_args.kwargs["params"], {"status": "completed", "offset": 40, "limit": 20})
+        self.assertEqual(get.call_args.kwargs["headers"], {"X-API-Key": "test-secret"})
+        self.assertEqual(get.call_args.kwargs["proxy"], "http://127.0.0.1:9876")
+        self.assertNotIn("secret", response.text)
+        self.assertEqual(self.client.post("/api/data-center/completed-batches", headers={"X-CSRF-Protection": "1"}).status_code, 405)
+
+    @patch("app.data_center.httpx.get")
+    def test_completed_batches_invalid_pagination_never_reaches_platform(self, get):
+        self.login("viewer")
+        for query in ("limit=0", "limit=201", "offset=-1", "offset=bad"):
+            self.assertEqual(self.client.get("/api/data-center/completed-batches?" + query).status_code, 422)
+        get.assert_not_called()
+
+    @patch("app.data_center.httpx.get")
+    def test_completed_batches_reject_wrong_status_or_broken_page_and_redact_errors(self, get):
+        self.login("viewer")
+        running = {"id": "batch_running", "prescription_id": "rx_running", "status": "running",
+                   "progress_percent": 50, "temperature_c": 30, "trace_code": "trace_running"}
+        for payload in ({"items": [running], "total": 1, "offset": 0, "limit": 20},
+                        {"items": [], "total": 3, "offset": 0, "limit": 20},
+                        {"items": [], "total": 0, "offset": 20, "limit": 20}):
+            get.return_value = httpx.Response(200, json=payload)
+            self.assertEqual(self.client.get("/api/data-center/completed-batches").status_code, 502)
+        for code in (401, 403, 404, 500):
+            get.return_value = httpx.Response(code, json={"detail": "gateway-secret"})
+            response = self.client.get("/api/data-center/completed-batches")
+            self.assertEqual(response.status_code, 502)
+            self.assertNotIn("secret", response.text)
+        get.return_value = httpx.Response(200, json={"items": [], "total": 0, "offset": 0, "limit": 20})
+        self.assertEqual(self.client.get("/api/data-center/completed-batches").json()["items"], [])

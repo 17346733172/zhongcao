@@ -122,6 +122,39 @@ class BatchPage(BaseModel):
     limit: int = Field(ge=1)
 
 
+class CompletedBatchPage(BatchPage):
+    fetched_at: datetime
+
+
+class StageProgress(BaseModel):
+    code: str
+    name: str
+    status: str
+    device_id: str | None = None
+    duration_seconds: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+    elapsed_seconds: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+
+
+class BatchProgress(Batch):
+    created_at: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+    sequence: int | None = Field(default=None, ge=0)
+    current_stage: str | None = None
+    steps: list[StageProgress] = Field(default_factory=list, max_length=200)
+
+
+class BatchProgressPage(BatchPage):
+    items: list[BatchProgress]
+
+
+class RecentBatchProgress(BaseModel):
+    items: list[BatchProgress]
+    total: int = Field(ge=0)
+    limit: int = Field(ge=1, le=20)
+    fetched_at: datetime
+    ordered_by_creation: bool
+    notice: str | None = None
+
+
 class AlarmPage(BaseModel):
     items: list[Alarm]
     total: int = Field(ge=0)

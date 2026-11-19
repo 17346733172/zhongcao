@@ -1,0 +1,51 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "completedOnly": true,
+      "prescriptionIds": true,
+      "cumulativeBadge": true,
+      "pagination56Across3Pages": true,
+      "failureRetainsSamePage": true,
+      "failedNewPageDoesNotShowOldRows": true,
+      "emptyRecovery": true,
+      "outOfRangeReset": true,
+      "automaticRefreshAndSlowState": true,
+      "historyPollingStops": true,
+      "noOverflow": true,
+      "draftPreserved": true
+    },
+    {
+      "width": 390,
+      "completedOnly": true,
+      "prescriptionIds": true,
+      "cumulativeBadge": true,
+      "pagination56Across3Pages": true,
+      "failureRetainsSamePage": true,
+      "failedNewPageDoesNotShowOldRows": true,
+      "emptyRecovery": true,
+      "outOfRangeReset": true,
+      "automaticRefreshAndSlowState": false,
+      "historyPollingStops": false,
+      "noOverflow": true,
+      "draftPreserved": true
+    },
+    {
+      "width": 320,
+      "completedOnly": true,
+      "prescriptionIds": true,
+      "cumulativeBadge": true,
+      "pagination56Across3Pages": true,
+      "failureRetainsSamePage": true,
+      "failedNewPageDoesNotShowOldRows": true,
+      "emptyRecovery": true,
+      "outOfRangeReset": true,
+      "automaticRefreshAndSlowState": false,
+      "historyPollingStops": false,
+      "noOverflow": true,
+      "draftPreserved": true
+    }
+  ],
+  "errors": [],
+  "note": "Isolated UI fixtures; no live platform, model or business writes."
+}

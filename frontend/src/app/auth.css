@@ -76,7 +76,6 @@ input:focus-visible, select:focus-visible, a:focus-visible, summary:focus-visibl
 .account-settings h3 { font-size: 17px; color: var(--navy); }
 .document-feedback { padding: 8px 20px; border-bottom: 1px solid var(--line); font-size: 12px; color: #647b99; display: flex; gap: 12px; align-items: center; }
 .document-feedback button { font-size: 12px; color: var(--blue); border: 0; background: none; }
-.readonly-note { display: flex; gap: 10px; align-items: flex-start; padding: 20px 14px; background: #edf4fd; border-radius: 7px; color: #526d8f; font-size: 13px; line-height: 1.9; }
 @media (max-width: 1000px) { .admin-layout { grid-template-columns: 285px minmax(0, 1fr); gap: 18px; } .account-card { padding: 20px; } }
 @media (max-width: 720px) {
   .login-page { display: block; background: #fff; }

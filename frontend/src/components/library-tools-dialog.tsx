@@ -1,19 +1,10 @@
 "use client";
 
-import { BookOpenTextIcon, CheckCircleIcon, XIcon } from "@phosphor-icons/react";
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { XIcon } from "@phosphor-icons/react";
+import { useEffect, useRef } from "react";
 import { ReferenceDocumentDialog } from "./reference-document-dialog";
-import { PrescriptionDialog } from "./prescription-dialog";
-
-type Tab = "reference" | "prescription";
-const tabs = [
-  { id: "reference", label: "基础资料", Icon: BookOpenTextIcon },
-  { id: "prescription", label: "处方检查", Icon: CheckCircleIcon },
-] as const;
 
 export function LibraryToolsDialog({ onClose }: { onClose: () => void }) {
-  const [tab, setTab] = useState<Tab>("reference");
-  const [prescriptionVisited, setPrescriptionVisited] = useState(false);
   const dialog = useRef<HTMLElement>(null);
   const close = useRef<HTMLButtonElement>(null);
   const previous = useRef<HTMLElement | null>(null);
@@ -35,40 +26,19 @@ export function LibraryToolsDialog({ onClose }: { onClose: () => void }) {
         if (dialog.current?.isConnected) return;
         const mobileMenu = document.querySelector<HTMLElement>('.mobile-menu[aria-label="打开导航"]');
         const target = mobileMenu?.getClientRects().length ? mobileMenu : previous.current;
-        target?.focus();
+        target?.focus({ preventScroll: true });
       });
     };
   }, [onClose]);
 
-  function selectTab(id: Tab) {
-    if (id === "prescription") setPrescriptionVisited(true);
-    setTab(id);
-  }
-  function tabKey(event: KeyboardEvent<HTMLButtonElement>, index: number) {
-    let next: number;
-    if (event.key === "ArrowRight" || event.key === "ArrowLeft") next = 1 - index;
-    else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = tabs.length - 1;
-    else return;
-    event.preventDefault();
-    selectTab(tabs[next].id);
-    dialog.current?.querySelector<HTMLElement>(`#library-tools-tab-${tabs[next].id}`)?.focus();
-  }
-
   return <div className="modal-backdrop library-tools-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <section ref={dialog} className="library-tools-dialog" role="dialog" aria-modal="true" aria-labelledby="library-tools-title">
       <header className="library-tools-header">
-        <h2 id="library-tools-title">中药资料与处方</h2>
-        <button ref={close} className="icon-button" aria-label="关闭中药资料与处方" onClick={onClose}><XIcon size={22} /></button>
+        <h2 id="library-tools-title">中药基础资料</h2>
+        <button ref={close} className="icon-button" aria-label="关闭中药基础资料" onClick={onClose}><XIcon size={22} /></button>
       </header>
-      <div className="library-tools-tabs" role="tablist" aria-label="中药工具">
-        {tabs.map(({ id, label, Icon }, index) => <button key={id} id={`library-tools-tab-${id}`} role="tab" aria-selected={tab === id} aria-controls={`library-tools-panel-${id}`} tabIndex={tab === id ? 0 : -1} onClick={() => selectTab(id)} onKeyDown={event => tabKey(event, index)}><Icon size={20} aria-hidden="true" />{label}</button>)}
-      </div>
-      <div className="library-tools-panel" id="library-tools-panel-reference" role="tabpanel" aria-labelledby="library-tools-tab-reference" hidden={tab !== "reference"}>
+      <div className="library-tools-panel">
         <ReferenceDocumentDialog embedded onClose={onClose} />
-      </div>
-      <div className="library-tools-panel" id="library-tools-panel-prescription" role="tabpanel" aria-labelledby="library-tools-tab-prescription" hidden={tab !== "prescription"}>
-        {prescriptionVisited && <PrescriptionDialog embedded active={tab === "prescription"} onClose={onClose} />}
       </div>
     </section>
   </div>;

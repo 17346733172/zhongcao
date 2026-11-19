@@ -1,15 +1,15 @@
 "use client";
 
-import { BookOpenTextIcon, ChartDonutIcon, DatabaseIcon, FileCodeIcon, FlaskIcon, HardDrivesIcon, RobotIcon, SidebarSimpleIcon, SlidersHorizontalIcon, XIcon } from "@phosphor-icons/react";
+import { BookOpenTextIcon, ChartDonutIcon, DatabaseIcon, FileCodeIcon, FlaskIcon, GaugeIcon, RobotIcon, SidebarSimpleIcon, XIcon } from "@phosphor-icons/react";
 import { AccountNavigation } from "./authenticated";
 import { libraries } from "@/lib/demo-data";
+import type { DataCenterTarget } from "@/lib/types";
 
 export type WorkspaceModule = { id: string; label: string };
 
 const moduleGroups = [
   { label: "测试", items: [{ id: "test-execution", label: "测试执行", Icon: FlaskIcon }, { id: "test-plans", label: "测试方案", Icon: FileCodeIcon }] },
   { label: "智能", items: [{ id: "ai-agent", label: "AI Agent", Icon: RobotIcon }, { id: "token-statistics", label: "Token 统计", Icon: ChartDonutIcon }] },
-  { label: "设备与系统", items: [{ id: "devices", label: "设备配置", Icon: HardDrivesIcon }, { id: "system-settings", label: "系统设置", Icon: SlidersHorizontalIcon }] },
 ];
 
 type Props = {
@@ -18,13 +18,14 @@ type Props = {
   dataCenterOpen: boolean;
   activeModule: string | null;
   onLibrary: (id: string) => void;
-  onDataCenter: () => void;
+  onDataCenter: (target?: DataCenterTarget) => void;
   onModule: (module: WorkspaceModule) => void;
   onClose: () => void;
   onCollapse: () => void;
 };
 
 export function Sidebar(props: Props) {
+  const operationsOpen = props.activeModule === "operations";
   return (
     <aside className={"sidebar" + (props.open ? " drawer-open" : "")} aria-label="主导航">
       <div className="brand">
@@ -37,11 +38,14 @@ export function Sidebar(props: Props) {
           <div className="nav-list">
             {libraries.map((library) => (
               <button key={library.id} className={"nav-item" + (props.toolsOpen ? " active" : "")} aria-expanded={props.toolsOpen} aria-haspopup="dialog" onClick={() => props.onLibrary(library.id)}>
-                <BookOpenTextIcon size={22} aria-hidden="true" /><span>中药资料与处方</span>
+                <BookOpenTextIcon size={22} aria-hidden="true" /><span>中药基础资料</span>
               </button>
             ))}
-            <button className={"nav-item" + (props.dataCenterOpen ? " active" : "")} aria-haspopup="dialog" aria-expanded={props.dataCenterOpen} onClick={props.onDataCenter}>
+            <button className={"nav-item" + (props.dataCenterOpen ? " active" : "")} aria-haspopup="dialog" aria-expanded={props.dataCenterOpen} onClick={() => props.onDataCenter()}>
               <DatabaseIcon size={22} aria-hidden="true" /><span>数据中心</span>
+            </button>
+            <button className={"nav-item" + (operationsOpen ? " active" : "")} aria-current={operationsOpen ? "page" : undefined} aria-controls="main-content" onClick={() => props.onModule({ id: "operations", label: "运行总览" })}>
+              <GaugeIcon size={22} aria-hidden="true" /><span>运行总览</span>
             </button>
           </div>
         {moduleGroups.map((group) => (
@@ -49,7 +53,7 @@ export function Sidebar(props: Props) {
             <h2 className="nav-label" id={`nav-group-${group.items[0].id}`}>{group.label}</h2>
             <div className="nav-list">
               {group.items.map(({ id, label, Icon }) => (
-                <button key={id} className={"nav-item" + (props.activeModule === id ? " active" : "")} aria-haspopup="dialog" aria-expanded={props.activeModule === id} onClick={() => props.onModule({ id, label })}>
+                <button key={id} className={"nav-item" + (props.activeModule === id ? " active" : "")} aria-current={id === "ai-agent" && props.activeModule === id ? "page" : undefined} aria-controls={id === "ai-agent" ? "main-content" : undefined} aria-haspopup={id === "ai-agent" ? undefined : "dialog"} aria-expanded={id === "ai-agent" ? undefined : props.activeModule === id} onClick={() => props.onModule({ id, label })}>
                   <Icon size={22} aria-hidden="true" /><span>{label}</span>
                 </button>
               ))}

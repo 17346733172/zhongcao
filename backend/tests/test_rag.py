@@ -173,7 +173,7 @@ class RagTests(unittest.TestCase):
             body = GeneratedAnswer.model_validate({"answerable": True, "title": "资料回答", "sections": [
                 {"title": "要点", "content": "理气健脾。", "origin": "document", "citations": [1]}]})
             with patch("app.chat.request_completion", return_value=body) as generate:
-                response = client.post("/api/chat", json={"question": "胸口痞闷怎么办", "use_knowledge": True})
+                response = client.post("/api/knowledge/query", json={"question": "胸口痞闷怎么办", "use_knowledge": True})
                 self.assertEqual(response.status_code, 200, response.text)
                 self.assertEqual(response.json()["sources"][0]["name"], "中药.md")
                 self.assertEqual(response.json()["retrievalMethod"], "vector")

@@ -1,0 +1,42 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "nonPotCategories": 13,
+      "initialNonPotDevices": 14,
+      "allBusyDevices": true,
+      "potSeparation": true,
+      "sharedRefresh": true,
+      "autoStatusChanges": true,
+      "emptyFailureRecovery": true,
+      "noOverflow": true,
+      "draftPreserved": true
+    },
+    {
+      "width": 390,
+      "nonPotCategories": 13,
+      "initialNonPotDevices": 14,
+      "allBusyDevices": true,
+      "potSeparation": true,
+      "sharedRefresh": true,
+      "autoStatusChanges": false,
+      "emptyFailureRecovery": true,
+      "noOverflow": true,
+      "draftPreserved": true
+    },
+    {
+      "width": 320,
+      "nonPotCategories": 13,
+      "initialNonPotDevices": 14,
+      "allBusyDevices": true,
+      "potSeparation": true,
+      "sharedRefresh": true,
+      "autoStatusChanges": false,
+      "emptyFailureRecovery": true,
+      "noOverflow": true,
+      "draftPreserved": true
+    }
+  ],
+  "errors": [],
+  "note": "Isolated UI fixtures; no live platform, model or business writes."
+}

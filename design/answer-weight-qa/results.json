@@ -1,0 +1,296 @@
+{
+  "passed": 6,
+  "results": [
+    {
+      "width": 1440,
+      "mode": "mcp",
+      "weights": [
+        {
+          "tag": "H2",
+          "text": "测试方案",
+          "weight": "400"
+        },
+        {
+          "tag": "H3",
+          "text": "设备默认每次用时",
+          "weight": "400"
+        },
+        {
+          "tag": "DIV",
+          "text": "调剂机：5分钟\n复核台：3分钟\n输送单元：5分钟",
+          "weight": "400"
+        },
+        {
+          "tag": "H3",
+          "text": "配置状态",
+          "weight": "400"
+        },
+        {
+          "tag": "DIV",
+          "text": "排版验收，不执行保存。 ",
+          "weight": "400"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "mode": "markdown",
+      "weights": [
+        {
+          "tag": "H3",
+          "text": "功效与用法",
+          "weight": "400"
+        },
+        {
+          "tag": "DIV",
+          "text": "一级标题\n二级标题\n三级标题\n四级标题\n五级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H4",
+          "text": "一级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H4",
+          "text": "二级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H4",
+          "text": "三级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H4",
+          "text": "四级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H5",
+          "text": "五级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H6",
+          "text": "六级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "STRONG",
+          "text": "强调文字",
+          "weight": "400"
+        },
+        {
+          "tag": "TH",
+          "text": "项目",
+          "weight": "400"
+        },
+        {
+          "tag": "TH",
+          "text": "内容",
+          "weight": "400"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "[1]",
+          "weight": "400"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "mode": "mcp",
+      "weights": [
+        {
+          "tag": "H2",
+          "text": "测试方案",
+          "weight": "400"
+        },
+        {
+          "tag": "H3",
+          "text": "设备默认每次用时",
+          "weight": "400"
+        },
+        {
+          "tag": "DIV",
+          "text": "调剂机：5分钟\n复核台：3分钟\n输送单元：5分钟",
+          "weight": "400"
+        },
+        {
+          "tag": "H3",
+          "text": "配置状态",
+          "weight": "400"
+        },
+        {
+          "tag": "DIV",
+          "text": "排版验收，不执行保存。 ",
+          "weight": "400"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "mode": "markdown",
+      "weights": [
+        {
+          "tag": "H3",
+          "text": "功效与用法",
+          "weight": "400"
+        },
+        {
+          "tag": "DIV",
+          "text": "一级标题\n二级标题\n三级标题\n四级标题\n五级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H4",
+          "text": "一级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H4",
+          "text": "二级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H4",
+          "text": "三级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H4",
+          "text": "四级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H5",
+          "text": "五级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H6",
+          "text": "六级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "STRONG",
+          "text": "强调文字",
+          "weight": "400"
+        },
+        {
+          "tag": "TH",
+          "text": "项目",
+          "weight": "400"
+        },
+        {
+          "tag": "TH",
+          "text": "内容",
+          "weight": "400"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "[1]",
+          "weight": "400"
+        }
+      ]
+    },
+    {
+      "width": 320,
+      "mode": "mcp",
+      "weights": [
+        {
+          "tag": "H2",
+          "text": "测试方案",
+          "weight": "400"
+        },
+        {
+          "tag": "H3",
+          "text": "设备默认每次用时",
+          "weight": "400"
+        },
+        {
+          "tag": "DIV",
+          "text": "调剂机：5分钟\n复核台：3分钟\n输送单元：5分钟",
+          "weight": "400"
+        },
+        {
+          "tag": "H3",
+          "text": "配置状态",
+          "weight": "400"
+        },
+        {
+          "tag": "DIV",
+          "text": "排版验收，不执行保存。 ",
+          "weight": "400"
+        }
+      ]
+    },
+    {
+      "width": 320,
+      "mode": "markdown",
+      "weights": [
+        {
+          "tag": "H3",
+          "text": "功效与用法",
+          "weight": "400"
+        },
+        {
+          "tag": "DIV",
+          "text": "一级标题\n二级标题\n三级标题\n四级标题\n五级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H4",
+          "text": "一级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H4",
+          "text": "二级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H4",
+          "text": "三级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H4",
+          "text": "四级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H5",
+          "text": "五级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "H6",
+          "text": "六级标题",
+          "weight": "400"
+        },
+        {
+          "tag": "STRONG",
+          "text": "强调文字",
+          "weight": "400"
+        },
+        {
+          "tag": "TH",
+          "text": "项目",
+          "weight": "400"
+        },
+        {
+          "tag": "TH",
+          "text": "内容",
+          "weight": "400"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "[1]",
+          "weight": "400"
+        }
+      ]
+    }
+  ]
+}

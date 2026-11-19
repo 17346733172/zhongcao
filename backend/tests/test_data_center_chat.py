@@ -286,13 +286,13 @@ class DataCenterChatTests(unittest.TestCase):
         self.assertEqual(self.client.post("/api/chat", json={"question": "现在有几个锅", "use_knowledge": True}, headers={"X-CSRF-Protection": "0"}).status_code, 403)
         self.reader.start.assert_not_called()
 
-    def test_medical_questions_keep_existing_path_and_drop_operational_history(self):
+    def test_medical_tool_endpoint_keeps_existing_path_and_drops_operational_history(self):
         self.login()
         answer = {"mode": "generated", "title": "中药资料", "introduction": "", "sections": [], "sources": []}
         history = [{"question": "附子", "answer": "旧资料上下文"}, {"question": "数据中心当前使用中的煎药锅有多少台", "answer": "OPERATIONAL_CANARY", "channel": "data_center"}]
         with patch("app.chat.ChatService.answer", return_value=answer) as generate:
             for question in ("陈皮有什么功效", "铁锅能不能煎药", "煎药锅的工作原理是什么"):
-                result = self.ask(question, history)
+                result = self.client.post('/api/knowledge/query', json={'question': question, 'history': history, 'use_knowledge': True})
                 self.assertEqual(result.status_code, 200)
                 self.assertEqual(result.json()["title"], "中药资料")
                 self.assertEqual(generate.call_args.args[3], [])

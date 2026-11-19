@@ -1,0 +1,12 @@
+/* One vertical scroller for the main page, shared by overview and chat. */
+.workspace .main-panel { overflow-x: hidden; overflow-y: auto; scrollbar-gutter: stable; }
+.workspace .main-panel[inert] { overflow-y: hidden; }
+.workspace .main-header { position: sticky; top: 0; z-index: 15; background: #fff; }
+.workspace .workspace-page { flex: 1 0 auto; overflow: visible; }
+.workspace .workspace-operations > .ops-content { flex: 1 0 auto; overflow: visible; scrollbar-gutter: auto; }
+.workspace .chat-body { flex: 1 0 auto; overflow: visible; }
+.workspace .conversation-scroll { flex: 1 0 auto; overflow: visible; }
+.workspace .conversation-scroll :is(.conversation-turn, .agent-answer-header, a, button, summary, [tabindex]),
+.workspace .workspace-operations :is(h3, a, button, [tabindex]) { scroll-margin-block: var(--page-header-height, 64px) var(--page-footer-height, 0px); }
+.workspace .welcome-state .conversation-scroll { flex: 0 0 auto; }
+.workspace .chat-body:not(.welcome-state) .composer-footer { position: sticky; bottom: 0; z-index: 10; background: var(--agent-background); }

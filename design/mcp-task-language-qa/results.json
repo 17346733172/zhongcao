@@ -1,0 +1,65 @@
+{
+  "passed": 5,
+  "reports": [
+    {
+      "width": 1440,
+      "question": "帮我下3个测试任务",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "create"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "下发三个任务",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "create"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "安排3项测试作业",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "create"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 390,
+      "question": "帮我下3个测试任务",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "create"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 320,
+      "question": "帮我下3个测试任务",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "create"
+        }
+      ],
+      "status": 200
+    }
+  ]
+}

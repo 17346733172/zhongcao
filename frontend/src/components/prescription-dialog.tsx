@@ -6,7 +6,7 @@ import { blankPrescription, withDoseScope, preparePrescription, checkPrescriptio
 import { PrescriptionDoseScope, PrescriptionFields } from "./prescription-fields";
 import { PrescriptionReport } from "./prescription-report";
 
-export function PrescriptionDialog({ onClose, embedded = false, active = true }: { onClose: () => void; embedded?: boolean; active?: boolean }) {
+export function PrescriptionDialog({ onClose }: { onClose: () => void }) {
   const [stage, setStage] = useState<"upload" | "confirm" | "report">("upload");
   const [status, setStatus] = useState<PrescriptionStatus | null>(null);
   const [statusError, setStatusError] = useState("");
@@ -35,7 +35,6 @@ export function PrescriptionDialog({ onClose, embedded = false, active = true }:
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
   useEffect(() => {
-    if (embedded) return;
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     dialog.current?.focus();
     const key = (event: KeyboardEvent) => {
@@ -48,8 +47,16 @@ export function PrescriptionDialog({ onClose, embedded = false, active = true }:
       else if (!event.shiftKey && (document.activeElement === last || document.activeElement === dialog.current)) { event.preventDefault(); first.focus(); }
     };
     document.addEventListener("keydown", key);
-    return () => { document.removeEventListener("keydown", key); const target = previous?.getClientRects().length ? previous : document.querySelector<HTMLElement>(".upload-trigger"); target?.focus(); };
-  }, [embedded]);
+    return () => {
+      document.removeEventListener("keydown", key);
+      requestAnimationFrame(() => {
+        if (dialog.current?.isConnected) return;
+        const trigger = document.querySelector<HTMLElement>(".prescription-trigger");
+        const target = previous?.isConnected && previous.getClientRects().length && previous !== document.body ? previous : trigger?.getClientRects().length ? trigger : Array.from(document.querySelectorAll<HTMLElement>(".mobile-menu, .sidebar .nav-item")).find(element => element.getClientRects().length);
+        target?.focus({ preventScroll: true });
+      });
+    };
+  }, []);
   useEffect(() => () => request.current?.abort(), []);
   useEffect(() => {
     const controller = new AbortController();
@@ -59,12 +66,12 @@ export function PrescriptionDialog({ onClose, embedded = false, active = true }:
   }, [attempt]);
   useEffect(() => {
     content.current?.scrollTo({ top: 0 });
-    if (active && (!embedded || stage !== "upload")) dialog.current?.focus();
+    dialog.current?.focus();
     const focusField = content.current?.dataset.focusField;
     if (stage === "confirm" && focusField) {
       delete content.current!.dataset.focusField;
       const field = Array.from(dialog.current?.querySelectorAll<HTMLElement>("[data-field]") ?? []).find(element => element.dataset.field === focusField);
-      if (active) { field?.focus(); field?.scrollIntoView({ block: "center", inline: "center" }); }
+      field?.focus(); field?.scrollIntoView({ block: "center", inline: "center" });
     }
     // Refresh old report contracts with the current data and the user's confirmed scope.
     if (stage === "report" && report && (report.prescription.dose_scope === undefined || !report.conclusion || report.sections?.length !== 5 || !Array.isArray(report.missing_information) || !Array.isArray(report.conclusion?.decision_reasons))) {
@@ -145,9 +152,9 @@ export function PrescriptionDialog({ onClose, embedded = false, active = true }:
   function manual() { setPreparation(null); setPrescription(withDoseScope(blankPrescription(), prescription.dose_scope ?? "per_dose")); setConfirmed(false); setError(""); setFeedback(""); setStage("confirm"); }
   function clearFile() { setFile(null); setPreviewUrl(""); }
   function startNew() { clearFile(); setText(""); setPreparation(null); setReport(null); setPrescription(blankPrescription()); setConfirmed(false); setStage("upload"); setError(""); setFeedback(""); }
-  return <div className={embedded ? "rx-panel" : "modal-backdrop rx-backdrop"} onMouseDown={event => { if (!embedded && event.target === event.currentTarget) onClose(); }}>
-    <section className={"rx-dialog" + (embedded ? " rx-embedded" : "")} role={embedded ? undefined : "dialog"} aria-modal={embedded ? undefined : true} aria-labelledby={embedded ? undefined : "rx-title"} tabIndex={-1} ref={dialog}>
-      {!embedded && <header className="rx-header"><div><h2 id="rx-title">处方检查</h2><p>中药饮片 · 上传识别、核对数据、检查疑点</p></div><button className="icon-button" onClick={onClose} aria-label="关闭处方检查"><XIcon size={22} /></button></header>}
+  return <div className="modal-backdrop rx-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <section className="rx-dialog" role="dialog" aria-modal="true" aria-labelledby="rx-title" tabIndex={-1} ref={dialog}>
+      <header className="rx-header"><div><h2 id="rx-title">处方检查</h2><p>中药饮片 · 上传识别、核对数据、检查疑点</p></div><button className="icon-button" onClick={onClose} aria-label="关闭处方检查"><XIcon size={22} /></button></header>
       <ol className="rx-steps" aria-label="处方检查步骤">{(["upload", "confirm", "report"] as const).map((step, i) => <li key={step} aria-current={stage === step ? "step" : undefined}><span>{i + 1}</span>{["上传识别", "核对数据", "检查结果"][i]}</li>)}</ol>
       <div className="rx-body" ref={content} aria-busy={busy || uploading}>
         {error && <div className="form-error rx-error" role="alert"><span>{error}</span>

@@ -1,0 +1,42 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "busyPotFilter": true,
+      "batchAndAlarm": true,
+      "sharedReader": true,
+      "refresh": true,
+      "polling": true,
+      "emptyAndFailure": true,
+      "missingBatch": true,
+      "tabsAndDraft": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "busyPotFilter": true,
+      "batchAndAlarm": true,
+      "sharedReader": true,
+      "refresh": true,
+      "polling": false,
+      "emptyAndFailure": true,
+      "missingBatch": true,
+      "tabsAndDraft": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "busyPotFilter": true,
+      "batchAndAlarm": true,
+      "sharedReader": true,
+      "refresh": true,
+      "polling": false,
+      "emptyAndFailure": true,
+      "missingBatch": true,
+      "tabsAndDraft": true,
+      "noOverflow": true
+    }
+  ],
+  "errors": [],
+  "note": "Isolated UI fixtures; no live platform, model or business writes."
+}

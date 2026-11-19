@@ -3,7 +3,7 @@
 import { HardDrivesIcon, ArrowRightIcon } from "@phosphor-icons/react";
 import type { Device } from "@/lib/data-center-api";
 
-const kinds = [
+export const deviceCategories = [
   ["pot", "煎药锅", "批次全程保留，倒渣与清洗完成后释放。"],
   ["dispenser", "调剂机", "饮片调剂与包煎分包。"],
   ["verification", "复核台", "核对调剂结果，仿真中自动通过。"],
@@ -20,6 +20,7 @@ const kinds = [
   ["washer", "清洗机", "完成一方一清洗，清洗后才释放锅具。"],
 ];
 const statuses = [["idle", "空闲"], ["busy", "占用"], ["fault", "故障"], ["offline", "停用"]];
+const kinds = deviceCategories;
 
 export function OperationsDeviceCategories({ devices, onSelect }: { devices: Device[]; onSelect: (kind: string) => void }) {
   const extraKinds = [...new Map(devices.filter(device => !kinds.some(([kind]) => kind === device.kind)).map(device => [device.kind, [device.kind, device.kind_name, "平台新增设备类型。"]])).values()];

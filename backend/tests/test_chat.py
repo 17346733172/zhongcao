@@ -5,7 +5,7 @@ import secrets
 from tempfile import TemporaryDirectory
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 import httpx
 from fastapi.testclient import TestClient
 from app.chat import ChatService
@@ -35,6 +35,14 @@ class ChatTests(unittest.TestCase):
         self.app = create_app(self.settings)
         self.client = TestClient(self.app, headers=HEADERS)
         self.client.__enter__()
+        # These cases verify the knowledge pipeline after semantic tool selection;
+        # tool choice itself is covered separately by MCP and real-model QA.
+        selector = patch('app.mcp_tools.agent.request_decision', new_callable=AsyncMock)
+        choose = selector.start()
+        self.addCleanup(selector.stop)
+        choose.return_value = {'role': 'assistant', 'content': None, 'tool_calls': [{
+            'id': 'knowledge', 'type': 'function', 'function': {'name': 'herbal_reference',
+            'arguments': json.dumps({'action': 'ask', 'query': 'original question is bound by agent'})}}]}
         with self.app.state.database.connect() as db:
             for role in ("admin", "editor", "viewer"):
                 db.execute("INSERT INTO users(username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?)",
@@ -158,7 +166,7 @@ class ChatTests(unittest.TestCase):
             for _ in range(4):
                 service.slots.release()
 
-    def test_no_hit_never_calls_model(self):
+    def test_knowledge_no_hit_never_calls_answer_generation(self):
         self.login()
         with patch("app.chat.httpx.Client") as factory:
             for question in ("111", "111有什么功效", "外星矿石XYZ123"):
@@ -169,13 +177,14 @@ class ChatTests(unittest.TestCase):
                 self.assertEqual(response.json()["sections"], [])
             factory.assert_not_called()
 
-    def test_missing_key_is_explicit_but_no_hit_still_returns_empty(self):
+    def test_missing_router_key_is_explicit_and_dedicated_knowledge_endpoint_keeps_no_hit(self):
         app = create_app(Settings(rag_enabled=False, database=self.settings.database))
         with TestClient(app, headers=HEADERS) as client:
             client.post("/api/auth/login", json={"username": "viewer", "password": self.password})
             self.assertFalse(client.get("/api/ai/status").json()["configured"])
             self.assertEqual(client.post("/api/chat", json={"use_knowledge": True, "question": "陈皮"}).status_code, 503)
-            self.assertEqual(client.post("/api/chat", json={"use_knowledge": True, "question": "111"}).json()["mode"], "no_match")
+            self.assertEqual(client.post("/api/chat", json={"use_knowledge": True, "question": "111"}).status_code, 503)
+            self.assertEqual(client.post("/api/knowledge/query", json={"use_knowledge": True, "question": "111"}).json()["mode"], "no_match")
 
     def test_all_roles_can_generate_from_authorized_server_sources(self):
         with patch("app.chat.httpx.Client") as factory:

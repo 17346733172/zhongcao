@@ -48,6 +48,26 @@
 .te-table-scroll table { width: 100%; min-width: 880px; border-collapse: collapse; font-size: 13px; }
 .te-table-scroll th { padding: 12px 14px; border-bottom: 1px solid #90a2b9; background: var(--te-surface); color: var(--te-muted); font-weight: 600; text-align: left; white-space: nowrap; }
 .te-table-scroll td { padding: 0; }
+.te-pot-data-status { margin: 14px 0 10px; color: var(--te-muted); font-size: 12px; line-height: 1.7; }
+.te-pot-error { color: var(--te-fail); line-height: 1.7; }
+.te-pot-notice { color: var(--te-aborted); line-height: 1.7; }
+.te-pot-empty { padding: 28px 0; color: var(--te-muted); text-align: center; line-height: 1.8; }
+.te-pot-table { margin-top: 12px; }
+.te-pot-table table { min-width: 940px; }
+.te-pot-table th { border-bottom-color: var(--te-line); font-weight: 400; }
+.te-pot-table td { padding: 16px 14px; border-bottom: 1px solid #e2e7ed; line-height: 1.7; vertical-align: top; }
+.te-pot-code { font-weight: 400; white-space: nowrap; }
+.te-pot-detail { display: block; margin-top: 3px; color: var(--te-muted); font-size: 12px; }
+.te-pot-busy { display: inline-flex; align-items: center; gap: 7px; color: var(--te-accent); white-space: nowrap; }
+.te-pot-busy i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.te-running-records { padding: 14px 16px 0; }
+.te-records-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
+.te-records-toolbar .te-pot-data-status { margin: 0; }
+.te-batch-table { margin: 12px -16px 0; max-width: calc(100% + 32px); }
+.te-batch-completed { color: var(--te-pass); }
+.te-records-pagination, .te-records-pagination > div { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.te-records-pagination { justify-content: space-between; padding: 14px 0; color: var(--te-muted); font-size: 12px; }
+.te-records-pagination .te-button { min-height: 34px; padding: 5px 10px; font-size: 12px; }
 .te-records-empty { min-height: 125px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; padding: 24px; color: var(--te-muted); }
 .te-records-empty small { font-size: 12px; }
 @media (max-width: 720px) {
@@ -71,5 +91,7 @@
   .te-machine-placeholders { gap: 6px; }
   .te-machine-placeholders > span { padding: 6px 8px; min-height: 32px; }
   .te-records-heading { padding: 10px 12px; }
+  .te-running-records { padding: 12px 12px 0; }
+  .te-batch-table { margin-inline: -12px; max-width: calc(100% + 24px); }
   .te-records-heading small { display: none; }
 }

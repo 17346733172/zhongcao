@@ -1,0 +1,142 @@
+{
+  "passed": 11,
+  "reports": [
+    {
+      "width": 1440,
+      "question": "查看运行总览",
+      "tools": [
+        {
+          "name": "operations_overview",
+          "title": "运行总览",
+          "action": "read"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "查看测试方案的默认用时",
+      "tools": [
+        {
+          "name": "test_plans",
+          "title": "测试方案",
+          "action": "read"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "查看已完成的历史批次",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "completed"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "生成2个仿真演示批次",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "create"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "把包装默认用时改成2分钟",
+      "tools": [
+        {
+          "name": "test_plans",
+          "title": "测试方案",
+          "action": "read"
+        },
+        {
+          "name": "test_plans",
+          "title": "测试方案",
+          "action": "save"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "我现在工作有几个锅",
+      "tools": [
+        {
+          "name": "data_center",
+          "title": "数据中心",
+          "action": "question"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "陈皮的功效",
+      "tools": [
+        {
+          "name": "herbal_reference",
+          "title": "中药基础资料",
+          "action": "ask"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 390,
+      "question": "查看测试方案的默认用时",
+      "tools": [
+        {
+          "name": "test_plans",
+          "title": "测试方案",
+          "action": "read"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 390,
+      "question": "查看运行总览",
+      "tools": [
+        {
+          "name": "operations_overview",
+          "title": "运行总览",
+          "action": "read"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 320,
+      "question": "查看测试方案的默认用时",
+      "tools": [
+        {
+          "name": "test_plans",
+          "title": "测试方案",
+          "action": "read"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 320,
+      "question": "查看运行总览",
+      "tools": [
+        {
+          "name": "operations_overview",
+          "title": "运行总览",
+          "action": "read"
+        }
+      ],
+      "status": 200
+    }
+  ]
+}

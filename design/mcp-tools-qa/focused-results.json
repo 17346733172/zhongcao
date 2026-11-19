@@ -1,0 +1,80 @@
+{
+  "passed": 5,
+  "reports": [
+    {
+      "width": 1440,
+      "question": "把包装默认用时改成2分钟",
+      "tools": [
+        {
+          "name": "test_plans",
+          "title": "测试方案",
+          "action": "read"
+        },
+        {
+          "name": "test_plans",
+          "title": "测试方案",
+          "action": "save"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "把包装默认用时改成1.5分钟",
+      "tools": [
+        {
+          "name": "test_plans",
+          "title": "测试方案",
+          "action": "read"
+        },
+        {
+          "name": "test_plans",
+          "title": "测试方案",
+          "action": "save"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "开始仿真",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "start"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "暂停仿真",
+      "tools": [
+        {
+          "name": "test_execution",
+          "title": "测试执行",
+          "action": "pause"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "width": 1440,
+      "question": "把包装默认用时改成2分钟",
+      "tools": [
+        {
+          "name": "test_plans",
+          "title": "测试方案",
+          "action": "read"
+        },
+        {
+          "name": "test_plans",
+          "title": "测试方案",
+          "action": "save"
+        }
+      ],
+      "status": 200
+    }
+  ]
+}

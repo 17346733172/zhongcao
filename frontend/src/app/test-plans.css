@@ -1,0 +1,14 @@
+.tp-description, .tp-read-time { margin: 16px 0; color: var(--ops-muted); font-size: 13px; line-height: 1.8; }
+.tp-card form { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+.tp-card label { font-size: 13px; }
+.tp-card input { width: 100%; min-width: 0; min-height: 40px; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; background: #fff; color: var(--text); }
+.tp-card input:focus-visible { outline: 3px solid #6ea5fc; outline-offset: 2px; }
+.tp-card input[aria-invalid="true"] { border-color: var(--ops-danger); }
+.tp-card input:disabled { background: var(--paper); color: var(--ops-muted); }
+.tp-card small { line-height: 1.6; font-size: 12px; color: var(--ops-muted); }
+.tp-card small.ops-danger { color: var(--ops-danger); }
+.tp-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+.tp-actions .ops-button { flex: 1; min-width: 90px; font-size: 13px; padding-inline: 8px; }
+.tp-save { background: var(--blue); border-color: var(--blue); color: #fff; }
+.tp-save:hover:not(:disabled) { background: var(--blue-hover); }
+.tp-success { color: var(--ops-success); border-color: #b9d9c7; background: #f2faf5; }

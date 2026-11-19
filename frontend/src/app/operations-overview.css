@@ -6,7 +6,7 @@
 .ops-platform-head p, .ops-sync p, .ops-section-head p, .ops-clock p, .ops-device-duration, .ops-device-head > span, .ops-device-detail > p, .ops-footnote { color: var(--ops-muted); line-height: 1.7; font-size: 13px; }
 .ops-platform-head p { margin-top: 5px; }
 .ops-status-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; }
-.ops-status-row time, .ops-elapsed strong, .ops-metrics dd { font-variant-numeric: tabular-nums; }
+.ops-status-row time, .ops-metrics dd { font-variant-numeric: tabular-nums; }
 .ops-status-row time { margin-left: 6px; font-size: 13px; }
 .ops-tag { display: inline-flex; align-items: center; padding: 4px 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--paper); color: var(--ui-text); }
 .ops-tag-warning { color: #8a5a12; background: #fff7e8; }
@@ -19,8 +19,6 @@
 .ops-empty { padding: 40px 16px; text-align: center; color: var(--ops-muted); line-height: 1.8; }
 .ops-clock { border: 1px solid var(--line); border-top: 2px solid var(--text); border-radius: 6px; padding: 22px; }
 .ops-clock h3 { font-size: 18px; margin-bottom: 8px; }
-.ops-elapsed { display: flex; align-items: center; gap: 14px; color: var(--ops-muted); }
-.ops-elapsed strong { font-size: 20px; color: var(--text); font-weight: 500; }
 .ops-clock .ops-clock-note { width: 100%; padding-top: 14px; border-top: 1px solid var(--line); }
 .ops-section-head { margin: 28px 0 12px; }
 .ops-section-head h3 { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
@@ -72,4 +70,17 @@
   .ops-metrics dd { font-size: 21px; }
   .ops-device-detail .ops-section-head { align-items: flex-start; }
   .ops-device-detail h3 { line-height: 1.7; }
+}
+
+/* The main overview shares the existing read-only content with data center. */
+.workspace-page { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.workspace-page[hidden] { display: none; }
+.workspace-operations { overflow: hidden; }
+.operations-page-refresh { margin-left: auto; flex-shrink: 0; font-size: 14px; }
+@media (max-width: 720px) {
+  .operations-page-refresh { min-height: 40px; padding: 7px 10px; }
+}
+@media (max-width: 360px) {
+  .operations-page-header .demo-label { display: none; }
+  .operations-page-header .breadcrumb h1 { flex-shrink: 0; }
 }

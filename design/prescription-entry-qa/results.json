@@ -1,0 +1,123 @@
+{
+  "origin": "http://127.0.0.1:56091",
+  "results": [
+    {
+      "role": "viewer",
+      "width": 1440,
+      "directPrescription": true,
+      "oldPanelRemoved": true,
+      "fileInputs": true,
+      "manualCheckAndRetry": true,
+      "sidebar": true,
+      "focusRestored": true,
+      "noOverflow": true,
+      "draftPreserved": true,
+      "docsUnavailable": false
+    },
+    {
+      "role": "viewer",
+      "width": 390,
+      "directPrescription": true,
+      "oldPanelRemoved": true,
+      "fileInputs": true,
+      "manualCheckAndRetry": true,
+      "sidebar": true,
+      "focusRestored": true,
+      "noOverflow": true,
+      "draftPreserved": true,
+      "docsUnavailable": false
+    },
+    {
+      "role": "viewer",
+      "width": 320,
+      "directPrescription": true,
+      "oldPanelRemoved": true,
+      "fileInputs": true,
+      "manualCheckAndRetry": true,
+      "sidebar": true,
+      "focusRestored": true,
+      "noOverflow": true,
+      "draftPreserved": true,
+      "docsUnavailable": true
+    },
+    {
+      "role": "editor",
+      "width": 1440,
+      "directPrescription": true,
+      "oldPanelRemoved": true,
+      "fileInputs": true,
+      "manualCheckAndRetry": false,
+      "sidebar": true,
+      "focusRestored": true,
+      "noOverflow": true,
+      "draftPreserved": true,
+      "docsUnavailable": false
+    },
+    {
+      "role": "editor",
+      "width": 390,
+      "directPrescription": true,
+      "oldPanelRemoved": true,
+      "fileInputs": true,
+      "manualCheckAndRetry": false,
+      "sidebar": true,
+      "focusRestored": true,
+      "noOverflow": true,
+      "draftPreserved": true,
+      "docsUnavailable": false
+    },
+    {
+      "role": "editor",
+      "width": 320,
+      "directPrescription": true,
+      "oldPanelRemoved": true,
+      "fileInputs": true,
+      "manualCheckAndRetry": false,
+      "sidebar": true,
+      "focusRestored": true,
+      "noOverflow": true,
+      "draftPreserved": true,
+      "docsUnavailable": false
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "directPrescription": true,
+      "oldPanelRemoved": true,
+      "fileInputs": true,
+      "manualCheckAndRetry": false,
+      "sidebar": true,
+      "focusRestored": true,
+      "noOverflow": true,
+      "draftPreserved": true,
+      "docsUnavailable": false
+    },
+    {
+      "role": "admin",
+      "width": 390,
+      "directPrescription": true,
+      "oldPanelRemoved": true,
+      "fileInputs": true,
+      "manualCheckAndRetry": false,
+      "sidebar": true,
+      "focusRestored": true,
+      "noOverflow": true,
+      "draftPreserved": true,
+      "docsUnavailable": false
+    },
+    {
+      "role": "admin",
+      "width": 320,
+      "directPrescription": true,
+      "oldPanelRemoved": true,
+      "fileInputs": true,
+      "manualCheckAndRetry": false,
+      "sidebar": true,
+      "focusRestored": true,
+      "noOverflow": true,
+      "draftPreserved": true,
+      "docsUnavailable": false
+    }
+  ],
+  "errors": []
+}

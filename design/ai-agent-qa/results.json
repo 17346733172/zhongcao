@@ -1,0 +1,114 @@
+{
+  "origin": "http://127.0.0.1:64377",
+  "results": [
+    {
+      "role": "viewer",
+      "width": 1440,
+      "defaultAgent": true,
+      "keyboardAndMobileNavigation": true,
+      "noPlaceholder": true,
+      "draftAndConversationPreserved": true,
+      "errorRetryAndCitation": true,
+      "otherModulesRestored": true,
+      "noOverflow": true,
+      "docsUnavailable": false
+    },
+    {
+      "role": "viewer",
+      "width": 390,
+      "defaultAgent": true,
+      "keyboardAndMobileNavigation": true,
+      "noPlaceholder": true,
+      "draftAndConversationPreserved": true,
+      "errorRetryAndCitation": true,
+      "otherModulesRestored": true,
+      "noOverflow": true,
+      "docsUnavailable": false
+    },
+    {
+      "role": "viewer",
+      "width": 320,
+      "defaultAgent": true,
+      "keyboardAndMobileNavigation": true,
+      "noPlaceholder": true,
+      "draftAndConversationPreserved": true,
+      "errorRetryAndCitation": true,
+      "otherModulesRestored": true,
+      "noOverflow": true,
+      "docsUnavailable": true
+    },
+    {
+      "role": "editor",
+      "width": 1440,
+      "defaultAgent": true,
+      "keyboardAndMobileNavigation": true,
+      "noPlaceholder": true,
+      "draftAndConversationPreserved": true,
+      "errorRetryAndCitation": true,
+      "otherModulesRestored": true,
+      "noOverflow": true,
+      "docsUnavailable": false
+    },
+    {
+      "role": "editor",
+      "width": 390,
+      "defaultAgent": true,
+      "keyboardAndMobileNavigation": true,
+      "noPlaceholder": true,
+      "draftAndConversationPreserved": true,
+      "errorRetryAndCitation": true,
+      "otherModulesRestored": true,
+      "noOverflow": true,
+      "docsUnavailable": false
+    },
+    {
+      "role": "editor",
+      "width": 320,
+      "defaultAgent": true,
+      "keyboardAndMobileNavigation": true,
+      "noPlaceholder": true,
+      "draftAndConversationPreserved": true,
+      "errorRetryAndCitation": true,
+      "otherModulesRestored": true,
+      "noOverflow": true,
+      "docsUnavailable": false
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "defaultAgent": true,
+      "keyboardAndMobileNavigation": true,
+      "noPlaceholder": true,
+      "draftAndConversationPreserved": true,
+      "errorRetryAndCitation": true,
+      "otherModulesRestored": true,
+      "noOverflow": true,
+      "docsUnavailable": false
+    },
+    {
+      "role": "admin",
+      "width": 390,
+      "defaultAgent": true,
+      "keyboardAndMobileNavigation": true,
+      "noPlaceholder": true,
+      "draftAndConversationPreserved": true,
+      "errorRetryAndCitation": true,
+      "otherModulesRestored": true,
+      "noOverflow": true,
+      "docsUnavailable": false
+    },
+    {
+      "role": "admin",
+      "width": 320,
+      "defaultAgent": true,
+      "keyboardAndMobileNavigation": true,
+      "noPlaceholder": true,
+      "draftAndConversationPreserved": true,
+      "errorRetryAndCitation": true,
+      "otherModulesRestored": true,
+      "noOverflow": true,
+      "docsUnavailable": false
+    }
+  ],
+  "errors": []
+}

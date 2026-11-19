@@ -35,7 +35,7 @@ export function SourceDialog({ source, onClose, loading = false, error, onRetry,
       }
     }
     document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("keydown", onKey); previous?.focus(); };
+    return () => { document.removeEventListener("keydown", onKey); previous?.focus({ preventScroll: true }); };
   }, [onClose, embedded]);
   const body = <>
         <div className="source-dialog-meta">{embedded && <span>{source.name}</span>}<span>{loading ? "正在读取文档" : error ? "文档读取失败" : !hasContent ? "待接入文档" : source.demo ? "演示原文" : "资料原文"}</span>{source.page && <span>引用位置：第 {source.page} 页（示例）</span>}</div>

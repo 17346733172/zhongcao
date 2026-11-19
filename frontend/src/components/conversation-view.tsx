@@ -5,18 +5,21 @@ import { useState } from "react";
 import { answerModeInfo } from "@/lib/answer-mode";
 import type { Answer, AnswerMode, DataCenterTarget, Message, Source } from "@/lib/types";
 import { AnswerMarkdown } from "./answer-markdown";
+import { AnswerHeader } from "./answer-header";
+import { AnswerCharts } from "./answer-charts";
 
 type AnswerActions = { onSource: (source: Source) => void; onToast: (text: string) => void; onDataCenter?: (target?: DataCenterTarget) => void };
 
-function AnswerResult({ answer, id, label, showSources, showSourceCard = true, onSource, onToast, onDataCenter }: AnswerActions & { answer: Answer; id: string; label: string; showSources: boolean; showSourceCard?: boolean }) {
+function AnswerResult({ answer, id, label, time, answeredAt, showSources, showSourceCard = true, onSource, onToast, onDataCenter }: AnswerActions & { answer: Answer; id: string; label: string; time: string; answeredAt?: string; showSources: boolean; showSourceCard?: boolean }) {
   const [activeSource, setActiveSource] = useState(0);
   const [expanded, setExpanded] = useState(true);
   const [copied, setCopied] = useState(false);
   const source = answer.sources[activeSource];
   const showTitle = !showSources || answer.mode !== "generated";
-  const introduction = answer.mode === "generated"
+  const originalIntroduction = answer.mode === "generated"
     ? answer.introduction.replace(/以下回答由 DeepSeek 生成。[\s\S]*$/, "").trim()
     : answer.introduction;
+  const introduction = answer.toolCalls?.length ? originalIntroduction.replace(/^已调用 MCP(?: 工具)?[：:][^。]*。\s*/, "").trim() : originalIntroduction;
   async function copyAnswer() {
     const text = [showTitle ? answer.title : "", introduction, ...answer.sections.map((section) => (section.origin === "ai_supplement" ? "【AI 补充，非文档原文】\n" : section.origin === "document" ? "【资料依据】\n" : "") + section.title + "\n" + section.content)].filter(Boolean).join("\n\n");
     try {
@@ -38,11 +41,11 @@ function AnswerResult({ answer, id, label, showSources, showSourceCard = true, o
   }
   return (
       <section className="answer-row" aria-label={label}>
-        <div className="avatar assistant-avatar"><SparkleIcon size={26} weight="fill" aria-hidden="true" /></div>
         <div className="answer-content">
+          <AnswerHeader answer={answer} time={time} answeredAt={answeredAt} />
           <div className={"answer-paper" + (!showTitle ? " answer-without-title" : "")}>
-            {answer.mode !== "generated" && <p className="answer-origin">{answer.mode === "data_center" ? "数据中心 · 仿真运行数据" : answer.mode === "greeting" ? "本草知问" : answer.mode === "clarification" ? "需要补充问题" : answer.mode === "no_match" ? "资料未命中 / 不足" : "原文摘录"}</p>}
-            {showTitle && <h2>{answer.title}</h2>}
+            {answer.mode !== "generated" && <p className="answer-origin visually-hidden">{answer.mode === "data_center" ? "数据中心 · 仿真运行数据" : answer.mode === "greeting" ? "本草知问" : answer.mode === "clarification" ? "需要补充问题" : answer.mode === "no_match" ? "资料未命中 / 不足" : "原文摘录"}</p>}
+            {showTitle && <h2 className="answer-title visually-hidden">{answer.title}</h2>}
             {introduction && <p className="answer-introduction">{introduction}</p>}
             <div className="answer-sections">
               {answer.sections.map((section, index) => (
@@ -53,6 +56,7 @@ function AnswerResult({ answer, id, label, showSources, showSourceCard = true, o
               ))}
             </div>
           </div>
+          <AnswerCharts charts={answer.charts} />
           <div className="answer-actions"><button className="quiet-button copy-answer" onClick={copyAnswer}>{copied ? <CheckIcon size={18} /> : <CopyIcon size={18} />}{copied ? "已复制" : "复制回答"}</button>{answer.dataCenter && onDataCenter && <button className="quiet-button" aria-haspopup="dialog" onClick={() => onDataCenter(answer.dataCenter)}><ArrowUpRightIcon size={18} />查看数据中心</button>}</div>
           {showSources && showSourceCard && !!answer.sources.length && <section className="sources-area" id={"sources-" + id} aria-label="引用资料">
             <button className="sources-heading" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}><LinkIcon size={22} aria-hidden="true" /><span>引用资料</span><CaretDownIcon className={expanded ? "rotated" : ""} size={15} /></button>
@@ -76,7 +80,7 @@ function AnswerMessage({ message, onSource, onToast, onDataCenter }: AnswerActio
         <div className="avatar user-avatar"><UserIcon size={23} weight="fill" aria-hidden="true" /></div>
         <div className="question-content"><p className="question-bubble">{message.question}</p><p className="message-time">{message.time}</p></div>
       </div>
-      <AnswerResult answer={message.answer} id={message.id} label="回答结果" showSources={message.showSources} showSourceCard={false} onSource={onSource} onToast={onToast} onDataCenter={onDataCenter} />
+      <AnswerResult answer={message.answer} id={message.id} label="回答结果" time={message.time} answeredAt={message.answeredAt} showSources={message.showSources} showSourceCard={false} onSource={onSource} onToast={onToast} onDataCenter={onDataCenter} />
     </article>
   );
 }

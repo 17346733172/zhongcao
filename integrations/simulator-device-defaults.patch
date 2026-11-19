@@ -1,0 +1,328 @@
+--- a/backend/app/api.py
++++ b/backend/app/api.py
+@@ -15,6 +15,7 @@
+                      PrescriptionCreate, ScenarioCreate)
+ from .pagination import page
+ from .prescription_routes import register_prescription_routes
++from .processing_defaults import prescription_data, processing_defaults, register_default_routes
+ from .service import DomainError, Service, require
+ from .workflow import DEFAULT_PROCESSING_SECONDS, DEVICE_LABELS, make_steps
+ 
+@@ -92,6 +93,7 @@
+ 
+     @router.get("/workflow", tags=["流程定义"], summary="获取流程模板、设备类型和参考来源")
+     def workflow():
++        durations = processing_defaults(service.store.read())
+         sample = PrescriptionCreate(external_no="template", patient_code="SIM",
+                                     herbs=[{"name": "演示先煎组", "grams_per_dose": 10, "method": "pre_decoct"},
+                                            {"name": "演示后下组", "grams_per_dose": 5, "method": "late_add"}])
+@@ -101,10 +103,10 @@
+                 "debug_step_enabled": debug_step,
+                 "clock_mode": "real_time", "speed": 1,
+                 "device_kinds": [{"code": str(k), "name": v,
+-                                  "default_processing_seconds": DEFAULT_PROCESSING_SECONDS.get(k)}
++                                  "default_processing_seconds": durations.get(k)}
+                                  for k, v in DEVICE_LABELS.items()],
+                 "herb_methods": {"normal": "常规", "pre_decoct": "先煎", "late_add": "后下（一煎末段）", "bag": "包煎"},
+-                "steps": make_steps(sample.model_dump()),
++                "steps": make_steps(prescription_data(sample, durations), durations),
+                 "assumptions": ["先煎组与常规浸泡组分开处理，先煎后合药，分组细节不建模",
+                                 "复核及成品质检为模拟通过，不执行药学审方或真实质量检测",
+                                 "每锅对应一张处方，药锅从调剂占用至清洗结束",
+@@ -112,6 +114,7 @@
+                                 "参数是演示假设，并非厂商设备参数或临床建议"]}
+ 
+     register_prescription_routes(router, service)
++    register_default_routes(router, service)
+ 
+     @router.post("/batches", status_code=201, tags=["批次"])
+     def create_batch(body: BatchCreate):
+--- a/backend/app/service.py
++++ b/backend/app/service.py
+@@ -7,6 +7,7 @@
+ from .models import PrescriptionCreate
+ from .store import Store
+ from .workflow import DEFAULT_PROCESSING_SECONDS, DEVICE_LABELS, device_record, make_steps, water_plan
++from .processing_defaults import defaults_page, prescription_data, processing_defaults
+ 
+ 
+ class DomainError(Exception):
+@@ -75,8 +76,30 @@
+ 
+     def create_prescription(self, request):
+         with self._timed_transaction() as (s, emit):
+-            p = self._prescription(s, emit, request.model_dump())
++            try:
++                data = prescription_data(request, processing_defaults(s))
++            except ValueError:
++                raise DomainError("invalid_recipe", "处方工艺参数与当前默认用时不兼容，请明确填写一煎和后下时长", 422) from None
++            p = self._prescription(s, emit, data)
+         return p
++
++    def device_defaults(self):
++        return defaults_page(self.store.read())
++
++    def update_device_default(self, kind, request):
++        if kind not in DEFAULT_PROCESSING_SECONDS:
++            raise DomainError("invalid_device_kind", "该设备类型不设置默认每次用时", 422)
++        with self._timed_transaction() as (s, emit):
++            if request.expected_revision != s.get("processing_defaults_revision", 0):
++                raise DomainError("defaults_changed", "默认用时已被更新，请重新读取后再保存")
++            old = processing_defaults(s)[kind]
++            s.setdefault("processing_defaults", {})[kind] = request.default_processing_seconds
++            s["processing_defaults_revision"] = request.expected_revision + 1
++            emit("device.defaults_updated", kind, old_seconds=old,
++                 default_processing_seconds=request.default_processing_seconds,
++                 revision=s["processing_defaults_revision"])
++            result = defaults_page(s)
++        return result
+ 
+     @staticmethod
+     def _prescription(s, emit, data):
+@@ -119,7 +142,7 @@
+         b = {"id": ident("batch"), "prescription_id": p["id"],
+              "trace_code": f"TCM-{uuid4().hex.upper()}", "sequence": len(s["batches"]) + 1,
+              "priority": p["priority"], "status": "queued", "stage_index": 0,
+-             "steps": make_steps(p), "water_plan": water_plan(p), "pot_id": None,
++             "steps": make_steps(p, processing_defaults(s)), "water_plan": water_plan(p), "pot_id": None,
+              "created_at": s["clock"]["now"], "started_at": None, "completed_at": None,
+              "temperature_c": 25.0, "late_added": False, "produced_bags": 0,
+              "dispatched": False, "cancel_requested": False, "waiting_reason": "等待调度"}
+@@ -225,7 +248,7 @@
+                 request = PrescriptionCreate(external_no=f"DEMO-{prefix}-{i+1:03}",
+                                              patient_code=f"SIM-{i+1:03}", herbs=herbs,
+                                              priority=2 if i == count - 1 else 0)
+-                p = self._prescription(s, emit, request.model_dump())
++                p = self._prescription(s, emit, prescription_data(request, processing_defaults(s)))
+                 p.update(status="approved", review={"approved": True, "operator": "演示场景生成器",
+                          "comment": "匿名模拟处方，演示审核通过", "sim_time": s["clock"]["now"]})
+                 p["review"]["real_time"] = emit("prescription.reviewed", p["id"], **p["review"])
+@@ -265,7 +288,7 @@
+         for d in s["devices"].values():
+             duration = s["clock"]["now"] - d["added_at"]
+             devices.append({**d, "kind_name": DEVICE_LABELS[d["kind"]],
+-                            "default_processing_seconds": DEFAULT_PROCESSING_SECONDS.get(d["kind"]),
++                            "default_processing_seconds": processing_defaults(s).get(d["kind"]),
+                             "utilization_percent": round(d["productive_seconds"] / duration * 100, 2) if duration else 0})
+         return devices
+ 
+--- a/backend/app/workflow.py
++++ b/backend/app/workflow.py
+@@ -34,8 +34,9 @@
+             "model": "演示估算：药材量×吸水系数+目标药液量+线性蒸发量；非临床模型"}
+ 
+ 
+-def make_steps(p):
++def make_steps(p, defaults=None):
+     r = p["recipe"]
++    times = {**DEFAULT_PROCESSING_SECONDS, **(defaults or {})}
+     steps = []
+ 
+     def add(code, name, kind, seconds, temperature=25):
+@@ -44,30 +45,30 @@
+                       "status": "pending", "device_id": None, "started_at": None,
+                       "finished_at": None, "target_temperature_c": temperature})
+ 
+-    add("dispensing", "饮片调剂（含包煎分包）", K.DISPENSER, DEFAULT_PROCESSING_SECONDS[K.DISPENSER])
+-    add("verification", "调剂复核", K.VERIFICATION, DEFAULT_PROCESSING_SECONDS[K.VERIFICATION])
+-    add("transport", "药锅输送", K.CONVEYOR, DEFAULT_PROCESSING_SECONDS[K.CONVEYOR])
+-    add("water_fill", "定量加水", K.WATER, DEFAULT_PROCESSING_SECONDS[K.WATER])
++    add("dispensing", "饮片调剂（含包煎分包）", K.DISPENSER, times[K.DISPENSER])
++    add("verification", "调剂复核", K.VERIFICATION, times[K.VERIFICATION])
++    add("transport", "药锅输送", K.CONVEYOR, times[K.CONVEYOR])
++    add("water_fill", "定量加水", K.WATER, times[K.WATER])
+     add("soaking", "浸泡", K.SOAKING, r["soak_seconds"])
+     if any(h["method"] == "pre_decoct" for h in p["herbs"]):
+         add("pre_decoct", "先煎药组煎煮", K.DECOCTER, r["pre_decoct_seconds"], r["target_temperature_c"])
+-        add("combine", "常规药组入锅", K.CONVEYOR, DEFAULT_PROCESSING_SECONDS[K.CONVEYOR], r["target_temperature_c"])
++        add("combine", "常规药组入锅", K.CONVEYOR, times[K.CONVEYOR], r["target_temperature_c"])
+     if r["heat_seconds"] > 0:
+         add("heating", "武火升温", K.DECOCTER, r["heat_seconds"], r["target_temperature_c"])
+     add("first_decoct", "一煎（文火）", K.DECOCTER, r["first_decoct_seconds"], r["target_temperature_c"])
+     if r["second_decoct_seconds"] > 0:
+-        add("first_filter", "一煎滤液暂存", K.FILTER, DEFAULT_PROCESSING_SECONDS[K.FILTER], 80)
+-        add("second_water", "二煎加水", K.WATER, DEFAULT_PROCESSING_SECONDS[K.WATER], 45)
++        add("first_filter", "一煎滤液暂存", K.FILTER, times[K.FILTER], 80)
++        add("second_water", "二煎加水", K.WATER, times[K.WATER], 45)
+         if r["heat_seconds"] > 0:
+             add("second_heating", "二煎升温", K.DECOCTER, r["heat_seconds"], r["target_temperature_c"])
+         add("second_decoct", "二煎（文火）", K.DECOCTER, r["second_decoct_seconds"], r["target_temperature_c"])
+-    add("filtering", "滤液合并", K.FILTER, DEFAULT_PROCESSING_SECONDS[K.FILTER], 75)
+-    add("packaging", "自动灌装包装", K.PACKER, DEFAULT_PROCESSING_SECONDS[K.PACKER], 65)
+-    add("labeling", "贴标", K.LABELER, DEFAULT_PROCESSING_SECONDS[K.LABELER], 45)
+-    add("quality_check", "成品质检（仿真通过）", K.QUALITY, DEFAULT_PROCESSING_SECONDS[K.QUALITY], 40)
+-    add("distribution", "成品配发", K.DISPATCH, DEFAULT_PROCESSING_SECONDS[K.DISPATCH], 35)
+-    add("residue", "自动倒渣", K.RESIDUE, DEFAULT_PROCESSING_SECONDS[K.RESIDUE], 30)
+-    add("cleaning", "一方一清洗", K.WASHER, DEFAULT_PROCESSING_SECONDS[K.WASHER])
++    add("filtering", "滤液合并", K.FILTER, times[K.FILTER], 75)
++    add("packaging", "自动灌装包装", K.PACKER, times[K.PACKER], 65)
++    add("labeling", "贴标", K.LABELER, times[K.LABELER], 45)
++    add("quality_check", "成品质检（仿真通过）", K.QUALITY, times[K.QUALITY], 40)
++    add("distribution", "成品配发", K.DISPATCH, times[K.DISPATCH], 35)
++    add("residue", "自动倒渣", K.RESIDUE, times[K.RESIDUE], 30)
++    add("cleaning", "一方一清洗", K.WASHER, times[K.WASHER])
+     return steps
+ 
+ 
+--- /dev/null
++++ b/backend/app/processing_defaults.py
+@@ -0,0 +1,45 @@
++"""Persistent simulator defaults; explicit prescription recipe fields take priority."""
++
++from fastapi import APIRouter
++from pydantic import Field
++
++from .models import Model, PrescriptionCreate
++from .workflow import DEFAULT_PROCESSING_SECONDS, DEVICE_LABELS
++
++
++class DefaultUpdate(Model):
++    default_processing_seconds: float = Field(strict=True, ge=6, le=7200)
++    expected_revision: int = Field(strict=True, ge=0)
++
++
++def processing_defaults(state):
++    return {**DEFAULT_PROCESSING_SECONDS, **state.get("processing_defaults", {})}
++
++
++def defaults_page(state):
++    return {"items": [{"kind": str(kind), "name": DEVICE_LABELS[kind], "default_processing_seconds": seconds}
++                      for kind, seconds in processing_defaults(state).items()],
++            "revision": state.get("processing_defaults_revision", 0)}
++
++
++def prescription_data(request, defaults):
++    data = request.model_dump()
++    recipe = data["recipe"]
++    fields = request.recipe.model_fields_set
++    for field, kind in (("soak_seconds", "soaking"), ("pre_decoct_seconds", "decocter"),
++                        ("first_decoct_seconds", "decocter"), ("second_decoct_seconds", "decocter")):
++        if field not in fields:
++            recipe[field] = defaults[kind]
++    if "late_add_seconds" not in fields and recipe["late_add_seconds"] >= recipe["first_decoct_seconds"]:
++        recipe["late_add_seconds"] = min(300, recipe["first_decoct_seconds"] / 3)
++    return PrescriptionCreate.model_validate(data).model_dump()
++
++
++def register_default_routes(router: APIRouter, service):
++    @router.get("/device-defaults", tags=["设备"], summary="读取设备分类默认每次用时")
++    def defaults():
++        return service.device_defaults()
++
++    @router.post("/device-defaults/{kind}", tags=["设备"], summary="保存设备分类默认用时，仅影响之后创建的数据")
++    def update(kind: str, body: DefaultUpdate):
++        return service.update_device_default(kind, body)
+--- /dev/null
++++ b/backend/tests/test_processing_defaults.py
+@@ -0,0 +1,111 @@
++import copy
++import json
++import threading
++import time
++import unittest
++from contextlib import contextmanager
++from unittest.mock import patch
++
++from fastapi.testclient import TestClient
++from app.api import create_app
++from app.models import PrescriptionCreate
++from app.processing_defaults import DefaultUpdate, prescription_data, processing_defaults
++from app.service import DomainError, Service
++from app.workflow import initial_state, make_steps
++from tests.postgres import test_schema
++
++
++class MemoryStore:
++    def __init__(self, state=None):
++        self.data = state or initial_state()
++        self.lock = threading.RLock()
++        self.revision = 0
++        self.events = []
++
++    def read(self):
++        return {**copy.deepcopy(self.data), "last_event_id": len(self.events)}
++
++    @contextmanager
++    def transaction(self):
++        state, events = copy.deepcopy(self.data), []
++        def emit(event_type, entity_id, **payload):
++            events.append((event_type, entity_id, payload))
++            return "2026-11-17T00:00:00Z"
++        yield state, emit
++        self.data = state
++        self.events.extend(events)
++        self.revision += 1
++
++
++def service(store=None):
++    result = Service.__new__(Service)
++    result.store = store or MemoryStore()
++    result.last_wall = time.monotonic()
++    result.snapshot_revision = -1
++    result.cached_snapshot = None
++    return result
++
++
++def prescription(code="fixture", **extra):
++    return PrescriptionCreate(external_no=code, patient_code="SIM", herbs=[{"name": "演示饮片", "grams_per_dose": 10}], **extra)
++
++
++class ProcessingDefaultsTests(unittest.TestCase):
++    def test_update_survives_json_reload_and_changes_dashboard_with_event(self):
++        s = service()
++        s.update_device_default("dispenser", DefaultUpdate(default_processing_seconds=450, expected_revision=0))
++        restored = service(MemoryStore(json.loads(json.dumps(s.store.data))))
++        self.assertEqual(restored.device_defaults()["revision"], 1)
++        self.assertEqual(next(i for i in restored.dashboard()["devices"] if i["kind"] == "dispenser")["default_processing_seconds"], 450)
++        self.assertEqual(s.store.events[-1][0], "device.defaults_updated")
++
++    def test_revision_conflict_and_pot_reject_without_state_change(self):
++        s = service()
++        s.update_device_default("dispenser", DefaultUpdate(default_processing_seconds=450, expected_revision=0))
++        before = copy.deepcopy(s.store.data)
++        for kind in ("dispenser", "pot"):
++            with self.assertRaises(DomainError):
++                s.update_device_default(kind, DefaultUpdate(default_processing_seconds=300, expected_revision=0))
++        self.assertEqual(s.store.data, before)
++
++    def test_existing_batch_frozen_new_batch_uses_new_fixed_default(self):
++        s = service()
++        def batch(code):
++            p = s.create_prescription(prescription(code))
++            s.store.data["prescriptions"][p["id"]]["status"] = "approved"
++            return s.create_batch(p["id"])
++        old = batch("before")
++        s.update_device_default("dispenser", DefaultUpdate(default_processing_seconds=450, expected_revision=0))
++        new = batch("after")
++        self.assertEqual(s.batch(old["id"])["steps"][0]["duration_seconds"], 600)
++        self.assertEqual(new["steps"][0]["duration_seconds"], 450)
++
++    def test_soaking_and_decoction_defaults_respect_explicit_recipe(self):
++        defaults = processing_defaults({"processing_defaults": {"soaking": 60, "decocter": 90}})
++        auto = prescription_data(prescription(), defaults)
++        self.assertEqual(auto["recipe"]["soak_seconds"], 60)
++        self.assertEqual(auto["recipe"]["first_decoct_seconds"], 90)
++        self.assertLess(auto["recipe"]["late_add_seconds"], 90)
++        explicit = prescription_data(prescription(recipe={"soak_seconds": 20, "first_decoct_seconds": 45, "second_decoct_seconds": 0}), defaults)
++        self.assertEqual(explicit["recipe"]["soak_seconds"], 20)
++        self.assertEqual(explicit["recipe"]["second_decoct_seconds"], 0)
++        self.assertEqual(next(step for step in make_steps(explicit, defaults) if step["code"] == "first_decoct")["duration_seconds"], 45)
++
++    def test_authenticated_api_and_validation(self):
++        with patch("app.api.Service", return_value=service()):
++            with TestClient(create_app(api_key="fixture-key", enable_runner=False)) as client:
++                path = "/api/v1/device-defaults/dispenser"
++                self.assertEqual(client.post(path, json={}).status_code, 401)
++                headers = {"X-API-Key": "fixture-key"}
++                for value in (0, 5, 7201, True, "300"):
++                    self.assertEqual(client.post(path, headers=headers, json={"default_processing_seconds": value, "expected_revision": 0}).status_code, 422)
++                result = client.post(path, headers=headers, json={"default_processing_seconds": 450, "expected_revision": 0})
++                self.assertEqual(result.status_code, 200)
++                self.assertEqual(result.json()["revision"], 1)
++                self.assertEqual(len(result.json()["items"]), 13)
++
++    def test_postgres_restart_preserves_defaults(self):
++        dsn = test_schema(self)
++        s = Service(dsn)
++        s.update_device_default("dispenser", DefaultUpdate(default_processing_seconds=450, expected_revision=0))
++        self.assertEqual(Service(dsn).device_defaults()["revision"], 1)
