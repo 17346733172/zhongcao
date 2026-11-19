@@ -1,3 +1,4 @@
+@import "./workbench-tokens.css";
 @import "./workspace.css";
 @import "./auth.css";
 @import "./chat-layout.css";
@@ -10,21 +11,23 @@
 @import "./new-test-task.css";
 @import "./test-plans.css";
 @import "./page-scroll.css";
+@import "./conversation-sessions.css";
+@import "./workbench-theme.css";
 
 :root {
-  --blue: #0862e8;
-  --blue-hover: #0753c5;
-  --navy: #08264f;
-  --text: #273446;
-  --muted: #7b8ba5;
-  --line: #e3eaf3;
-  --paper: #f5f8fc;
-  --sidebar: #f5f9ff;
-  --green: #368e61;
+  --blue: var(--wb-accent);
+  --blue-hover: var(--wb-accent-hover);
+  --navy: var(--wb-ink);
+  --text: var(--wb-ink);
+  --muted: var(--wb-muted);
+  --line: var(--wb-line);
+  --paper: var(--wb-surface-soft);
+  --sidebar: var(--wb-surface-soft);
+  --green: var(--wb-success);
   --supplement-text: #77551e;
   --supplement-paper: #fff5e4;
-  --serif: "Noto Serif SC", "Songti SC", "SimSun", "STSong", serif;
-  --sans: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --serif: var(--wb-font-ui);
+  --sans: var(--wb-font-ui);
 }
 
 * { box-sizing: border-box; }

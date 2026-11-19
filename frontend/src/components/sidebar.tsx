@@ -7,8 +7,12 @@ import type { DataCenterTarget } from "@/lib/types";
 
 export type WorkspaceModule = { id: string; label: string };
 
+const testModules = [
+  { id: "test-execution", label: "测试执行", Icon: FlaskIcon },
+  { id: "test-plans", label: "测试方案", Icon: FileCodeIcon },
+];
+
 const moduleGroups = [
-  { label: "测试", items: [{ id: "test-execution", label: "测试执行", Icon: FlaskIcon }, { id: "test-plans", label: "测试方案", Icon: FileCodeIcon }] },
   { label: "智能", items: [{ id: "ai-agent", label: "AI Agent", Icon: RobotIcon }, { id: "token-statistics", label: "Token 统计", Icon: ChartDonutIcon }] },
 ];
 
@@ -47,6 +51,11 @@ export function Sidebar(props: Props) {
             <button className={"nav-item" + (operationsOpen ? " active" : "")} aria-current={operationsOpen ? "page" : undefined} aria-controls="main-content" onClick={() => props.onModule({ id: "operations", label: "运行总览" })}>
               <GaugeIcon size={22} aria-hidden="true" /><span>运行总览</span>
             </button>
+            {testModules.map(({ id, label, Icon }) => (
+              <button key={id} className={"nav-item" + (props.activeModule === id ? " active" : "")} aria-haspopup="dialog" aria-expanded={props.activeModule === id} onClick={() => props.onModule({ id, label })}>
+                <Icon size={22} aria-hidden="true" /><span>{label}</span>
+              </button>
+            ))}
           </div>
         {moduleGroups.map((group) => (
           <section className="sidebar-module-group" key={group.label} aria-labelledby={`nav-group-${group.items[0].id}`}>

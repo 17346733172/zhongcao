@@ -1,0 +1,33 @@
+{
+  "date": "2026-11-19",
+  "reference": "reference.png",
+  "referencePixels": {
+    "width": 1487,
+    "height": 1058
+  },
+  "scope": "Implementation and static verification only; browser verification deferred by explicit user choice.",
+  "typecheck": "passed",
+  "frontendTests": {
+    "passed": 40,
+    "failed": 0
+  },
+  "build": {
+    "result": "passed",
+    "command": "pnpm build --webpack",
+    "isolatedCopy": "tmp/workbench-v3-build-20261119",
+    "cpus": 1,
+    "note": "Existing Next.js security warning interrupted the first attempt; retry passed. Dependencies unchanged."
+  },
+  "themeTokens": 38,
+  "localDocumentLinks": 176,
+  "contrastRatios": {
+    "navigation": 13.06,
+    "navigationSecondary": 8.31,
+    "primaryButton": 6.77,
+    "secondaryText": 4.83,
+    "selectedConversation": 11.83
+  },
+  "browserVerification": "deferred_by_user",
+  "visualQA": "blocked",
+  "backendTests": "not_run_no_backend_changes"
+}

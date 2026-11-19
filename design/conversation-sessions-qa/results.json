@@ -1,0 +1,74 @@
+[
+  {
+    "width": 1440,
+    "newSession": true,
+    "switchAndResume": true,
+    "contextIsolated": true,
+    "abortIsolated": true,
+    "errorCleared": true,
+    "singleMainScroller": true,
+    "navigationRetainsSession": true,
+    "refreshClearsAsLabelled": true,
+    "errors": []
+  },
+  {
+    "width": 1280,
+    "newSession": true,
+    "switchAndResume": true,
+    "contextIsolated": true,
+    "abortIsolated": true,
+    "errorCleared": true,
+    "singleMainScroller": true,
+    "navigationRetainsSession": true,
+    "refreshClearsAsLabelled": true,
+    "errors": []
+  },
+  {
+    "width": 1100,
+    "newSession": true,
+    "switchAndResume": true,
+    "contextIsolated": true,
+    "abortIsolated": true,
+    "errorCleared": true,
+    "singleMainScroller": true,
+    "navigationRetainsSession": true,
+    "refreshClearsAsLabelled": true,
+    "errors": []
+  },
+  {
+    "width": 768,
+    "newSession": true,
+    "switchAndResume": true,
+    "contextIsolated": true,
+    "abortIsolated": true,
+    "errorCleared": true,
+    "singleMainScroller": true,
+    "navigationRetainsSession": true,
+    "refreshClearsAsLabelled": true,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "newSession": true,
+    "switchAndResume": true,
+    "contextIsolated": true,
+    "abortIsolated": true,
+    "errorCleared": true,
+    "singleMainScroller": true,
+    "navigationRetainsSession": true,
+    "refreshClearsAsLabelled": true,
+    "errors": []
+  },
+  {
+    "width": 320,
+    "newSession": true,
+    "switchAndResume": true,
+    "contextIsolated": true,
+    "abortIsolated": true,
+    "errorCleared": true,
+    "singleMainScroller": true,
+    "navigationRetainsSession": true,
+    "refreshClearsAsLabelled": true,
+    "errors": []
+  }
+]

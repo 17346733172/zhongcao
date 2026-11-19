@@ -1,0 +1,281 @@
+{
+  "passed": 6,
+  "results": [
+    {
+      "width": 1280,
+      "height": 858,
+      "initial": {
+        "x": 252,
+        "y": 731.203125,
+        "width": 1013,
+        "height": 126.796875
+      },
+      "initialEmpty": true,
+      "initialNoRequest": true,
+      "initialPrescriptionDraft": true,
+      "shiftEnter": true,
+      "scrollInfo": {
+        "scrollers": [
+          "main-panel"
+        ],
+        "rootHeight": 858,
+        "viewport": 858,
+        "windowY": 0,
+        "width": 1280,
+        "viewportWidth": 1280
+      },
+      "footerVisible": true,
+      "positionsRestored": true,
+      "modalLock": true,
+      "twoTurns": true,
+      "appendedWidget": true,
+      "keyboardFocus": true,
+      "routeScroll": [
+        {
+          "routeName": "account",
+          "overflowY": "visible",
+          "rootHeight": 2058,
+          "viewport": 858,
+          "windowY": 100
+        },
+        {
+          "routeName": "login",
+          "overflowY": "visible",
+          "rootHeight": 2058,
+          "viewport": 858,
+          "windowY": 100
+        }
+      ]
+    },
+    {
+      "width": 1830,
+      "height": 900,
+      "initial": {
+        "x": 314.75,
+        "y": 773.203125,
+        "width": 1500.25,
+        "height": 126.796875
+      },
+      "initialEmpty": true,
+      "initialNoRequest": true,
+      "initialPrescriptionDraft": true,
+      "shiftEnter": true,
+      "scrollInfo": {
+        "scrollers": [
+          "main-panel"
+        ],
+        "rootHeight": 900,
+        "viewport": 900,
+        "windowY": 0,
+        "width": 1830,
+        "viewportWidth": 1830
+      },
+      "footerVisible": true,
+      "positionsRestored": true,
+      "modalLock": true,
+      "twoTurns": true,
+      "appendedWidget": true,
+      "keyboardFocus": true,
+      "routeScroll": [
+        {
+          "routeName": "account",
+          "overflowY": "visible",
+          "rootHeight": 2100,
+          "viewport": 900,
+          "windowY": 100
+        },
+        {
+          "routeName": "login",
+          "overflowY": "visible",
+          "rootHeight": 2100,
+          "viewport": 900,
+          "windowY": 100
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "initial": {
+        "x": 252,
+        "y": 873.203125,
+        "width": 1173,
+        "height": 126.796875
+      },
+      "initialEmpty": true,
+      "initialNoRequest": true,
+      "initialPrescriptionDraft": true,
+      "shiftEnter": true,
+      "scrollInfo": {
+        "scrollers": [
+          "main-panel"
+        ],
+        "rootHeight": 1000,
+        "viewport": 1000,
+        "windowY": 0,
+        "width": 1440,
+        "viewportWidth": 1440
+      },
+      "footerVisible": true,
+      "positionsRestored": true,
+      "modalLock": true,
+      "twoTurns": true,
+      "appendedWidget": true,
+      "keyboardFocus": true,
+      "routeScroll": [
+        {
+          "routeName": "account",
+          "overflowY": "visible",
+          "rootHeight": 2200,
+          "viewport": 1000,
+          "windowY": 100
+        },
+        {
+          "routeName": "login",
+          "overflowY": "visible",
+          "rootHeight": 2200,
+          "viewport": 1000,
+          "windowY": 100
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "initial": {
+        "x": 0,
+        "y": 638.21875,
+        "width": 375,
+        "height": 205.78125
+      },
+      "initialEmpty": true,
+      "initialNoRequest": true,
+      "initialPrescriptionDraft": true,
+      "shiftEnter": true,
+      "scrollInfo": {
+        "scrollers": [
+          "main-panel"
+        ],
+        "rootHeight": 844,
+        "viewport": 844,
+        "windowY": 0,
+        "width": 390,
+        "viewportWidth": 390
+      },
+      "footerVisible": true,
+      "positionsRestored": true,
+      "modalLock": true,
+      "twoTurns": true,
+      "appendedWidget": true,
+      "keyboardFocus": true,
+      "routeScroll": [
+        {
+          "routeName": "account",
+          "overflowY": "visible",
+          "rootHeight": 2070,
+          "viewport": 844,
+          "windowY": 100
+        },
+        {
+          "routeName": "login",
+          "overflowY": "visible",
+          "rootHeight": 2044,
+          "viewport": 844,
+          "windowY": 100
+        }
+      ]
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "initial": {
+        "x": 0,
+        "y": 638.21875,
+        "width": 305,
+        "height": 205.78125
+      },
+      "initialEmpty": true,
+      "initialNoRequest": true,
+      "initialPrescriptionDraft": true,
+      "shiftEnter": true,
+      "scrollInfo": {
+        "scrollers": [
+          "main-panel"
+        ],
+        "rootHeight": 844,
+        "viewport": 844,
+        "windowY": 0,
+        "width": 320,
+        "viewportWidth": 320
+      },
+      "footerVisible": true,
+      "positionsRestored": true,
+      "modalLock": true,
+      "twoTurns": true,
+      "appendedWidget": true,
+      "keyboardFocus": true,
+      "routeScroll": [
+        {
+          "routeName": "account",
+          "overflowY": "visible",
+          "rootHeight": 2093,
+          "viewport": 844,
+          "windowY": 100
+        },
+        {
+          "routeName": "login",
+          "overflowY": "visible",
+          "rootHeight": 2062,
+          "viewport": 844,
+          "windowY": 100
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "height": 600,
+      "initial": {
+        "x": 252,
+        "y": 473.203125,
+        "width": 1013,
+        "height": 126.796875
+      },
+      "initialEmpty": true,
+      "initialNoRequest": true,
+      "initialPrescriptionDraft": true,
+      "shiftEnter": true,
+      "scrollInfo": {
+        "scrollers": [
+          "main-panel"
+        ],
+        "rootHeight": 600,
+        "viewport": 600,
+        "windowY": 0,
+        "width": 1280,
+        "viewportWidth": 1280
+      },
+      "footerVisible": true,
+      "positionsRestored": true,
+      "modalLock": true,
+      "twoTurns": true,
+      "appendedWidget": true,
+      "keyboardFocus": true,
+      "routeScroll": [
+        {
+          "routeName": "account",
+          "overflowY": "visible",
+          "rootHeight": 2029,
+          "viewport": 600,
+          "windowY": 100
+        },
+        {
+          "routeName": "login",
+          "overflowY": "visible",
+          "rootHeight": 1976,
+          "viewport": 600,
+          "windowY": 100
+        }
+      ]
+    }
+  ]
+}

@@ -1,14 +1,16 @@
 "use client";
 
-import { ArrowsClockwiseIcon, ListIcon } from "@phosphor-icons/react";
+import { ArrowsClockwiseIcon, ClockCounterClockwiseIcon, ListIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { initialConversations, initialDocuments, libraries } from "@/lib/demo-data";
+import { initialDocuments, libraries } from "@/lib/demo-data";
 import { createAnswer } from "@/lib/knowledge-answer";
 import { generateAnswer, loadAIStatus, type AIStatus } from "@/lib/chat-api";
-import { answerModeInfo, DEFAULT_ANSWER_MODE, runAnswerMode } from "@/lib/answer-mode";
-import type { Conversation, DataCenterTarget, KnowledgeDocument, Source } from "@/lib/types";
+import { DEFAULT_ANSWER_MODE, runAnswerMode } from "@/lib/answer-mode";
+import type { DataCenterTarget, KnowledgeDocument, Source } from "@/lib/types";
+import { useConversationHistory } from "@/lib/use-conversation-history";
 import { api, errorMessage } from "@/lib/api";
 import { Sidebar, type WorkspaceModule } from "./sidebar";
+import { ConversationSessions } from "./conversation-sessions";
 import { ConversationView } from "./conversation-view";
 import { QuestionComposer } from "./question-composer";
 import { PrescriptionDialog } from "./prescription-dialog";
@@ -27,10 +29,11 @@ export default function KnowledgeWorkspace() {
   const [documentsLoading, setDocumentsLoading] = useState(false);
   const [documentsLoaded, setDocumentsLoaded] = useState(false);
   const [libraryId, setLibraryId] = useState("herbal");
-  const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const history = useConversationHistory();
+  const { conversations, activeId } = history;
   const [documents, setDocuments] = useState<KnowledgeDocument[]>(initialDocuments);
   const [navigationOpen, setNavigationOpen] = useState(false);
+  const [sessionsOpen, setSessionsOpen] = useState(false);
   const [prescriptionOpen, setPrescriptionOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobile, setMobile] = useState(false);
@@ -43,7 +46,7 @@ export default function KnowledgeWorkspace() {
   const [source, setSource] = useState<Source | null>(null);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [dataCenterOpen, setDataCenterOpen] = useState(false);
-  const [mainPage, setMainPage] = useState<"operations" | "ai-agent">("operations");
+  const [mainPage, setMainPage] = useState<"operations" | "ai-agent">("ai-agent");
   const [activeModule, setActiveModule] = useState<WorkspaceModule | null>(null);
   const [newTestTaskOpen, setNewTestTaskOpen] = useState(false);
   const [moduleBusy, setModuleBusy] = useState(false);
@@ -56,10 +59,11 @@ export default function KnowledgeWorkspace() {
   const pageScrollPositions = useRef({ operations: 0, "ai-agent": 0 });
   const restorePageScroll = useRef(false);
   const answerRequest = useRef<AbortController | null>(null);
+  useEffect(() => () => { answerRequest.current?.abort(); answerRequest.current = null; }, []);
   const currentLibrary = libraries.find((item) => item.id === libraryId)!;
   const currentConversation = conversations.find((item) => item.id === activeId);
-  const hasAnswers = !!currentConversation?.messages.length;
   const libraryDocuments = documents.filter((item) => item.libraryId === libraryId);
+  const closeSessions = useCallback(() => setSessionsOpen(false), []);
   const closeSource = useCallback(() => setSource(null), []);
   const closeTools = useCallback(() => setToolsOpen(false), []);
   const closePrescription = useCallback(() => setPrescriptionOpen(false), []);
@@ -115,15 +119,18 @@ export default function KnowledgeWorkspace() {
     const header = page.querySelector<HTMLElement>(".main-header");
     const footer = page.querySelector<HTMLElement>(".composer-footer");
     const updateInsets = () => {
-      page.style.setProperty("--page-header-height", `${header?.getBoundingClientRect().height ?? 0}px`);
-      page.style.setProperty("--page-footer-height", `${mainPage === "ai-agent" && hasAnswers ? footer?.getBoundingClientRect().height ?? 0 : 0}px`);
+      const controlsHeight = header?.classList.contains("agent-chat-controls")
+        ? Math.max(0, ...Array.from(header.querySelectorAll<HTMLElement>("button")).map((button) => button.getClientRects().length ? button.getBoundingClientRect().height + 24 : 0))
+        : header?.getBoundingClientRect().height ?? 0;
+      page.style.setProperty("--page-header-height", `${controlsHeight}px`);
+      page.style.setProperty("--page-footer-height", `${mainPage === "ai-agent" ? footer?.getBoundingClientRect().height ?? 0 : 0}px`);
     };
     const observer = new ResizeObserver(updateInsets);
     if (header) observer.observe(header);
     if (footer) observer.observe(footer);
     updateInsets();
     return () => observer.disconnect();
-  }, [mainPage, hasAnswers]);
+  }, [mainPage]);
 
   useEffect(() => {
     const page = mainScrollRef.current;
@@ -189,9 +196,23 @@ export default function KnowledgeWorkspace() {
     setDataCenterTarget(target);
     setDataCenterOpen(true);
   }
+  function changeConversation(id: string | null) {
+    if (id !== activeId || id === null) {
+      answerRequest.current?.abort();
+      answerRequest.current = null;
+      setBusy(false);
+      setAnswerError("");
+      setDraft("");
+      setSource(null);
+      void history.select(id);
+      if (id === null) mainScrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
+    }
+    setSessionsOpen(false);
+    requestAnimationFrame(() => composerRef.current?.focus({ preventScroll: true }));
+  }
   async function ask(question: string) {
     const text = question.trim();
-    if (!text || busy || answerRequest.current) return;
+    if (!text || busy || answerRequest.current || history.loading || history.loadError || history.unsaved) return;
     const controller = new AbortController();
     answerRequest.current = controller;
     setBusy(true);
@@ -206,13 +227,9 @@ export default function KnowledgeWorkspace() {
       );
       if (controller.signal.aborted || answerRequest.current !== controller) return;
       const message = { id: crypto.randomUUID(), question: text, ...result, showSources: true, time, answeredAt: new Date().toISOString() };
-      setConversations((current) => {
-        const exists = current.find((item) => item.id === conversationId);
-        if (exists) return current.map((item) => item.id === conversationId ? { ...item, messages: [...item.messages, message] } : item);
-        return [{ id: conversationId, libraryId, title: text.slice(0, 16), messages: [message] }, ...current];
-      });
-      setActiveId(conversationId);
       setDraft("");
+      setBusy(false);
+      await history.append(conversationId, libraryId, message);
     } catch (cause) {
       if (!controller.signal.aborted && answerRequest.current === controller) setAnswerError(errorMessage(cause));
     } finally {
@@ -231,26 +248,31 @@ export default function KnowledgeWorkspace() {
     }
   }
   return (
-    <div className={"workspace" + (sidebarCollapsed ? " nav-collapsed" : "")}>
+    <div className={"workspace" + (mainPage === "ai-agent" ? " has-conversation-sessions" : "") + (sidebarCollapsed ? " nav-collapsed" : "")}>
       {navigationOpen && <button className="drawer-backdrop navigation-backdrop" aria-label="关闭导航遮罩" onClick={() => setNavigationOpen(false)} />}
       <Sidebar open={navigationOpen} toolsOpen={toolsOpen} dataCenterOpen={dataCenterOpen} activeModule={toolsOpen || dataCenterOpen ? null : activeModule?.id ?? mainPage} onLibrary={selectLibrary} onDataCenter={openDataCenter} onModule={openModule} onClose={() => setNavigationOpen(false)} onCollapse={() => setSidebarCollapsed(true)} />
-      <main ref={mainScrollRef} className="main-panel" id="main-content" inert={!!source || toolsOpen || prescriptionOpen || dataCenterOpen || !!activeModule || (navigationOpen && mobile)}>
-        <header className={"main-header" + (mainPage === "operations" ? " operations-page-header" : "")}>
+      {mainPage === "ai-agent" && <ConversationSessions conversations={conversations.filter((item) => item.libraryId === libraryId)} activeId={activeId} open={sessionsOpen} loading={history.loading} saving={history.saving} unsaved={history.unsaved} onNew={() => changeConversation(null)} onSelect={changeConversation} onClose={closeSessions} />}
+      <main ref={mainScrollRef} className="main-panel" id="main-content" inert={!!source || toolsOpen || prescriptionOpen || dataCenterOpen || !!activeModule || sessionsOpen || (navigationOpen && mobile)}>
+        <header className={"main-header" + (mainPage === "operations" ? " operations-page-header" : " agent-chat-controls")}>
           <button className={"icon-button mobile-menu" + (sidebarCollapsed ? " desktop-visible" : "")} aria-label={mobile ? "打开导航" : "展开侧栏"} aria-expanded={mobile ? navigationOpen : !sidebarCollapsed} onClick={() => mobile ? setNavigationOpen(true) : setSidebarCollapsed(false)}><ListIcon size={25} /></button>
-          <div className="header-context">
-            <div className="breadcrumb"><h1>{mainPage === "operations" ? "运行总览" : currentLibrary.name}</h1><span className="demo-label">{mainPage === "operations" ? "煎药流程仿真" : answerModeInfo[mode].label}</span></div>
-            <p>{answerModeInfo[mode].description}</p>
-          </div>
-          {mainPage === "operations" && <button className="ops-button operations-page-refresh" aria-label="刷新运行总览" disabled={snapshotReader.busy} onClick={snapshotReader.refreshData}><ArrowsClockwiseIcon size={18} aria-hidden="true" />{snapshotReader.busy ? "读取中" : "刷新"}</button>}
+          {mainPage === "operations" ? <>
+            <div className="header-context"><div className="breadcrumb"><h1>运行总览</h1><span className="demo-label">煎药流程仿真</span></div></div>
+            <button className="ops-button operations-page-refresh" aria-label="刷新运行总览" disabled={snapshotReader.busy} onClick={snapshotReader.refreshData}><ArrowsClockwiseIcon size={18} aria-hidden="true" />{snapshotReader.busy ? "读取中" : "刷新"}</button>
+          </> : <>
+            <h1 className="visually-hidden">AI Agent</h1>
+            <button className="session-toggle" aria-haspopup="dialog" aria-expanded={sessionsOpen} aria-controls="conversation-sessions-dialog" onClick={() => setSessionsOpen(true)}><ClockCounterClockwiseIcon size={20} aria-hidden="true" /><span>会话</span></button>
+          </>}
         </header>
         {mainPage === "operations" && <section className="workspace-page workspace-operations" aria-label="运行总览内容"><OperationsOverview state={snapshotReader.state} /></section>}
         <div className="workspace-page" hidden={mainPage !== "ai-agent"}>
+          {(history.loading || history.loadError) && <div className="document-feedback conversation-feedback" role={history.loadError ? "alert" : "status"}><span>{history.loadError ? `历史会话读取失败：${history.loadError}` : "正在读取历史会话…"}</span>{history.loadError && <button onClick={() => void history.retryLoad()}>重新读取会话</button>}</div>}
+          {(history.saving || history.saveError) && <div className="document-feedback conversation-feedback" role={history.saveError ? "alert" : "status"}><span>{history.saveError ? `回答已生成，但会话尚未保存：${history.saveError} 请保留当前页面并重试保存。` : "正在保存会话…"}</span>{history.saveError && <button onClick={() => void history.retrySave()}>重试保存</button>}</div>}
           {(documentsLoading || documentError) && <div className="document-feedback" role={documentError ? "alert" : "status"}><span>{documentError || "正在读取知识库资料…"}</span>{documentError && <button onClick={() => void loadDocuments()}>重新读取</button>}</div>}
-          <div className={"chat-body" + (!(currentConversation?.messages.length) ? " welcome-state" : "")}>
+          <div className="chat-body">
             <div className="conversation-scroll" aria-label="问答内容" aria-busy={busy}>
               <ConversationView mode={mode} messages={currentConversation?.messages ?? []} busy={busy} libraryName={currentLibrary.name} onSource={setSource} onToast={setToast} onDataCenter={openDataCenter} />
             </div>
-            <QuestionComposer draft={draft} busy={busy} disabled={false} prescriptionOpen={prescriptionOpen} error={answerError} status={aiStatus} statusError={aiStatusError} inputRef={composerRef} onDraft={setDraft} onSubmit={submit} onKeyDown={composerKey} onPrescription={() => setPrescriptionOpen(true)} />
+            <QuestionComposer draft={draft} busy={busy} disabled={history.loading || !!history.loadError || history.unsaved} prescriptionOpen={prescriptionOpen} error={answerError} status={aiStatus} statusError={aiStatusError} inputRef={composerRef} onDraft={setDraft} onSubmit={submit} onKeyDown={composerKey} onPrescription={() => setPrescriptionOpen(true)} />
           </div>
         </div>
       </main>

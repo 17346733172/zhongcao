@@ -29,7 +29,7 @@ export default function LoginForm() {
     <main className="login-page">
       <section className="login-story" aria-label="本草知问介绍">
         <div className="brand"><BookOpenTextIcon size={35} weight="fill" aria-hidden="true" /><span>本草知问</span></div>
-        <div className="login-story-content"><span className="eyebrow">中药知识 · 有据可循</span><h1>让每一次提问，<br />都有原文可依。</h1><p>整理中药资料，回到知识源头。<br />在专属知识库中阅读、提问与核对。</p><div className="login-illustration" aria-hidden="true"><BookOpenTextIcon size={100} weight="light" /><span>本草 · 知识 · 问答</span></div></div>
+        <div className="login-story-content"><span className="eyebrow">中药知识 · 有据可循</span><h1>让每一次提问，<br />都有原文可依。</h1><p>整理中药资料，回到知识源头。<br />查阅资料、核对来源，了解仿真运行状态。</p><div className="login-illustration" aria-hidden="true"><BookOpenTextIcon size={100} weight="light" /><span>本草 · 知识 · 问答</span></div></div>
         <p className="login-story-footer"><ShieldCheckIcon size={19} aria-hidden="true" />账号访问控制 · 按角色分配权限</p>
       </section>
       <section className="login-form-area" aria-labelledby="login-title">
@@ -42,7 +42,7 @@ export default function LoginForm() {
           </form>
           <p className="login-help">请使用管理员分配的账号。忘记密码请联系管理员。</p>
           <div className="login-note"><ShieldCheckIcon size={19} aria-hidden="true" /><p>不同账号拥有不同操作权限，登录后可查看自己的角色。</p></div>
-        </div><p className="login-bottom">当前提供关键词原文检索，请核对引用原文</p>
+        </div><p className="login-bottom">中药知识问答 · 运行数据查询，请核对来源与数据时间</p>
       </section>
     </main>
   );

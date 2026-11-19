@@ -1,0 +1,41 @@
+/* Selected visual system: design/workbench-v3/reference.png. */
+:root {
+  --wb-font-ui: "DM Sans", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", "Segoe UI", sans-serif;
+  --wb-font-mono: Consolas, "SFMono-Regular", "Microsoft YaHei", monospace;
+  --wb-ink: #182b43;
+  --wb-muted: #63738a;
+  --wb-accent: #2359ad;
+  --wb-accent-hover: #1b478d;
+  --wb-accent-soft: #e6effd;
+  --wb-focus: #71a7ff;
+  --wb-nav: #162b46;
+  --wb-nav-hover: #203e60;
+  --wb-nav-active: #254a77;
+  --wb-nav-text: #f0f5fc;
+  --wb-nav-muted: #b7c7db;
+  --wb-nav-line: #36506e;
+  --wb-surface: #ffffff;
+  --wb-surface-soft: #f5f7fb;
+  --wb-surface-head: #edf2f8;
+  --wb-line: #d4dfea;
+  --wb-line-strong: #bacbe0;
+  --wb-canvas: #edf3fa;
+  --wb-grid: #e0e8f2;
+  --wb-success: #24754c;
+  --wb-success-soft: #eff8f2;
+  --wb-warning: #946018;
+  --wb-warning-soft: #fff8ec;
+  --wb-danger: #ad3434;
+  --wb-danger-soft: #fff4f3;
+  --wb-nav-width: 224px;
+  --wb-session-width: 272px;
+  --wb-radius: 4px;
+  --wb-dialog-radius: 6px;
+  --wb-control-height: 40px;
+  --wb-space-1: 4px;
+  --wb-space-2: 8px;
+  --wb-space-3: 12px;
+  --wb-space-4: 16px;
+  --wb-space-6: 24px;
+  --wb-dialog-shadow: 0 18px 60px #10253e29;
+}

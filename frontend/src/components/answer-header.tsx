@@ -13,13 +13,12 @@ export function AnswerHeader({ answer, time, answeredAt }: { answer: Answer; tim
     ? new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(timestamp)
     : time.replace(/^今天\s*/, "");
   const calls = answer.toolCalls ?? [];
-  const task = calls.at(-1)?.title ?? (answer.mode === "generated" ? "知识问答" : answer.title);
   const usage = answer.usage;
   const validUsage = usage && [usage.inputTokens, usage.outputTokens].every(value => Number.isSafeInteger(value) && value >= 0);
   return <>
     <header className="agent-answer-header">
       <span className="agent-avatar" aria-hidden="true"><RobotIcon size={21} /></span>
-      <div className="agent-answer-meta"><span className="agent-name">Agent</span><span className="agent-task-label" title={task}>{task}</span>{displayedTime && <time className="agent-answer-time" dateTime={validTime ? answeredAt : undefined} title="北京时间">{displayedTime}</time>}</div>
+      <div className="agent-answer-meta"><span className="agent-name">Agent</span>{displayedTime && <time className="agent-answer-time" dateTime={validTime ? answeredAt : undefined} title="北京时间">{displayedTime}</time>}</div>
       {validUsage && <span className="agent-token-usage" aria-label="工具选择Token用量" title="本轮模型工具选择的实际用量，不含知识库回答生成">{usage.scope === "tool_selection" && <span>工具选择 </span>}{usage.inputTokens.toLocaleString("zh-CN")} 入 / {usage.outputTokens.toLocaleString("zh-CN")} 出</span>}
     </header>
     {calls.length > 0 && <ol className="agent-tool-log" aria-label="工具调用记录">{calls.map((call, index) => {

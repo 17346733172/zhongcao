@@ -99,4 +99,7 @@ export type Conversation = {
   libraryId: string;
   title: string;
   messages: Message[];
+  messageCount?: number;
+  updatedAt?: string;
+  messagesLoaded?: boolean;
 };

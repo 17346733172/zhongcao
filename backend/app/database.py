@@ -53,6 +53,25 @@ class Database:
                     created_by INTEGER NOT NULL REFERENCES users(id),
                     created_at INTEGER NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS conversations (
+                    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    id TEXT NOT NULL,
+                    library_id TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    saved_at REAL NOT NULL,
+                    PRIMARY KEY(user_id, id)
+                );
+                CREATE INDEX IF NOT EXISTS conversations_recent ON conversations(user_id, saved_at DESC);
+                CREATE TABLE IF NOT EXISTS conversation_messages (
+                    sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    conversation_id TEXT NOT NULL,
+                    id TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    UNIQUE(user_id, conversation_id, id),
+                    FOREIGN KEY(user_id, conversation_id) REFERENCES conversations(user_id, id) ON DELETE CASCADE
+                );
                 CREATE TABLE IF NOT EXISTS simulation_events (
                     source TEXT NOT NULL,
                     event_id INTEGER NOT NULL,

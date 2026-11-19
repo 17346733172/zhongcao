@@ -1,19 +1,19 @@
-"""Bounded DeepSeek tool selection; all execution goes through an MCP session."""
+"""Chat Agent services and request lifecycle; LangGraph controls tool orchestration."""
 
 import asyncio
 import json
 import re
-from datetime import timedelta
-from time import perf_counter
 
 import httpx
 from fastapi import HTTPException
-from mcp.shared.memory import create_connected_server_and_client_session
+from fastmcp import Client
 from .client import BencaoClient, ToolFailure
 from .commands import normalize_command, requested_creation_count
 from .formatting import format_result
 from .server import CATALOG, create_server
-from .presentation import chart_for_result, tool_trace
+from .presentation import chart_for_result
+from .synthesis import organize_answer
+from .workflow import AgentContext, run_workflow
 
 KINDS = {'dispenser': ('调剂', '配药'), 'verification': ('复核',), 'conveyor': ('传送', '输送'),
          'water': ('加水', '注水'), 'soaking': ('浸泡',), 'decocter': ('煎煮',), 'filter': ('过滤',),
@@ -97,12 +97,12 @@ def authorize_write(question, name, args, prior):
 
 
 async def invoke(session, name, args):
-    result = await session.call_tool(name, args)
-    if result.isError:
+    result = await session.call_tool(name, args, raise_on_error=False)
+    if result.is_error:
         raise ToolFailure(' '.join(c.text for c in result.content if c.type == 'text'),
-                          (result.structuredContent or {}).get('status_code', 502))
-    if result.structuredContent is not None:
-        return result.structuredContent
+                          (result.structured_content or {}).get('status_code', 502))
+    if result.structured_content is not None:
+        return result.structured_content
     return json.loads(next(c.text for c in result.content if c.type == 'text'))
 
 
@@ -136,85 +136,25 @@ async def answer_with_mcp(app, request, payload, *, direct=None, response=None):
             cookies={settings.cookie_name: request.cookies.get(settings.cookie_name, '')}, timeout=190) as http:
         api = BencaoClient(http)
         server = create_server(api)
-        results = []
-        traces = []
-        usage = None
         failure = None
-        async with create_connected_server_and_client_session(server, read_timeout_seconds=timedelta(seconds=190)) as session:
-            async def call_tool_with_trace(name, args):
-                started = perf_counter()
-                data = await invoke(session, name, args)
-                traces.append(tool_trace(name, args, data, (perf_counter() - started) * 1000))
-                return data
-            # Capture expected errors inside the SDK task group, so HTTPException is not wrapped in ExceptionGroup.
+        async with Client(server, timeout=190) as session:
+            context = AgentContext(settings=settings, payload=payload, session=session, system_prompt=PROMPT,
+                decide=request_decision, authorize=authorize_write, invoke=invoke, finish=finish,
+                summarize=organize_answer, direct=direct)
+            # Capture expected errors inside the client lifecycle before closing its task group.
             try:
                 if direct:
-                    name, args = direct
-                    results.append((name, args, await call_tool_with_trace(name, args)))
+                    answer = await run_workflow(context)
                 else:
                     if not settings.deepseek_api_key:
                         raise HTTPException(503, 'Agent 工具选择需要已配置且支持 Tool Calls 的 DeepSeek 模型。')
                     if _slots.locked():
                         raise HTTPException(429, 'Agent 请求繁忙，请稍后重试。')
                     async with _slots:
-                        listing = await session.list_tools()
-                        tools = [{'type': 'function', 'function': {'name': t.name, 'description': t.description,
-                                  'parameters': t.inputSchema}} for t in listing.tools]
-                        messages = [{'role': 'system', 'content': PROMPT}, {'role': 'user', 'content': json.dumps({
-                            'current_question': payload.question,
-                            'history_for_context_only': [t.model_dump(exclude={'answer'}) for t in payload.history]}, ensure_ascii=False)}]
-                        for step in range(3):
-                            message = await request_decision(settings, messages, tools)
-                            reported_usage = message.get('_usage')
-                            if reported_usage:
-                                usage = {key: (usage or {}).get(key, 0) + reported_usage[key] for key in ('inputTokens', 'outputTokens')}
-                            calls = message.get('tool_calls') or []
-                            if not calls:
-                                if results:
-                                    break
-                                return {'mode': 'clarification', 'title': '请明确要查询或执行的内容',
-                                    'introduction': '本次尚未调用工具，也未修改数据。', 'sources': [], 'sections': [{
-                                        'title': '可调用模块', 'content': '可查询中药基础资料、数据中心、运行总览、批次记录与测试方案；生成批次请写明数量，修改默认用时请写明设备和分钟数。'}]}
-                            if len(calls) != 1:
-                                raise HTTPException(502, 'Agent 每步只能选择一个工具，本次未执行该步骤。')
-                            call = calls[0]
-                            try:
-                                name = call['function']['name']
-                                args = json.loads(call['function']['arguments'])
-                                if name not in CATALOG or not isinstance(args, dict) or not isinstance(call['id'], str):
-                                    raise ValueError('Invalid tool')
-                            except (KeyError, TypeError, ValueError):
-                                raise HTTPException(502, 'Agent 工具参数无效，本次未执行该步骤。') from None
-                            # Tool selection does not rewrite the original knowledge
-                            # question or discard the existing, validated history.
-                            if name == 'herbal_reference' and args.get('action') == 'ask':
-                                args = {**args, 'query': payload.question,
-                                        'history': [t.model_dump() for t in payload.history]}
-                            if name == 'data_center' and args.get('action') == 'question':
-                                args = {**args, 'question': payload.question,
-                                        'history': [t.model_dump() for t in payload.history]}
-                            writing = authorize_write(payload.question, name, args, results)
-                            # Confirmation is derived from the current user's exact instruction,
-                            # rather than depending on whether the model repeats a Boolean flag.
-                            if writing:
-                                args = {**args, 'confirmed': True}
-                            try:
-                                CATALOG[name][0].model_validate(args)
-                            except ValueError:
-                                raise HTTPException(502, 'Agent 工具参数无效，本次未执行该步骤。') from None
-                            if any(n == name and a == args for n, a, _ in results):
-                                break
-                            data = await call_tool_with_trace(name, args)
-                            results.append((name, args, data))
-                            if (writing or name == 'herbal_reference'
-                                    or name == 'test_execution' and args.get('action') == 'progress'
-                                    or data.get('stale') or data.get('error')):
-                                break
-                            messages.append({'role': 'assistant', 'content': message.get('content'), 'tool_calls': calls})
-                            messages.append({'role': 'tool', 'tool_call_id': call['id'], 'content': json.dumps(data, ensure_ascii=False)[:50000]})
+                        answer = await run_workflow(context)
                 if response is not None and api.server_timing:
                     response.headers['Server-Timing'] = api.server_timing
-                return finish(results, payload.question, traces, usage)
+                return answer
             except ToolFailure as error:
                 failure = HTTPException(error.status_code, str(error))
             except HTTPException as error:

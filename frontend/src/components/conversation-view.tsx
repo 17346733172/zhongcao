@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRightIcon, BookOpenTextIcon, CaretDownIcon, CheckIcon, CopyIcon, FilePdfIcon, FileTextIcon, LinkIcon, SparkleIcon, UserIcon } from "@phosphor-icons/react";
+import { ArrowUpRightIcon, CaretDownIcon, CheckIcon, CopyIcon, FilePdfIcon, FileTextIcon, LinkIcon, SparkleIcon, UserIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { answerModeInfo } from "@/lib/answer-mode";
 import type { Answer, AnswerMode, DataCenterTarget, Message, Source } from "@/lib/types";
@@ -98,9 +98,7 @@ type Props = {
 export function ConversationView(props: Props) {
   return (
     <>
-      {!props.messages.length && <div className="welcome" aria-label={props.libraryName + "问答"}>
-        <h2><BookOpenTextIcon size={41} weight="fill" aria-hidden="true" /><span>你好，有什么我能帮你的吗？</span></h2>
-      </div>}
+      {!props.messages.length && <p className="visually-hidden">{props.libraryName}问答：在底部输入问题，回答将显示在这里。</p>}
       {props.messages.map((message) => <AnswerMessage key={message.id} message={message} onSource={props.onSource} onToast={props.onToast} onDataCenter={props.onDataCenter} />)}
       {props.busy && <div className="thinking" role="status"><SparkleIcon size={20} weight="fill" aria-hidden="true" /><span>{answerModeInfo[props.mode].busy}</span></div>}
     </>

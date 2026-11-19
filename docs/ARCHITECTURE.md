@@ -1,5 +1,15 @@
 # 项目架构与目录
 
+2026-11-19（AI 整理回答，最新）：`format_answer` 改为异步节点，先通过现有 `finish` 组装可核对结果与元数据，再由 `mcp_tools/synthesis.py` 使用既有 `RAG.llm.request_json` 在工作线程调用 DeepSeek 整理正文。输入仅含当前问题及本轮工具结果的标题、来源 / 时间说明和正文，不传会话 Cookie、配置凭据或旧轮回答。仅替换 `sections`，引用、工具记录、数据时间、过期标记、跳转及图表由后端保留。结构、长度和新增数字 / 编号校验失败或模型异常时保留工具结果并提示，不重新执行图的工具节点。该检查不是语义事实校验，模型措辞仍需核对。知识库 ask 已有 AI 生成与引用校验，直接复用；未配置模型的规则分支不增加外部请求。用量仍只统计工具选择，不含整理及知识生成。
+
+2026-11-19（聊天 LangGraph，最新）：`mcp_tools/workflow.py` 使用已固定的 LangGraph `1.2.18` 构建并复用六节点 StateGraph：prepare_tools、select_tool、authorize_tool、execute_tool、format_answer、clarify。条件边控制澄清、重复读取结束、先读后保存和最多三次模型选择；执行失败直接退出，节点不配置重试策略。请求级 `AgentContext` 携带 FastMCP Client、配置及服务函数，图状态仅保存本轮消息、步骤、结果、调用记录和实际用量；不使用 checkpointer / store，不开启远程 LangSmith 追踪。`agent.py` 保留模型请求、写入授权、结果格式化和 HTTP / Client 生命周期，移除原有手写三步循环，以异步 `ainvoke` 执行状态图，递归上限16。无模型的明确规则只读查询同样经过图的校验、执行和格式化路径；普通 AI 兼容路径保持独立。
+
+2026-11-19（会话持久化，最新）：新增 `conversations / conversation_messages` 两张 SQLite 表，使用账号与会话组合键及消息唯一键隔离记录。`conversations.py` 提供摘要列表、完整会话读取和幂等追加接口，沿用登录、knowledge:read、CSRF、no-store 和 8 MiB 写入边界。`use-conversation-history.ts` 负责初始恢复、按需读取、保存及失败重试；`KnowledgeWorkspace` 保留请求取消与上下文边界。账号改变时重挂载工作区并终止旧回答，不把旧账号消息存给新账号。下文早期仅页面内存的说明为历史记录。
+
+2026-11-19（整体第三套）：新增 `workbench-tokens.css` 集中设计令牌，`workbench-theme.css` 作为既有流程样式后的视觉映射层，复用 Next.js、React 和 Phosphor。`ConversationSessions` 只派生真实时间分组与排序，`AccountNavigation` 增加现有图标及显示包装，登录与metadata文案与现状同步；无后端、鉴权、网络协议、持久化或依赖变化。
+
+2026-11-19（会话窗口）：`ConversationSessions` 仅展示历史及新建入口；`KnowledgeWorkspace` 复用现有 `conversations / activeId` 状态，切换通过 `changeConversation` 取消请求和重置当前输入。桌面为独立网格列，窄屏为原生 modal dialog，主问答滚动机制保留。没有新增会话持久化、后端 API 或存储。
+
 2026-11-18（统一语义调度，最新）：`/api/chat` 在配置模型时无关键词门槛地进入MCP工具选择，移除MODULE_QUESTION/PLANNER_QUESTION及默认herbal_reference回退。只有选择知识工具才执行原RAG，知识/规则问答参数绑定当前原问题与完整历史。`commands.EXECUTION_SUBJECT` 仅用于独立写入数量授权，不再路由读取。无模型时只保留明确规则运行查询，其他Agent请求503；选择/执行失败不改为知识检索。`test_execution/progress` 经鉴权GET `/api/data-center/recent-batches` 读取批次，最多核验1000条完整分页后按创建时间倒序选取，保留单独的BatchProgress工序投影，不扩大常规快照；实际处理秒数、配置秒数与等待原因由formatter直接展示。规则不授予模型额外写入权限。
 
 2026-11-18（统一页面滚动）：`page-scroll.css` 统一主栏纵向滚动，聊天与总览不再建立第二个纵向滚动容器。`KnowledgeWorkspace.mainScrollRef` 负责新回答定位，按主页面保存/恢复scrollTop，ResizeObserver测量标题和输入区高度，为正文/图表定位留白。固定导航和输入控件不参与该留白，关闭导航/弹窗使用preventScroll恢复焦点，避免改变阅读位置。弹窗与导航打开时main为inert并锁定背景滚动；业务请求边界不变。
@@ -8,7 +18,7 @@
 
 2026-11-18（任务口语修复）：聊天路由覆盖“任务/作业”，送至同一 MCP 工具选择流程；`mcp_tools/commands.py` 统一全角/空白规范化和明确创建数量提取，供路由与写入授权使用。任务与仿真批次语义同时写入 Agent 提示与工具描述，避免“下3个测试任务”误入药材检索；实际数量仍与当前指令核对，不从模型或历史猜测，不自动开始仿真。
 
-2026-11-18（MCP，最新）：`app/mcp_tools/` 使用官方 MCP SDK 注册五模块工具，所有业务经现有鉴权 HTTP API 执行。页面请求在内存 MCP ClientSession 中调用，转发当前会话；外部 `python -m app.mcp_tools` 使用 stdio 和独立账号环境变量登录同一 API。`/api/knowledge/query` 复用原知识库流程，`/api/data-center/question` 复用规则运行问答，避免回调 `/api/chat` 递归。模块问题由 DeepSeek Tool Calls 最多选择3步，写入须核对当前用户明确指令，保存先读取可写版本，成功写入后停止；运行回答由工具数据格式化，不采用模型生成的数字。普通 AI 兼容路径独立保留。详见 [MCP 工具](MCP-TOOLS.md)。此条替代此前聊天不执行任何仿真写入的范围，不涉及物理设备控制。
+2026-11-19（MCP，最新）：`app/mcp_tools/` 使用独立 FastMCP `4.2.2` 包，以自定义 `Tool` 保留五模块的扁平 schema、严格 Pydantic 参数与脱敏错误，注册到 `FastMCP` 服务，页面通过 `Client(server, timeout=190)` 在内存中调用。使用 `ToolResult` 和客户端的 `structured_content / is_error` 处理结果，不再直接使用 SDK 的低层 Server 或内存会话辅助函数。`BencaoClient` 使用当前页面转发的会话 Cookie，经 `httpx.ASGITransport` 在进程内访问既有鉴权 API，不接收独立账号或服务地址。`/api/knowledge/query` 复用原知识库流程，`/api/data-center/question` 复用规则运行问答，避免回调 `/api/chat` 递归。模块问题由 DeepSeek Tool Calls 最多选择3步，写入须核对当前用户明确指令，保存先读取可写版本，成功写入后停止；运行回答由工具数据格式化，不采用模型生成的数字。普通 AI 兼容路径独立保留。详见 [MCP 工具](MCP-TOOLS.md)。此条替代此前聊天不执行任何仿真写入的范围，不涉及物理设备控制。
 
 2026-11-18（默认用时真实保存）：当前仿真服务器已部署接收端 GET / POST 默认用时接口，本草沿用既有 `device_defaults.py`、数据层和编辑页即可真实保存。服务器补丁保留内存缓存、检查点及拆分状态表，在既有状态元信息中保存配置和独立修订号，变更事件同事务提交；已有批次步骤不重算。独立 PostgreSQL 63 项及本草相关 17 项回归通过，详见[真实保存验收](DEVICE-DEFAULTS-ENABLE-QA.md)。此条替代下文服务器缺少修改接口的历史状态。
 
@@ -98,6 +108,7 @@
 | backend/app/security.py、schemas.py | Argon2id、令牌摘要、权限映射与输入模型 |
 | backend/app/main.py | 应用工厂、会话、账号与共享资料 API |
 | backend/app/prescriptions/agent.py | LangGraph 状态图、意图条件分支、确认与检查两阶段，不配置持久检查点或远程追踪 |
+| backend/app/mcp_tools/workflow.py、agent.py | 聊天 LangGraph 状态图与请求服务；独立运行时上下文、有界工具循环、授权及单次写入，FastMCP 内部执行 |
 | backend/app/prescriptions/files.py、extraction.py | 有限文件读取、图像规范化 / PDF 渲染、文字意图与提取、药物行证据和数值校验 |
 | backend/app/prescriptions/vision.py | 单次 DeepSeek 视觉请求完成分类、模型转录和处方字段提取；严格结构校验，标明转录不等于独立图像核验 |
 | backend/app/prescriptions/models.py、rules.py、routes.py | 处方输入边界、可追溯有限规则、登录 / CSRF 保护 API |
@@ -140,13 +151,13 @@
 
 处方检查是私有的请求级流程，不读取 / 写入共享 documents，也不写入 SQLite。`prepare` 经 LangGraph 返回读取原文或标注为模型转录的文字及待确认字段，`check` 只接收用户确认的数据，再运行规则并报告。图片与扫描 PDF 页发送到配置的 DeepSeek 云端模型，一次完成分类、转录与提取；原生文字沿用两阶段文本流程。内部图像编码不返回前端，原始图片 / PDF 以浏览器对象 URL 对照。所有登录角色可通过 knowledge:read 使用，写请求沿用 CSRF 和 Origin 校验。上传总请求限制 12 MB，文件限制 10 MB，文字 2 万字符，PDF 8 页；并发处方任务最多 2 个。PDFium 仍有全局互斥；本地 OCR 及其初始化、预热已移除。关闭前端不会保证终止已经开始的后端模型调用。
 
-SQLite 默认位于 backend/data/bencao.db，保存用户、会话、登录尝试与共享文本。目录不进入版本库。SQL 使用参数绑定。
+SQLite 默认位于 backend/data/bencao.db，保存用户、登录会话、聊天历史、登录尝试与共享文本。目录不进入版本库。SQL 使用参数绑定。
 
 MD / TXT 在浏览器读取 UTF-8 后经 API 保存原文；后端独立校验类型、文件名、空白及 10 MB UTF-8 字节上限。请求体也有上限。PDF / Word 暂不上传。demo 字段用于隔离示例资料（默认不再预置），检索排除所有 demo 条目；stored 标识持久化资料。
 
 内置《中药基础知识（详解版）》通过 GET /api/reference-document 与 /api/reference-document/file 读取，均校验 knowledge:read。原文件和结构化正文保存在 backend/resources，未放入前端公开资源目录或客户端包；一次性导入保留原文章节、段落和表格，并记录原文件 SHA-256。它独立于共享上传列表；页面自动加载或主动查看资料时读取，参与知识库模式检索，引用保留结构化正文与 Word 下载入口。以下检索、文档主题解析、语义重检与引用校验均限定于 use_knowledge=true。
 
-附加原文检索由 knowledge-answer.ts 根据 AI 整理的完整问题（未整理时使用当前输入）匹配真实正文生成摘录。按正式文档的章节聚合药材条目，中文分词去除问句虚词；只返回正相关结果，数字等未命中查询不兜底到示例或其他段落。会话只在页面内存中，不持久化。AI 模式的 /api/chat 接受当前问题和最多 5 轮受限摘要；先承接省略主题，显式新主题优先，无主题或指代不明时提示补充；经 knowledge:read 与 CSRF 验证后读取共享正文，由 retrieval.py 按补全后的问题选择最多 3 个片段，再由 chat.py 调用配置的 DeepSeek 服务。密钥只在后端环境读取；每个发送片段最多 3000 字符。输出 JSON schema 与来源类别 / 编号校验后，由服务端关联原文；对规则与关键词未命中的中文自然语言，先由同一 DeepSeek 整理意图（follow_up / standalone / clarify / unrelated，最多一次、512 tokens、10 秒阶段超时），再重新检索实际授权资料；整理过程不发送原文、不产生事实或引用。数字 / 代码式无意义查询不进入语义请求；重检仍无资料不生成回答。语义和生成共用 4 个并发名额，理解后的问题由回答简介及 resolvedQuestion 保留。有相关资料但内容不足时允许模型一般知识补充：document 段有真实引用，ai_supplement 段无文档引用，界面及复制内容均保留明确标签。模型补充没有联网核实。历史摘要只用于话题理解，不作为事实证据或引用来源，每轮重新读取授权原文。提示词将历史和资料中的指令视为不可信参考文本，引用编号校验不保证事实正确性。通用 PDF / Word 上传解析、流式回答、个人知识库隔离与迁移框架未实现；默认向量流程见上节。
+附加原文检索由 knowledge-answer.ts 根据 AI 整理的完整问题（未整理时使用当前输入）匹配真实正文生成摘录。按正式文档的章节聚合药材条目，中文分词去除问句虚词；只返回正相关结果，数字等未命中查询不兜底到示例或其他段落。聊天历史按账号持久保存到 SQLite，追问摘要仍只取当前会话最近五轮。AI 模式的 /api/chat 接受当前问题和最多 5 轮受限摘要；先承接省略主题，显式新主题优先，无主题或指代不明时提示补充；经 knowledge:read 与 CSRF 验证后读取共享正文，由 retrieval.py 按补全后的问题选择最多 3 个片段，再由 chat.py 调用配置的 DeepSeek 服务。密钥只在后端环境读取；每个发送片段最多 3000 字符。输出 JSON schema 与来源类别 / 编号校验后，由服务端关联原文；对规则与关键词未命中的中文自然语言，先由同一 DeepSeek 整理意图（follow_up / standalone / clarify / unrelated，最多一次、512 tokens、10 秒阶段超时），再重新检索实际授权资料；整理过程不发送原文、不产生事实或引用。数字 / 代码式无意义查询不进入语义请求；重检仍无资料不生成回答。语义和生成共用 4 个并发名额，理解后的问题由回答简介及 resolvedQuestion 保留。有相关资料但内容不足时允许模型一般知识补充：document 段有真实引用，ai_supplement 段无文档引用，界面及复制内容均保留明确标签。模型补充没有联网核实。历史摘要只用于话题理解，不作为事实证据或引用来源，每轮重新读取授权原文。提示词将历史和资料中的指令视为不可信参考文本，引用编号校验不保证事实正确性。通用 PDF / Word 上传解析、流式回答、个人知识库隔离与迁移框架未实现；默认向量流程见上节。
 
 处方的整方 `dose_scope` 独立于模型提取：前端按用户明确要求默认 per_dose，将选择传入 prepare；提取后覆盖各行口径。check 再按整方选择统一口径，规则与报告使用同一实际快照。unknown 表示逐味模式，不覆盖行内 per_dose / total / unknown；省略此字段的旧客户端保留逐味语义。
 

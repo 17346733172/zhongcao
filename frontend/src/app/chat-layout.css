@@ -159,12 +159,6 @@
 .composer-meta { justify-content: center; flex-wrap: wrap; gap: 4px 13px; padding-top: 12px; color: var(--ui-muted); font: 400 var(--ui-meta-size)/var(--ui-line-height) var(--sans); text-align: center; }
 .ai-status-note { color: inherit; font: inherit; }
 .answer-error { padding: 10px 14px; border-radius: 10px; background: #fff4f3; }
-.welcome-state { justify-content: center; padding-bottom: 9vh; gap: 32px; }
-.welcome-state .conversation-scroll { flex: 0 0 auto; overflow: visible; padding: 0 28px; }
-.welcome { min-height: 0; padding: 0; display: block; }
-.welcome h2 { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 0; font: 700 30px/1.5 var(--sans); color: #111318; }
-.welcome h2 > svg { color: var(--blue); }
-.welcome-state .composer-footer { padding-top: 0; padding-bottom: 0; }
 .workspace .upload-heading h2 { font-size: 19px; }
 .workspace .source-dialog { color: var(--text); }
 .workspace .original-content { color: #464c58; }
@@ -179,9 +173,6 @@
   .workspace .brand > svg { width: 28px; }
   .conversation-scroll { padding-left: 28px; padding-right: 28px; }
   .composer-footer { width: calc(100% - 56px); }
-  .welcome h2 { font-size: 25px; gap: 10px; }
-  .welcome h2 > svg { width: 35px; height: 35px; }
-  .welcome-state { padding-bottom: 7vh; }
 }
 @media (max-width: 720px) {
   .workspace { --ui-font-size: 16px; --answer-heading-size: 20px; display: block; }
@@ -207,11 +198,6 @@
   .send-button { min-width: 40px; width: 40px; height: 40px; }
   .prescription-trigger { gap: 6px; padding: 7px 10px; }
   .composer-meta { gap: 2px 8px; padding-top: 10px; }
-  .welcome-state { padding-bottom: 11vh; gap: 26px; }
-  .welcome-state .conversation-scroll { padding: 0 22px; }
-  .welcome h2 { gap: 9px; font-size: 23px; }
-  .welcome h2 > svg { width: 31px; height: 31px; }
-  .welcome h2 > span { max-width: 250px; text-align: left; }
   .source-card { padding: 13px; }
   .source-file { font-size: 12px; }
   .source-excerpt { font-size: 12px; }
@@ -219,8 +205,4 @@
 }
 @media (max-width: 360px) {
   .composer-actions { gap: 3px; }
-  .welcome h2 { font-size: 21px; }
-}
-@media (max-height: 600px) {
-  .welcome-state { padding-bottom: 12px; gap: 18px; overflow-y: auto; justify-content: safe center; }
 }

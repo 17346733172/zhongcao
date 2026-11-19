@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "本草知问 · 中药知识库",
-  description: "从你上传的中药资料中查找内容、阅读摘要并核对原文。支持账号权限与共享文本资料，问答为演示。",
+  description: "查阅中药资料、核对回答来源，查询煎药仿真运行状态。支持账号权限与共享知识库。",
   robots: { index: false, follow: false },
 };
 

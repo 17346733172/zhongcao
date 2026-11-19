@@ -1,5 +1,15 @@
 # 组件开发、样式、依赖和无障碍规范
 
+2026-11-19（会话持久化，最新）：网络请求集中于 `conversations-api.ts`，状态与取消集中于 `use-conversation-history.ts`；页面只编排提问与会话切换。会话摘要通过 `updatedAt / messageCount` 展示分组、时间和轮数，切换时读取完整消息；读取中禁用提问，保存失败保留本页回答并提供单独重试，不重复生成。存在未保存内容时提示离开风险；反馈区避开窄屏和收起导航后的悬浮按钮。此条替代此前没有存储的说明。
+
+2026-11-19（第三套整体主题，最新）：`workbench-tokens.css` 是工作台颜色 / 字体 / 尺寸 / 常用间距的集中来源，`workbench-theme.css` 最后导入并将既有组件映射到选定视觉；基础流程样式保留，后续视觉调整优先使用主题令牌。桌面导航224px、会话272px，1100px及以下复用原会话窗口，720px及以下复用手机导航。`ConversationSessions` 仅按实际最后回答时间做北京时间分组与排序，旧时间缺失显示「本页会话」，不注入演示记录；新增真实组件SSR回归纳入 `pnpm test`。账号图标使用现有 Phosphor，未改权限和请求逻辑。浏览器验收本轮按用户要求暂缓。
+
+2026-11-19（聊天页头移除）：AI Agent 的 `.main-header.agent-chat-controls` 高度为0，仅保留语义隐藏的页面标题和悬浮导航 / 会话按钮，不渲染资料标题及模式标签。ResizeObserver 根据实际可见按钮高度设置滚动定位留白；窄屏与侧栏收起状态为首条消息预留按钮空间，网格背景始终从主区顶端开始。运行总览保持常规页头。
+
+2026-11-19（会话组件）：`conversation-sessions.tsx` 展示桌面会话栏与窄屏原生 dialog，样式及 276px 宽度 / 深蓝强调色集中于 `conversation-sessions.css`。`KnowledgeWorkspace` 继续管理页面内会话，`changeConversation` 取消旧请求、清空草稿 / 错误并切换活动 ID；旧请求通过 AbortController 与请求身份双重检查，不能写入新会话。历史只来自已有成功回答，不注入演示条目；不新增存储、接口、依赖或环境变量。原生 dialog 补齐 Tab / Shift+Tab 循环、Escape、关闭和 preventScroll 焦点恢复。
+
+2026-11-19（Agent 初始布局）：`ConversationView` 空会话仅保留语义隐藏的操作说明，网格与紧凑底部输入区由 `agent-answer.css` 统一维护，不再切换 `welcome-state`。`KnowledgeWorkspace` 在 AI Agent 打开时始终观察输入区高度，兼容初始页、错误反馈、文本框调整高度及手机换行；只在主栏滚动，工作区根页面的条件溢出约束继续保留。
+
 2026-11-18（页面滚动）：`page-scroll.css` 统一主页面滚动，只有 `.main-panel` 承担主内容纵向滚动；聊天包装与总览内容自然展开，宽图表/表格仅局部横向滚动。`KnowledgeWorkspace.mainScrollRef` 负责新回答定位，切换总览/AI Agent保存并恢复各自scrollTop；main为inert时暂停背景滚动。ResizeObserver按标题/输入区高度为正文控件与图表设置scroll-margin，固定控件不设置全局scroll-padding；导航及弹窗关闭时以preventScroll恢复焦点。不要通过仅隐藏滚动条来保留双层滚动容器。
 
 2026-11-18（Agent回答）：`AnswerHeader` 只展示实际提供的 `toolCalls/usage`，回答时间使用 `Message.answeredAt`，旧消息回退已有time；调用记录不暴露原参数或凭据。`AnswerCharts` 只接收有限、非负且维度一致的数字，使用SVG提供可读描述及原始数据表，手机局部横向滚动，ResizeObserver仅调整图表宽度。`agent-answer.css` 集中维护新格式颜色、网格、边框与响应式布局；正文仍使用常规字重。保留标题/强调语义和原文引用，复制正文不夹入图表或工具日志。

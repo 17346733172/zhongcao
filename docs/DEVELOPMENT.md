@@ -1,10 +1,16 @@
 # 开发与验证
 
+2026-11-19（AI 整理回答）：重启后端加载 `mcp_tools/synthesis.py` 及异步 `format_answer`，前端无需构建，无新依赖或环境变量。复用现有 DeepSeek 地址、模型和 JSON 客户端；运行类回答在工具完成后额外增加一次模型整理请求，最多等待30秒，不重试。仅发送本轮整理所需的工具结果，不传登录 Cookie 或凭据。模型请求 / 输出校验失败时明确提示并返回已有工具结果，已执行操作不重新提交。输入超过48000字符时不截断回执，直接返回工具结果；知识库 ask 不再增加一次生成。`usage.scope=tool_selection` 继续不含回答整理用量。定向验证：`python -m unittest discover -s tests -p 'test_mcp*.py' -v`（使用后端虚拟环境）。
+
+2026-11-19（聊天 LangGraph）：聊天工具调度改用 `mcp_tools/workflow.py` 的六节点状态图，复用现有 `langgraph==1.2.18` 与 `fastmcp==4.2.2`，无新增依赖或环境变量。更新后重启后端，前端无需构建。原模型请求、鉴权 API 和回答协议保持兼容，最多三次模型选择，失败不重试，写入成功后结束。图不保存检查点或跨请求工具状态，配置与客户端仅放在请求级 runtime context，远程追踪关闭。流程图与测试入口见 [MCP 工具说明](MCP-TOOLS.md)。
+
+2026-11-19（历史会话保存）：后端启动时幂等新增会话与消息表，无需新依赖或环境变量；更新后重启后端。`GET /api/conversations` 返回当前账号全部会话摘要，`GET /api/conversations/{uuid}` 返回完整会话，`POST /api/conversations/{uuid}/messages` 追加一轮，提交 `{libraryId, message}`，沿用登录与 CSRF；写入上限 8 MiB。同一消息 UUID 重试不会重复，改内容重放返回 409，多窗口追加不会覆盖。页面刷新读取最近会话，保存失败需在离开前重试。新增 `tests/test_conversations.py`；历史内容不是工具授权，读取历史不会重新调用模型或执行工具。
+
 2026-11-18 Agent语义调度：重启后端加载，前端无源码或构建变更，无新增依赖/环境变量。配置模型时Agent的每个问题均进入语义工具选择，取代旧关键词入口；首次知识问答也会增加一次工具选择请求。新增鉴权GET `/api/data-center/recent-batches?limit=5` 与测试执行progress，使用已有平台batches列表读取完整有界分页并投影工序计时，不修改平台。接口范围/失败语义与验收见 [运行查询验证](MCP-SEMANTIC-ROUTING-QA.md)。
 
 2026-11-18 Agent回答展示：新增前端元信息/图表组件和MCP结果展示字段，需重启后端加载 `mcp_tools/presentation.py`。无新增依赖或环境变量；旧调用方可忽略 `toolCalls` 新字段、`charts` 和 `usage`。用量字段源自 [DeepSeek返回的usage](https://api-docs.deepseek.com/api/create-chat-completion/)，当前只累计模型工具选择请求，不含知识回答生成。界面验收使用隔离平台回执，不在真实平台执行写入。
 
-2026-11-18 MCP：更新 `requirements.txt` 后重启后端，页面 AI Agent 即可调用五模块工具；前端无构建变更。外部 stdio 配置、独立环境变量示例、工具 schema 与验证命令见 [MCP 工具说明](MCP-TOOLS.md)。新增官方 SDK `mcp==1.30.0` 及固定传递依赖，沿用本草账号、CSRF、平台认证、代理与写入校验；不另设免登录 MCP HTTP 端口。知识专用 `/api/knowledge/query` 与规则运行问答 `/api/data-center/question` 同样需要登录和 `knowledge:read`，POST 限64 KiB。
+2026-11-19 MCP：直接依赖改为 `fastmcp==4.2.2`，五模块工具仅供页面 AI Agent 通过 FastMCP 内存客户端调用，沿用当前登录会话，无需单独配置 MCP 账号、地址或启动进程。先运行 `backend/.venv/Scripts/python.exe -m pip install -r backend/requirements.txt`，再重启后端；前端无构建变更。底层 `mcp==2.3.0` 和 `mcp-types==2.3.0` 为 FastMCP 的传递依赖，OpenTelemetry API 按其要求更新至 `1.45.2`，版本统一锁定于 `requirements-lock.txt`。一键启动脚本同步检查 FastMCP 版本，避免重复安装旧 SDK。工具 schema、内部调用链与验证命令见 [MCP 工具说明](MCP-TOOLS.md)。沿用本草账号、CSRF、平台认证、代理与写入校验。知识专用 `/api/knowledge/query` 与规则运行问答 `/api/data-center/question` 同样需要登录和 `knowledge:read`，POST 限64 KiB。
 
 ## 环境与启动
 

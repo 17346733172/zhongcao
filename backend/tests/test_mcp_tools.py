@@ -1,12 +1,8 @@
 import asyncio
 import json
-import os
 import secrets
-import sys
 import time
 import unittest
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from threading import Thread
 from datetime import datetime, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -14,14 +10,12 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
 from fastapi.testclient import TestClient
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
-from mcp.shared.memory import create_connected_server_and_client_session
+from fastmcp import Client, FastMCP
 
 from app.config import Settings
 from app.main import create_app
-from app.mcp_tools.agent import authorize_write, invoke
-from app.mcp_tools.client import BencaoClient, ToolFailure, validate_base_url
+from app.mcp_tools.agent import authorize_write
+from app.mcp_tools.client import BencaoClient, ToolFailure
 from app.mcp_tools.commands import requested_creation_count
 from app.mcp_tools.server import create_server
 from app.security import token_hash
@@ -59,6 +53,12 @@ class MCPTests(unittest.TestCase):
         reader.fetched_at = datetime.now(timezone.utc)
         reader.start = AsyncMock()
         reader.request_refresh = Mock()
+        # Existing routing tests keep their verified text while exercising the new final node.
+        synthesis = patch('app.mcp_tools.synthesis.request_json', side_effect=lambda settings, prompt, context, **kwargs:
+            json.dumps({'sections': context['verified_answer']['sections'] or [
+                {'title': '查询结果', 'content': context['verified_answer']['title']}]}, ensure_ascii=False))
+        self.synthesis = synthesis.start()
+        self.addCleanup(synthesis.stop)
 
     def tearDown(self):
         self.client.__exit__(None, None, None)
@@ -68,8 +68,8 @@ class MCPTests(unittest.TestCase):
         async def run():
             async with httpx.AsyncClient(transport=httpx.ASGITransport(app=self.app), base_url='http://internal',
                     cookies={self.settings.cookie_name: self.token} if token else {}) as http:
-                async with create_connected_server_and_client_session(create_server(BencaoClient(http))) as session:
-                    return await session.call_tool(name, arguments or {})
+                async with Client(create_server(BencaoClient(http))) as session:
+                    return await session.call_tool(name, arguments or {}, raise_on_error=False)
         return asyncio.run(run())
 
     def ask(self, question):
@@ -78,46 +78,48 @@ class MCPTests(unittest.TestCase):
     def test_initialize_and_list_exactly_five_tools_with_strict_schemas(self):
         async def run():
             async with httpx.AsyncClient() as http:
-                async with create_connected_server_and_client_session(create_server(BencaoClient(http))) as session:
-                    tools = (await session.list_tools()).tools
+                server = create_server(BencaoClient(http))
+                self.assertIsInstance(server, FastMCP)
+                async with Client(server) as session:
+                    tools = await session.list_tools()
                     self.assertEqual({t.name for t in tools}, {'herbal_reference', 'data_center', 'operations_overview', 'test_execution', 'test_plans'})
                     for tool in tools:
-                        self.assertFalse(tool.inputSchema['additionalProperties'])
-                    self.assertTrue(next(t for t in tools if t.name == 'data_center').annotations.readOnlyHint)
-                    self.assertFalse(next(t for t in tools if t.name == 'test_execution').annotations.readOnlyHint)
+                        self.assertFalse(tool.input_schema['additionalProperties'])
+                    self.assertTrue(next(t for t in tools if t.name == 'data_center').annotations.read_only_hint)
+                    self.assertFalse(next(t for t in tools if t.name == 'test_execution').annotations.read_only_hint)
         asyncio.run(run())
 
     def test_anonymous_and_revoked_sessions_cannot_read_or_write(self):
-        self.assertTrue(self.tool('operations_overview', token=False).isError)
+        self.assertTrue(self.tool('operations_overview', token=False).is_error)
         with self.app.state.database.connect() as db:
             db.execute('DELETE FROM sessions')
         with patch('app.simulation_operations.simulation_request', new_callable=AsyncMock) as upstream:
             for name, args in [('operations_overview', {}), ('test_execution', {'action': 'create', 'count': 2, 'confirmed': True})]:
-                self.assertTrue(self.tool(name, args).isError)
+                self.assertTrue(self.tool(name, args).is_error)
             upstream.assert_not_called()
 
     def test_reference_read_pagination_and_search(self):
         result = self.tool('herbal_reference', {'action': 'read', 'offset': 5, 'limit': 2})
-        self.assertFalse(result.isError)
-        self.assertEqual(len(result.structuredContent['items']), 2)
-        self.assertGreater(result.structuredContent['total'], 100)
+        self.assertFalse(result.is_error)
+        self.assertEqual(len(result.structured_content['items']), 2)
+        self.assertGreater(result.structured_content['total'], 100)
         found = self.tool('herbal_reference', {'action': 'search', 'query': '陈皮'})
         self.assertIn('陈皮', found.content[0].text)
         missing = self.tool('herbal_reference', {'action': 'search', 'query': '1111111'})
-        self.assertEqual(missing.structuredContent['items'], [])
+        self.assertEqual(missing.structured_content['items'], [])
 
     def test_overview_and_running_share_real_time_and_do_not_invent_records(self):
         reader = self.app.state.data_center_reader
-        overview = self.tool('operations_overview').structuredContent
+        overview = self.tool('operations_overview').structured_content
         self.assertEqual(overview['fetched_at'], reader.fetched_at.isoformat().replace('+00:00', 'Z'))
         self.assertEqual(overview['data']['device_categories']['pot']['total'], 6)
-        running = self.tool('test_execution').structuredContent
+        running = self.tool('test_execution').structured_content
         self.assertEqual(len(running['data']['devices']), 3)
         self.assertEqual(running['data']['batches'], [])
         reader.fetched_at = datetime(2020, 1, 1, tzinfo=timezone.utc)
-        self.assertTrue(self.tool('operations_overview').structuredContent['stale'])
+        self.assertTrue(self.tool('operations_overview').structured_content['stale'])
         reader.data = None
-        self.assertIsNone(self.tool('operations_overview').structuredContent['data'])
+        self.assertIsNone(self.tool('operations_overview').structured_content['data'])
 
     def test_invalid_or_unconfirmed_writes_never_reach_api(self):
         with patch('app.simulation_operations.simulation_request', new_callable=AsyncMock) as upstream:
@@ -133,21 +135,24 @@ class MCPTests(unittest.TestCase):
             ]
             for name, args in cases:
                 with self.subTest(args=args):
-                    self.assertTrue(self.tool(name, args).isError)
+                    result = self.tool(name, args)
+                    self.assertTrue(result.is_error)
+                    self.assertEqual(result.structured_content['status_code'], 422)
+                    self.assertNotIn('http://evil', result.content[0].text)
             upstream.assert_not_called()
 
-    def test_external_command_receipt_and_uncertain_failure_sent_once(self):
+    def test_command_receipt_and_uncertain_failure_sent_once(self):
         with patch('app.simulation_operations.simulation_request', new_callable=AsyncMock) as upstream:
             upstream.return_value = httpx.Response(201, json={'count': 2, 'batch_ids': ['a', 'b']})
             result = self.tool('test_execution', {'action': 'create', 'count': 2, 'confirmed': True})
-            self.assertFalse(result.isError)
-            self.assertEqual(result.structuredContent['batch_ids'], ['a', 'b'])
+            self.assertFalse(result.is_error)
+            self.assertEqual(result.structured_content['batch_ids'], ['a', 'b'])
             self.assertEqual(upstream.await_count, 1)
             from fastapi import HTTPException
             upstream.reset_mock()
             upstream.side_effect = HTTPException(502, '未能确认操作结果，系统不会自动重复提交。')
             failed = self.tool('test_execution', {'action': 'start', 'confirmed': True})
-            self.assertTrue(failed.isError)
+            self.assertTrue(failed.is_error)
             self.assertIn('不会自动重复提交', failed.content[0].text)
             self.assertEqual(upstream.await_count, 1)
 
@@ -155,12 +160,12 @@ class MCPTests(unittest.TestCase):
         with patch('app.device_defaults.simulation_request', new_callable=AsyncMock) as upstream:
             upstream.return_value = httpx.Response(200, json=defaults(3, 90))
             result = self.tool('test_plans', {'action': 'save', 'kind': 'packer', 'minutes': 1.5, 'expected_revision': 2, 'confirmed': True})
-            self.assertFalse(result.isError)
+            self.assertFalse(result.is_error)
             self.assertEqual(upstream.call_args.args[-1], {'default_processing_seconds': 90, 'expected_revision': 2})
             upstream.return_value = httpx.Response(409)
             result = self.tool('test_plans', {'action': 'save', 'kind': 'packer', 'minutes': 2, 'expected_revision': 2, 'confirmed': True})
-            self.assertTrue(result.isError)
-            self.assertEqual(result.structuredContent['status_code'], 409)
+            self.assertTrue(result.is_error)
+            self.assertEqual(result.structured_content['status_code'], 409)
 
     def test_agent_selects_overview_through_mcp_and_formats_actual_data(self):
         with patch('app.mcp_tools.agent.request_decision', new_callable=AsyncMock) as choose:
@@ -191,6 +196,61 @@ class MCPTests(unittest.TestCase):
         self.assertEqual(chart['series'][0]['values'], [0, 2, 0, 8, 0])
         self.assertEqual(chart['fetchedAt'], trace['fetchedAt'])
         self.assertNotIn('良率', json.dumps(body, ensure_ascii=False))
+
+    def test_final_ai_organizes_tool_results_and_preserves_metadata(self):
+        sections = [{'title': '运行情况', 'content': '有 2 个批次正在进行，8 个已完成。'}]
+        self.synthesis.side_effect = None
+        self.synthesis.return_value = json.dumps({'sections': sections}, ensure_ascii=False)
+        with patch('app.mcp_tools.agent.request_decision', new_callable=AsyncMock) as choose:
+            choose.side_effect = [decision('operations_overview'), {'content': '不可信数字999999'}]
+            response = self.ask('查看运行总览')
+        self.assertEqual(response.status_code, 200, response.text)
+        body = response.json()
+        self.assertEqual(body['sections'], sections)
+        self.assertEqual(body['mode'], 'data_center')
+        self.assertEqual(body['sources'], [])
+        self.assertEqual(body['resolvedQuestion'], '查看运行总览')
+        self.assertEqual(body['charts'][0]['series'][0]['values'], [0, 2, 0, 8, 0])
+        self.assertIn('数据读取时间', body['introduction'])
+        self.assertEqual(body['toolCalls'][0]['name'], 'operations_overview')
+        self.synthesis.assert_called_once()
+        context = self.synthesis.call_args.args[2]
+        self.assertEqual(context['current_question'], '查看运行总览')
+        self.assertEqual(set(context['verified_answer']), {'title', 'introduction', 'sections'})
+        self.assertNotIn(self.token, json.dumps(context))
+        self.assertNotIn('999999', json.dumps(context))
+
+    def test_failed_ai_after_successful_write_keeps_receipt_without_resubmitting(self):
+        from fastapi import HTTPException
+        self.synthesis.side_effect = HTTPException(504, 'upstream-private-detail')
+        with patch('app.mcp_tools.agent.request_decision', new_callable=AsyncMock) as choose, patch('app.simulation_operations.simulation_request', new_callable=AsyncMock) as upstream:
+            choose.return_value = decision('test_execution', action='create', count=2)
+            upstream.return_value = httpx.Response(201, json={'count': 2, 'batch_ids': ['a', 'b']})
+            response = self.ask('生成2个仿真演示批次')
+        self.assertEqual(response.status_code, 200, response.text)
+        body = response.json()
+        self.assertIn('AI 整理暂时未完成', body['introduction'])
+        self.assertIn('生成数量：2', body['sections'][0]['content'])
+        self.assertIn('a、b', body['sections'][0]['content'])
+        self.assertEqual(body['toolCalls'][0]['status'], 'success')
+        self.assertNotIn('upstream-private-detail', response.text)
+        upstream.assert_awaited_once()
+        choose.assert_awaited_once()
+        self.synthesis.assert_called_once()
+
+    def test_stale_data_warning_survives_ai_organization(self):
+        self.app.state.data_center_reader.fetched_at = datetime(2020, 1, 1, tzinfo=timezone.utc)
+        self.synthesis.side_effect = None
+        self.synthesis.return_value = json.dumps({'sections': [{'title': '上次记录', 'content': '有 2 个批次进行中，当前状态无法确认。'}]})
+        with patch('app.mcp_tools.agent.request_decision', new_callable=AsyncMock) as choose:
+            choose.return_value = decision('operations_overview')
+            response = self.ask('查看运行总览')
+        self.assertEqual(response.status_code, 200, response.text)
+        body = response.json()
+        self.assertIn('不能确认实时状态', body['introduction'])
+        self.assertTrue(body['toolCalls'][0]['stale'])
+        self.assertTrue(body['charts'][0]['stale'])
+        self.assertIn('2020', self.synthesis.call_args.args[2]['verified_answer']['introduction'])
 
     def test_read_then_save_chart_uses_latest_confirmed_defaults(self):
         with patch('app.mcp_tools.agent.request_decision', new_callable=AsyncMock) as choose, patch('app.device_defaults.simulation_request', new_callable=AsyncMock) as upstream:
@@ -435,10 +495,10 @@ class MCPTests(unittest.TestCase):
             return model.model_validate({'items': items, 'total': 201, 'offset': offset, 'limit': 200})
         with patch('app.data_center.read_simulation', side_effect=read) as upstream:
             result = self.tool('test_execution', {'action': 'progress', 'limit': 2})
-            self.assertFalse(result.isError, result)
-            self.assertEqual([b['id'] for b in result.structuredContent['items']], ['b201', 'b200'])
+            self.assertFalse(result.is_error, result)
+            self.assertEqual([b['id'] for b in result.structured_content['items']], ['b201', 'b200'])
             self.assertEqual(upstream.call_count, 2)
-            self.assertTrue(result.structuredContent['ordered_by_creation'])
+            self.assertTrue(result.structured_content['ordered_by_creation'])
         def changed(settings, path, model, params):
             page = read(settings, path, model, params)
             if params['offset']:
@@ -446,85 +506,75 @@ class MCPTests(unittest.TestCase):
             return page
         with patch('app.data_center.read_simulation', side_effect=changed):
             result = self.tool('test_execution', {'action': 'progress', 'limit': 2})
-            self.assertTrue(result.isError)
+            self.assertTrue(result.is_error)
             self.assertIn('分页发生变化', result.content[0].text)
         with patch('app.data_center.read_simulation', side_effect=lambda settings, path, model, params: model.model_validate({'items': [], 'total': 1001, 'offset': 0, 'limit': 200})) as upstream:
             result = self.tool('test_execution', {'action': 'progress', 'limit': 2})
-            self.assertTrue(result.isError)
+            self.assertTrue(result.is_error)
             upstream.assert_called_once()
-        self.assertTrue(self.tool('test_execution', {'action': 'progress', 'limit': 21}).isError)
-        self.assertTrue(self.tool('test_execution', {'action': 'progress'}, token=False).isError)
+        self.assertTrue(self.tool('test_execution', {'action': 'progress', 'limit': 21}).is_error)
+        self.assertTrue(self.tool('test_execution', {'action': 'progress'}, token=False).is_error)
 
-    def test_stdio_real_subprocess_handshake_and_listing(self):
+    def test_graph_limits_distinct_read_decisions_to_three(self):
+        with patch('app.mcp_tools.agent.request_decision', new_callable=AsyncMock) as choose:
+            choose.side_effect = [decision('data_center', action='snapshot'), decision('operations_overview'),
+                                  decision('test_execution', action='running'), decision('test_execution', action='status')]
+            response = self.ask('综合查看当前平台运行数据')
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual([call['name'] for call in response.json()['toolCalls']],
+                         ['data_center', 'operations_overview', 'test_execution'])
+        self.assertEqual(choose.await_count, 3)
+
+    def test_graph_finishes_on_duplicate_read_without_repeating_it(self):
+        with patch('app.mcp_tools.agent.request_decision', new_callable=AsyncMock) as choose:
+            choose.side_effect = [decision('operations_overview'), decision('operations_overview'),
+                                  decision('test_execution', action='status')]
+            response = self.ask('查看运行总览')
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(len(response.json()['toolCalls']), 1)
+        self.assertEqual(choose.await_count, 2)
+
+    def test_graph_stops_on_uncertain_write_failure_without_retry(self):
+        from fastapi import HTTPException
+        with patch('app.mcp_tools.agent.request_decision', new_callable=AsyncMock) as choose, patch('app.simulation_operations.simulation_request', new_callable=AsyncMock) as upstream:
+            choose.side_effect = [decision('test_execution', action='create', count=2),
+                                  decision('test_execution', action='create', count=2)]
+            upstream.side_effect = HTTPException(502, '未能确认操作结果，系统不会自动重复提交。')
+            response = self.ask('生成2个仿真演示批次')
+        self.assertEqual(response.status_code, 502, response.text)
+        self.assertIn('不会自动重复提交', response.json()['detail'])
+        choose.assert_awaited_once()
+        upstream.assert_awaited_once()
+
+    def test_graph_does_not_reuse_a_prior_request_read_to_authorize_save(self):
+        with patch('app.mcp_tools.agent.request_decision', new_callable=AsyncMock) as choose, patch('app.device_defaults.simulation_request', new_callable=AsyncMock) as upstream:
+            choose.side_effect = [decision('test_plans', action='read'), {'content': '', 'tool_calls': []},
+                                  decision('test_plans', action='save', kind='packer', minutes=2, expected_revision=2)]
+            upstream.return_value = httpx.Response(200, json=defaults())
+            read = self.ask('查看测试方案的默认用时')
+            self.assertEqual(read.status_code, 200, read.text)
+            save = self.ask('把包装默认用时改成2分钟')
+        self.assertEqual(save.status_code, 502, save.text)
+        self.assertIn('成功读取当前可写版本', save.json()['detail'])
+        self.assertEqual(choose.await_count, 3)
+        upstream.assert_awaited_once()
+        self.assertEqual(upstream.call_args.args[1], 'GET')
+
+    def test_bridge_auth_failures_are_redacted_without_login_or_retry(self):
         async def run():
-            params = StdioServerParameters(command=sys.executable, args=['-m', 'app.mcp_tools'],
-                cwd=str(Path(__file__).resolve().parents[1]), env={**os.environ,
-                    'BENCAO_MCP_USERNAME': 'placeholder', 'BENCAO_MCP_PASSWORD': 'placeholder'})
-            async with stdio_client(params) as (read, write):
-                async with ClientSession(read, write) as session:
-                    await session.initialize()
-                    tools = await session.list_tools()
-                    self.assertEqual(len(tools.tools), 5)
-                    result = await session.call_tool('test_execution', {'action': 'create', 'count': 0})
-                    self.assertTrue(result.isError)
+            for status_code in (401, 403):
+                def reject(request):
+                    self.assertEqual(request.method, 'GET')
+                    self.assertEqual(request.url.path, '/api/reference-document')
+                    self.assertEqual(request.headers.get('X-CSRF-Protection'), '1')
+                    return httpx.Response(status_code, json={'detail': 'sensitive-secret'})
+
+                handler = Mock(side_effect=reject)
+                async with httpx.AsyncClient(base_url='http://bencao.internal',
+                        transport=httpx.MockTransport(handler)) as http:
+                    with self.subTest(status_code=status_code), self.assertRaises(ToolFailure) as caught:
+                        await BencaoClient(http).request('GET', '/api/reference-document')
+                    self.assertEqual(caught.exception.status_code, status_code)
+                    self.assertNotIn('sensitive-secret', str(caught.exception))
+                    handler.assert_called_once()
         asyncio.run(run())
-
-    def test_bridge_rejects_insecure_remote_and_auth_failures_are_redacted(self):
-        for url in ['http://remote.example', 'https://user:secret@example.com', 'https://example.com/path', 'file:///etc/passwd']:
-            with self.assertRaises(ValueError):
-                validate_base_url(url)
-        self.assertEqual(validate_base_url('http://127.0.0.1:8000/'), 'http://127.0.0.1:8000')
-        async def run():
-            async with httpx.AsyncClient(base_url='https://example.com', transport=httpx.MockTransport(
-                    lambda r: httpx.Response(401, json={'detail': 'sensitive-secret'}))) as http:
-                api = BencaoClient(http, 'user', 'sensitive-secret')
-                with self.assertRaises(ToolFailure) as caught:
-                    await api.request('GET', '/api/reference-document')
-                self.assertNotIn('sensitive-secret', str(caught.exception))
-        asyncio.run(run())
-
-    def test_external_stdio_login_and_business_read_over_http(self):
-        requests = []
-        password = secrets.token_urlsafe(18)
-        class Handler(BaseHTTPRequestHandler):
-            def log_message(self, *args):
-                pass
-
-            def do_POST(self):
-                requests.append(self.path)
-                body = json.loads(self.rfile.read(int(self.headers['content-length'])))
-                valid = body == {'username': 'mcp_user', 'password': password} and self.headers.get('X-CSRF-Protection') == '1'
-                self.send_response(200 if valid else 401)
-                self.send_header('Set-Cookie', 'bencao_session=test-session; HttpOnly; Path=/')
-                self.end_headers()
-                self.wfile.write(b'{}')
-
-            def do_GET(self):
-                requests.append(self.path)
-                valid = self.headers.get('Cookie') == 'bencao_session=test-session'
-                self.send_response(200 if valid else 401)
-                self.end_headers()
-                self.wfile.write(json.dumps({'id': 'test', 'name': 'fixture', 'blocks': [{'type': 'paragraph', 'text': 'test source'}]}).encode())
-        http_server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
-        worker = Thread(target=http_server.serve_forever, daemon=True)
-        worker.start()
-        async def run():
-            params = StdioServerParameters(command=sys.executable, args=['-m', 'app.mcp_tools'],
-                cwd=str(Path(__file__).resolve().parents[1]), env={**os.environ,
-                    'BENCAO_MCP_API_URL': f'http://127.0.0.1:{http_server.server_port}',
-                    'BENCAO_MCP_USERNAME': 'mcp_user', 'BENCAO_MCP_PASSWORD': password})
-            async with stdio_client(params) as (read, write):
-                async with ClientSession(read, write) as session:
-                    await session.initialize()
-                    for _ in range(2):
-                        result = await session.call_tool('herbal_reference', {'action': 'read', 'limit': 1})
-                        self.assertFalse(result.isError)
-                        self.assertEqual(result.structuredContent['items'][0]['text'], 'test source')
-        try:
-            asyncio.run(run())
-            self.assertEqual(requests.count('/api/auth/login'), 1)
-            self.assertEqual(requests.count('/api/reference-document'), 2)
-        finally:
-            http_server.shutdown()
-            http_server.server_close()
-            worker.join(timeout=3)

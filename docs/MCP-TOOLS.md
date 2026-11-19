@@ -1,6 +1,6 @@
 # 五模块 MCP 与 AI Agent
 
-2026-11-18。截图中的五个模块已封装为标准 MCP 工具。页面 AI Agent 使用官方 SDK 的内存 MCP 连接，外部 Agent 使用 stdio；两种连接调用同一套工具及本草 HTTP API，不直接读取另一个项目的数据库。
+2026-11-19。聊天工具调度使用 `langgraph==1.2.18` 的状态图，五个模块使用独立包 `fastmcp==4.2.2` 封装为标准 MCP 工具，仅供页面 AI Agent 通过 FastMCP 内存客户端调用。工具沿用当前登录会话，通过进程内 API 访问知识库和仿真平台，不直接读取另一个项目的数据库。
 
 ## 工具
 
@@ -29,9 +29,11 @@
 - `下3个测试方子`、`下三份测试处方`、`下发两张模拟药方`：测试/仿真/模拟/演示限定的方子、处方、药方同样指匿名演示批次。写入须通过独立的当前指令与数量核对；普通方子不能授予批次创建权限。查询方子时按上下文选择运行数据或方剂知识，不由“方子”一词强制查原文。
 - `查看测试方案的默认用时`、`把包装默认用时改成2分钟`。
 
-回答说明已调用的 MCP 模块；接口额外返回 `toolCalls: [{name, title, action}]`。工具选择最多3步、每步1个调用，修改成功后立即结束本轮。运行结果由已校验工具数据格式化，不采用模型自由生成的统计数字或成功声明。药材问答保留原有生成及来源校验流程。普通 AI 兼容模式 `use_knowledge=false` 不调用这些工具。
+回答说明已调用的 MCP 模块；接口额外返回 `toolCalls: [{name, title, action}]`。工具选择最多3步、每步1个调用，修改成功后不再执行工具。随后由 DeepSeek 根据本轮已校验结果整理正文：先回答问题，再组织相关细节。后端保留原文引用、真实调用记录、数据读取时间、过期提示、数据中心入口及图表，模型不能改写这些字段。药材 ask 已经过 AI 生成及来源校验，直接复用；未配置模型时规则只读查询直接返回工具结果。普通 AI 兼容模式 `use_knowledge=false` 不调用这些工具。
 
-progress读取后直接按校验字段展示，不再要求模型自由总结。最近记录从平台完整分页集合按created_at、sequence倒序选取；一次最多核验1000条，分页变化/重复或超过范围时明确失败，不把首屏旧记录冒称最近。缺少创建时间时说明无法确认最近顺序。实际处理用时为工序elapsed_seconds累计值，不含排队/暂停，当前工序duration_seconds为该批次配置值；缺少实际计时不按零或默认值填补，未提供等待起止时不能判断等了多久或长期卡死。
+用户已明确同意将本轮设备、批次、统计等结果发送到当前配置的 DeepSeek 服务。整理只接收当前问题及工具结果的标题、说明和正文，不发送登录 Cookie、凭据或旧轮回答；使用已有 JSON Output 客户端，单次最多30秒，不带工具定义、不执行操作。仅接受1–8节的正文结构，拒绝新增数字 / 设备编号与伪造文档引用；这不能替代完整语义事实核验。输入超过48000字符、模型超时 / 失败或输出不合法时，返回已有工具结果并明确提示，不重试模型或业务写入。工具选择失败与工具执行失败仍直接返回实际错误。Token 用量继续仅统计工具选择，不包含本次整理。
+
+progress读取后先按校验字段计算实际处理分钟数，再交给 AI 按当前问题整理，不能新增耗时或故障推断。最近记录从平台完整分页集合按created_at、sequence倒序选取；一次最多核验1000条，分页变化/重复或超过范围时明确失败，不把首屏旧记录冒称最近。缺少创建时间时说明无法确认最近顺序。实际处理用时为工序elapsed_seconds累计值，不含排队/暂停，当前工序duration_seconds为该批次配置值；缺少实际计时不按零或默认值填补，未提供等待起止时不能判断等了多久或长期卡死。
 
 页面写入只接受当前问题中明确的一项操作及其参数。生成数量支持阿拉伯数字、全角数字及常用中文数字（含两、十、二十等），仍须为1–50的确定整数；修改分钟数使用阿拉伯数字。保存须明确一个设备种类，并在本轮先读取可写版本。否定、假设、询问操作方法、参数不一致或陈旧修订号不会触发修改。含多项修改的需求请分轮发送。模型不支持工具、无有效参数或缺少信息时返回实际错误/澄清；资料、历史或工具文本不能授权写入。
 
@@ -39,65 +41,59 @@ progress读取后直接按校验字段展示，不再要求模型自由总结。
 
 最新统一语义调度与运行工序查询验收见 [运行查询验证](MCP-SEMANTIC-ROUTING-QA.md)，替代此前以关键词决定是否调用Agent的行为说明。
 
-## 外部 Agent 连接
+## 运行与调用链
 
-在项目根目录安装依赖：
+安装依赖后，按 [开发说明](DEVELOPMENT.md) 启动本草前后端并登录，即可使用页面 AI Agent；无需另设 MCP 账号或启动进程。在项目根目录安装后端依赖：
 
 ```powershell
 .\backend\.venv\Scripts\python.exe -m pip install -r backend/requirements.txt
 ```
 
-1. 启动本草后端（默认 `http://127.0.0.1:8000`）。
-2. 将 [backend/.env.mcp.example](../backend/.env.mcp.example) 复制为 `backend/.env.mcp`，填写现有本草账号和密码。没有默认账号；建议使用已有普通用户或创建一个专门的普通用户账号。真实文件已被 `.gitignore` 忽略。
-3. 把 [mcp-config.example.json](../backend/mcp-config.example.json) 的 `bencao` 配置合入外部 Agent 的 MCP 配置，按实际项目位置调整绝对路径。`PYTHONPATH` 也供不支持 cwd 的客户端定位 Python 模块。不要把真实密码填进提交的 JSON。
-4. 重新连接后，通过 `tools/list` 应发现上述五个工具。
-
-也可由 MCP 客户端以如下命令启动（stdio 会等待 JSON-RPC，不能当作交互命令行使用）：
-
-```powershell
-Set-Location D:\本草\backend
-.\.venv\Scripts\python.exe -m app.mcp_tools --env-file D:\本草\backend\.env.mcp
+```mermaid
+flowchart TD
+    A[页面 AI Agent] --> B[FastAPI /api/chat]
+    B --> P
+    subgraph L[LangGraph 聊天调度]
+        P[准备工具] --> C[DeepSeek 选择工具]
+        P -->|规则只读分支| V[参数与当前指令授权]
+        C -->|单个工具| V
+        C -->|没有调用且没有结果| Q[澄清]
+        C -->|选择完成| R[AI 整理回答]
+        V -->|重复调用| R
+        V -->|校验通过| E[FastMCP 内存客户端执行]
+        E -->|可继续且未达三步| C
+        E -->|写入成功或满足停止条件| R
+    end
+    E --> F[进程内本草鉴权 API]
+    F --> G[知识库 / 仿真平台]
+    R --> H[保留引用、调用记录、数据时间、过期状态与图表]
+    H --> I[页面展示回答]
 ```
 
-环境变量仅供 MCP 进程读取，**不是模型参数**：
+`answer_with_mcp` 保留 `Client(server, timeout=190)` 的生命周期，再通过 LangGraph 的 `ainvoke` 执行 prepare_tools → select_tool → authorize_tool → execute_tool → format_answer / clarify，条件边决定继续或结束。工具发现使用 `list_tools()`，DeepSeek Tool Calls 提供选择，执行使用 `call_tool(..., raise_on_error=False)` 并检查 `is_error / structured_content`。业务上限为三次模型选择，图递归上限16；重复调用直接整理已有结果，知识回答、工序进度、过期结果和成功写入均会停止。节点异常直接结束并交由原 API 错误处理返回，不配置节点重试或失败后的知识库回退。
 
-| 变量 | 用途 |
-| --- | --- |
-| `BENCAO_MCP_API_URL` | 本草 API 入口，默认 http://127.0.0.1:8000；远程必须 HTTPS，不接受内嵌凭据、路径和查询参数。 |
-| `BENCAO_MCP_USERNAME` | 已存在、启用的本草账号。 |
-| `BENCAO_MCP_PASSWORD` | 该账号密码。 |
+图实例可复用，每轮的消息、结果、用量与已读取修订号均为独立状态。当前 FastMCP 客户端、配置和服务函数通过 runtime context 传入，不放入图状态；不设置 checkpointer / store，远程 LangSmith 追踪关闭。`create_server` 继续以自定义 `Tool` 保留扁平 schema、严格 Pydantic 校验与脱敏错误；`BencaoClient` 使用当前会话 Cookie，通过 `httpx.ASGITransport` 访问同一 FastAPI 应用，不自行登录或重试操作。
 
-首次实际调用时登录，之后使用 HttpOnly 会话；会话失效/撤销后重新连接，不自动重新登录或重试原操作。仅列出工具不请求业务数据。凭据不返回模型；不在 stdout 写运行日志，stdout 专用于 MCP。保持本草 API 可达；本实现没有额外开放公网 HTTP MCP 服务端口。
+图中的「AI 整理回答」对应异步 `format_answer`：运行类结果由 `synthesis.py` 调用 DeepSeek 整理；知识 ask 复用已生成正文，无模型规则分支直接保留原结果；整理失败也走保留结果的路径，均不会返回执行工具节点。
 
-外部写调用必须提供 `confirmed=true`，表示 Agent 已取得用户对本次操作的明确授权；外部 Agent 负责用户确认交互。本草仍逐请求校验登录及权限，写请求保留 CSRF 头、版本冲突、并发锁、平台回执确认与单次发送。例如：
-
-```json
-{"name":"test_execution","arguments":{"action":"create","count":2,"confirmed":true}}
-```
-
-```json
-{"name":"test_plans","arguments":{"action":"read"}}
-```
-
-用 read 的实际修订号替换下面的 `12` 后，才能保存：
-
-```json
-{"name":"test_plans","arguments":{"action":"save","kind":"packer","minutes":2,"expected_revision":12,"confirmed":true}}
-```
+写入的 `confirmed=true` 由后端校验当前用户明确指令后生成；保存设备用时须在本轮先读到当前可写修订号。业务 API 继续逐请求校验登录及权限，保留 CSRF、版本冲突、并发锁、平台回执确认与单次发送。
 
 超时/连接中断可能已触及平台，先读取实际状态，不能自动重发；`isError=true` 不等于修改一定没有生效。测试方案保存冲突后重新读取并核对，不自动覆盖。
 
 ## 实现与验证
 
-- `backend/app/mcp_tools/`：严格输入模型、五工具注册、鉴权 API 适配、stdio 入口、内置 Agent 选择及结果格式化。
+- `backend/app/mcp_tools/workflow.py`：聊天 LangGraph 状态、节点、条件边与请求级上下文；`agent.py` 保留模型请求、授权规则、格式化和 HTTP 生命周期。
+- `backend/app/mcp_tools/synthesis.py`：本轮工具结果的 AI 正文整理、结构与新增数字 / 编号检测、失败保留；JSON Output 配置复用既有客户端，参见 [DeepSeek JSON Output](https://api-docs.deepseek.com/guides/json_mode/)。
+- `backend/app/mcp_tools/` 其余模块：严格输入模型、五工具注册、当前会话 API 适配及结果展示。
 - `POST /api/knowledge/query`：复用原知识库流程，避免 MCP 回调 `/api/chat` 递归。
 - `POST /api/data-center/question`：复用既有规则运行问答。两个接口均保留登录、knowledge:read、CSRF、64 KiB 请求上限及脱敏校验错误。
-- 固定官方 SDK `mcp==1.30.0`（1.x 维护线），在现有 FastAPI/Pydantic 约束下安装；不混用2.x API。协议依据见 [SDK 1.x](https://py.sdk.modelcontextprotocol.io/v1/)、[MCP tools](https://modelcontextprotocol.io/specification/2025-11-25/server/tools)、[DeepSeek Tool Calls](https://api-docs.deepseek.com/guides/tool_calls/)。
+- 直接依赖固定为 `fastmcp==4.2.2`；`mcp==2.3.0`、`mcp-types==2.3.0` 等底层传递依赖统一固定在锁文件，业务代码不再使用低层 SDK 接口。迁移依据见 [FastMCP 迁移说明](https://gofastmcp.com/docs/getting-started/upgrading/from-low-level-sdk-v1)、[FastMCP 内存客户端](https://gofastmcp.com/docs/clients/client)、[工具结果与错误](https://gofastmcp.com/docs/clients/tools) 和 [DeepSeek Tool Calls](https://api-docs.deepseek.com/guides/tool_calls/)。
+- 聊天图复用已有 `langgraph==1.2.18`，图与运行时上下文依据见 [LangGraph Graph API](https://docs.langchain.com/oss/python/langgraph/graph-api) 和 [Runtime context](https://reference.langchain.com/python/langgraph/runtime/Runtime)。处方检查 Agent 保持原有独立 LangGraph 流程。
 
 自动测试命令（backend 目录）：
 
 ```powershell
-.\.venv\Scripts\python.exe -m unittest discover -s tests -p test_mcp_tools.py -v
+.\.venv\Scripts\python.exe -m unittest discover -s tests -p 'test_mcp*.py' -v
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 .\.venv\Scripts\python.exe -m pip check
 ```

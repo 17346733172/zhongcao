@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 from .config import Settings
 from .database import Database
+from .conversations import register_conversation_routes
 from .chat import ChatService
 from .rag import KnowledgeRetriever
 from .prescriptions.routes import register_prescription_routes
@@ -77,7 +78,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             if request.headers.get("x-csrf-protection") != "1" or (origin and origin not in settings.allowed_origins):
                 return JSONResponse({"detail": "请求来源校验失败，请刷新页面后重试"}, status_code=403)
             # Bound request bytes even for chunked requests before JSON parsing.
-            maximum = (12 * 1024 * 1024 if request.url.path in {"/api/documents", "/api/prescriptions/prepare"}
+            maximum = (8 * 1024 * 1024 if request.url.path.startswith("/api/conversations/")
+                       else 12 * 1024 * 1024 if request.url.path in {"/api/documents", "/api/prescriptions/prepare"}
                        else 128 * 1024 if request.url.path in {"/api/prescriptions/check", "/api/prescriptions/simulation"}
                        else 64 * 1024 if request.url.path in {"/api/chat", "/api/knowledge/query", "/api/data-center/question"} else 16 * 1024)
             size = 0
@@ -97,6 +99,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def validation_error(request, error):
         # Never echo submitted passwords or document content in errors.
         fields = ", ".join(str(item["loc"][-1]) for item in error.errors())
+        if request.url.path.startswith("/api/conversations/"):
+            return JSONResponse({"detail": "会话消息格式无效，请保留当前页面并重试保存。"}, status_code=422)
         if request.url.path == "/api/prescriptions/simulation":
             return JSONResponse({"detail": "上传数据无效，请返回核对页检查药材和剂数后重新生成报告。"}, status_code=422)
         if request.url.path.startswith("/api/prescriptions/"):
@@ -322,6 +326,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             if not db.execute("DELETE FROM documents WHERE id = ?", (document_id,)).rowcount:
                 raise HTTPException(404, "资料不存在或已移除")
 
+    register_conversation_routes(app, require)
     register_prescription_routes(app, require, settings)
     register_data_center_routes(app, require, settings)
     register_simulation_routes(app, require, settings)

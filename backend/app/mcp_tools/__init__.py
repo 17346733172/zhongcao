@@ -1,1 +1,1 @@
-"""The five workspace modules exposed through the official MCP SDK."""
+"""The five workspace modules exposed internally through FastMCP."""

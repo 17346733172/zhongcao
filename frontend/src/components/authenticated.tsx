@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowLeftIcon, SignOutIcon, UserCircleIcon, UsersThreeIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { api, ApiError, errorMessage, roleLabels, type User } from "@/lib/api";
@@ -62,21 +63,21 @@ export function Authenticated({ children, permission }: { children: ReactNode; p
       {error && <Link href="/login">返回登录</Link>}
     </main>
   );
-  return <AuthContext.Provider value={{ user, logout, error, busy }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider key={user.id} value={{ user, logout, error, busy }}>{children}</AuthContext.Provider>;
 }
 
 export function AccountNavigation() {
   const { user, logout, busy, error } = useAuth();
   return (
     <div className="account-navigation">
-      <Link href="/account" className="account-identity"><span>{user.display_name}</span><small>{roleLabels[user.role]} · {user.username}</small></Link>
-      {user.permissions.includes("users:manage") && <Link href="/admin" className="account-link">账号管理</Link>}
-      <button className="account-link" onClick={() => void logout()} disabled={busy}>{busy ? "退出中…" : "退出登录"}</button>
+      <Link href="/account" className="account-identity"><UserCircleIcon size={22} aria-hidden="true" /><span className="account-identity-copy"><span>{user.display_name}</span><small>{roleLabels[user.role]} · {user.username}</small></span></Link>
+      {user.permissions.includes("users:manage") && <Link href="/admin" className="account-link"><UsersThreeIcon size={18} aria-hidden="true" />账号管理</Link>}
+      <button className="account-link" onClick={() => void logout()} disabled={busy}><SignOutIcon size={18} aria-hidden="true" />{busy ? "退出中…" : "退出登录"}</button>
       {error && <p className="form-error" role="alert">{error}</p>}
     </div>
   );
 }
 
 export function AccountHeader({ title }: { title: string }) {
-  return <header className="account-header"><div><Link href="/">← 返回知识库</Link><h1>{title}</h1></div><AccountNavigation /></header>;
+  return <header className="account-header"><div><Link href="/" className="account-return"><ArrowLeftIcon size={16} aria-hidden="true" />返回知识库</Link><h1>{title}</h1></div><AccountNavigation /></header>;
 }
